@@ -1,0 +1,45 @@
+{
+  "name": "fs-explorer",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "description": "",
+  "license": "MIT",
+  "author": {
+    "name": "Szymon Bretner (ncpa0cpl)",
+    "email": ""
+  },
+  "scripts": {
+    "test:tsc": "tsc --noEmit",
+    "prepare": "husky install",
+    "build": "node ./scripts/build.mjs",
+    "fix:lint": "oxlint --fix ./src",
+    "test:lint": "oxlint ./src",
+    "fix:fmt": "dprint fmt",
+    "test:fmt": "dprint check"
+  },
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@ncpa0cpl/nodepack": "^2.3.3",
+    "@types/bun": "latest",
+    "dprint": "^0.47.1",
+    "esbuild": "^0.23.0",
+    "git-hook-tasks": "git+https://github.com/ncpa0cpl/git-hook-tasks#0.0.1",
+    "husky": "~8",
+    "lightningcss": "^1.25.1",
+    "oxlint": "^0.5.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "@ncpa0cpl/vanilla-jsx": "^0.0.1-alpha.23",
+    "adwavecss": "^0.0.14"
+  },
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
+}
