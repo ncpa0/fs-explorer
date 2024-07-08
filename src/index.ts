@@ -5,14 +5,55 @@ import { Filesystem, FStat } from "./filesystem-interface";
 import { Styles } from "./styles-component";
 import { Path } from "./utils/path";
 
+export interface Place {
+  readonly id: string;
+  readonly label: string;
+  readonly path: string;
+}
+
+export interface FileAction {
+  readonly label: string;
+  readonly match: { test(filepath: string): boolean };
+  readonly run: (file: FStat) => void;
+}
+
+export interface ExplorerOptions {
+  readonly openAction?: (
+    filepath: string
+  ) => undefined | ((file: FStat) => void);
+  /**
+   * List of actions that can be performed on different files. If an action
+   * matches a file, it will be displayed in the context menu, when that
+   * file is pressed.
+   */
+  readonly actions?: ReadonlyArray<FileAction>;
+  /**
+   * Initial list of links that will appear in the left pane. User can add,
+   * remove or reorder these as they see fit.
+   */
+  readonly places?: ReadonlyArray<Place>;
+  /**
+   * List of links that will always appear in the left pane. User can't
+   * remove or reorder these.
+   */
+  readonly staticPlaces?: ReadonlyArray<Place>;
+  readonly showLeftPane?: boolean;
+}
+
 export class Explorer {
   private cleanups: Array<() => void> = [];
 
   public readonly history = new ExplorerHistory();
   public readonly location: ExplorerLocation = this.history["location"];
-  public readonly currentDir = sig<FStat[]>([]);
 
-  constructor(public readonly filesystem: Filesystem) {
+  public readonly currentDir = sig<ReadonlyArray<FStat>>([]);
+  public readonly places = sig<ReadonlyArray<Place>>([]);
+  public readonly staticPlaces = sig<ReadonlyArray<Place>>([]);
+
+  constructor(
+    public readonly filesystem: Filesystem,
+    public readonly options: ExplorerOptions
+  ) {
     ExplorerLocation.signal(this.location).observe((path) => {
       this.updateDirContents(path);
     });
@@ -23,6 +64,13 @@ export class Explorer {
 
     filesystem.onChange(onChange);
     this.cleanups.push(() => filesystem.offChange(onChange));
+
+    if (options.places) {
+      this.places.dispatch(options.places.slice());
+    }
+    if (options.staticPlaces) {
+      this.staticPlaces.dispatch(options.staticPlaces.slice());
+    }
   }
 
   private updateDirContents(path: Path | string) {
@@ -56,5 +104,29 @@ export class Explorer {
     for (const cleanup of this.cleanups) {
       cleanup();
     }
+  }
+
+  addPlace(place: Place) {
+    this.places.dispatch((places) => {
+      return [...places, place];
+    });
+  }
+
+  removePlace(id: string) {
+    this.places.dispatch((places) => {
+      return places.filter((place) => place.id !== id);
+    });
+  }
+
+  addStaticPlace(place: Place) {
+    this.staticPlaces.dispatch((places) => {
+      return [...places, place];
+    });
+  }
+
+  removeStaticPlace(id: string) {
+    this.staticPlaces.dispatch((places) => {
+      return places.filter((place) => place.id !== id);
+    });
   }
 }
