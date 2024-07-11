@@ -1,0 +1,36 @@
+/* transition: background-color .2s; */
+.dir-view {
+    display: grid;
+    grid-template-columns: 3em 3fr 1fr 1fr;
+    overflow-y: auto;
+    max-height: 100vh;
+
+    & .file-entry {
+        display: contents;
+
+        & > * {
+            padding: 1em .5em;
+            margin-block: .2em;
+
+            &:first-child {
+                border-top-left-radius: 4px;
+                border-bottom-left-radius: 4px;
+                margin-left: .6em;
+            }
+
+            &:last-child {
+                border-top-right-radius: 4px;
+                border-bottom-right-radius: 4px;
+                margin-right: .6em;
+            }
+        }
+
+        &:hover {
+            cursor: pointer;
+
+            & > * {
+                background-color: #86868646;
+            }
+        }
+    }
+}

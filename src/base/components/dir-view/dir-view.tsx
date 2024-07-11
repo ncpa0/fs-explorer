@@ -12,22 +12,9 @@ export function DirView(props: DirViewProps) {
   const files = props.explorer.currentDir;
 
   return (
-    <div
-      class={[
-        ACSS.Box.box,
-        ACSS.Box.bg2,
-        "dir-view",
-      ]}
-    >
-      <Range
-        data={files}
-      >
-        {(file) => (
-          <FileEntry
-            explorer={props.explorer}
-            file={file}
-          />
-        )}
+    <div class={[ACSS.Box.box, ACSS.Box.bg2, "dir-view"]}>
+      <Range data={files} into={<div class="dcontents" />}>
+        {(file) => <FileEntry explorer={props.explorer} file={file} />}
       </Range>
     </div>
   );
@@ -44,9 +31,9 @@ function FileEntry(props: { explorer: Explorer; file: FStat }) {
   return (
     <div class={["file-entry"]} onmousedown={handleClick}>
       <div class={{ "file-icon": true, directory: props.file.directory }}></div>
-      <div class={["filename"]}>
-        {props.file.name}
-      </div>
+      <div class={["filename"]}>{props.file.name}</div>
+      <div class={["file-size"]}>{props.file.size}</div>
+      <div class={["file-modified"]}>{props.file.mtime}</div>
     </div>
   );
 }

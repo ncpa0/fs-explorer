@@ -3,7 +3,7 @@ import { memo } from "./decorators/memo";
 export class Path {
   static from(
     path: Path | string | string[],
-    type?: "absolute" | "relative"
+    type?: "absolute" | "relative",
   ): Path {
     if (path instanceof Path) {
       return path;

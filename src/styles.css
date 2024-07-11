@@ -1,3 +1,9 @@
 @import "./base/components/window/styles.css";
 
 @import "./base/components/location-bar/styles.css";
+
+@import "./base/components/dir-view/styles.css";
+
+.explorer-window .dcontents {
+    display: contents;
+}

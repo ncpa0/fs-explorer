@@ -52,7 +52,7 @@ export class Explorer {
 
   constructor(
     public readonly filesystem: Filesystem,
-    public readonly options: ExplorerOptions
+    public readonly options: ExplorerOptions = {}
   ) {
     ExplorerLocation.signal(this.location).observe((path) => {
       this.updateDirContents(path);

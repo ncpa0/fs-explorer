@@ -40,7 +40,7 @@ export class ExplorerHistory {
     if (this.stackPosition < this.stack.length) {
       this.stack.splice(
         this.stackPosition,
-        this.stack.length - this.stackPosition
+        this.stack.length - this.stackPosition,
       );
     }
     const path = Path.from(p);
