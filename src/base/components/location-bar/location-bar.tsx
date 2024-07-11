@@ -1,5 +1,8 @@
 import { ReadonlySignal, sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../..";
+import ArrowBackwardIcon from "../../../assets/main-theme/icons/arrow-back.svg";
+import ArrowForwardIcon from "../../../assets/main-theme/icons/arrow-forward.svg";
+import ArrowUpIcon from "../../../assets/main-theme/icons/arrow-up.svg";
 import { ACSS } from "../../../utils/css";
 import { Path } from "../../../utils/path";
 import { ExplorerLocation } from "../../history";
@@ -130,24 +133,24 @@ function ControlButtons(props: {
         onmousedown={props.onBack}
         class={[ACSS.Button.button, ACSS.Button.flat, ACSS.Button.square]}
       >
-        <span class={ACSS.Typography.text}>
-          {"<"}
+        <span class={["control-icon", ACSS.Typography.text]}>
+          <ArrowBackwardIcon />
         </span>
       </button>
       <button
         onmousedown={props.onForward}
         class={[ACSS.Button.button, ACSS.Button.flat, ACSS.Button.square]}
       >
-        <span class={ACSS.Typography.text}>
-          {">"}
+        <span class={["control-icon", ACSS.Typography.text]}>
+          <ArrowForwardIcon />
         </span>
       </button>
       <button
         onmousedown={props.onUp}
         class={[ACSS.Button.button, ACSS.Button.flat, ACSS.Button.square]}
       >
-        <span class={ACSS.Typography.text}>
-          ^
+        <span class={["control-icon", ACSS.Typography.text]}>
+          <ArrowUpIcon />
         </span>
       </button>
     </div>

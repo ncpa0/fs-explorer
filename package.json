@@ -27,6 +27,8 @@
   "devDependencies": {
     "@ncpa0cpl/nodepack": "^2.3.3",
     "@types/bun": "latest",
+    "@types/luxon": "^3.4.2",
+    "dedent": "^1.5.3",
     "dprint": "^0.47.1",
     "esbuild": "^0.23.0",
     "git-hook-tasks": "git+https://github.com/ncpa0cpl/git-hook-tasks#0.0.1",
@@ -39,7 +41,8 @@
   },
   "dependencies": {
     "@ncpa0cpl/vanilla-jsx": "^0.0.1-alpha.23",
-    "adwavecss": "^0.0.14"
+    "adwavecss": "^0.0.14",
+    "luxon": "^3.4.4"
   },
   "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }

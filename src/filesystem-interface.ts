@@ -6,6 +6,7 @@ export interface FStat {
   readonly path: string;
   readonly size: number;
   readonly directory: boolean;
+  readonly hidden: boolean;
 
   readonly read: boolean;
   readonly write: boolean;

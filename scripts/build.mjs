@@ -1,5 +1,7 @@
 import { build } from "@ncpa0cpl/nodepack";
+import dedent from "dedent";
 import { bundle } from "lightningcss";
+import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "url";
 
@@ -25,7 +27,7 @@ async function main() {
       minify: !isDev,
       sourcemap: isDev ? "inline" : false,
       jsxImportSource: "@ncpa0cpl/vanilla-jsx",
-      plugins: [cssPlugin()],
+      plugins: [cssPlugin(), svgLoaderPlugin()],
     },
   };
   /**
@@ -85,4 +87,49 @@ export default stylesheet;
       });
     },
   };
+}
+
+/**
+ * @returns {import("esbuild").Plugin}
+ */
+function svgLoaderPlugin() {
+  return {
+    name: "svg-loader",
+    setup(build) {
+      build.onLoad({ filter: /\.svg$/ }, async (args) => {
+        const contents = await fs.readFile(args.path, "utf-8");
+
+        const code = JsxComponentForSvg(contents);
+
+        return {
+          contents: code,
+          loader: "js",
+        };
+      });
+    },
+  };
+}
+
+function JsxComponentForSvg(svgContent) {
+  const code = /** js */ `
+    const sanitizer = trustedTypes.createPolicy("known-trusted", {
+      createHTML: (input) => input,
+    });
+    const content = sanitizer.createHTML(${JSON.stringify(svgContent)});
+
+    export default function Svg(props) {
+      const elem = document.createElement("svg");
+      elem.innerHTML = content;
+      for (const [key, value] of Object.entries(props)) {
+        if (key in elem) {
+          elem[key] = value;
+          continue;
+        }
+        elem.setAttribute(key, String(value));
+      }
+      return elem;
+    }
+  `;
+
+  return dedent(code);
 }

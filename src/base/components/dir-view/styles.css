@@ -1,15 +1,78 @@
 /* transition: background-color .2s; */
 .dir-view {
     display: grid;
-    grid-template-columns: 3em 3fr 1fr 1fr;
+    grid-template-columns: 3em 1fr 10em 16em;
     overflow-y: auto;
-    max-height: 100vh;
+    max-height: 100%;
+
+    &.empty {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 10em;
+
+        & .empty-dir-msg {
+            font-size: 1.6em;
+        }
+    }
+
+    & .dirview-header {
+        & > * {
+            display: flex;
+            align-items: center;
+            padding-top: .5em;
+            padding-bottom: .4em;
+            position: sticky;
+            top: 0;
+            left: 0;
+            background-color: var(--clr-bg-2);
+            z-index: 2;
+            border-bottom: 1px solid var(--clr-dimmed);
+        }
+
+        & .header-name {
+            cursor: pointer;
+            padding-left: .5em;
+        }
+
+        & .header-size {
+            cursor: pointer;
+            justify-content: center;
+            border-left: 1px solid var(--clr-dimmed);
+        }
+
+        & .header-date {
+            cursor: pointer;
+            justify-content: center;
+            border-left: 1px solid var(--clr-dimmed);
+        }
+    }
 
     & .file-entry {
         display: contents;
 
+        & .filename,
+        & .file-size,
+        & .file-modified,
+        & .file-icon {
+            display: flex;
+            align-items: center;
+        }
+
+        & .file-size,
+        & .file-modified {
+            justify-content: flex-end;
+            padding-right: 2em;
+        }
+
+        & .file-icon svg {
+            width: 1.75em;
+            height: 1.75em;
+            margin-bottom: .1em;
+        }
+
         & > * {
-            padding: 1em .5em;
+            padding: .5em .5em;
             margin-block: .2em;
 
             &:first-child {

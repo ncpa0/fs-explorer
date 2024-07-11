@@ -34,13 +34,13 @@ export class ExplorerHistory {
   private stack: { path: Path }[] = [
     { path: ExplorerLocation.pathOf(this.location) },
   ];
-  private stackPosition = 0;
+  private stackPosition = 1;
 
   push(p: string | Path): void {
     if (this.stackPosition < this.stack.length) {
       this.stack.splice(
         this.stackPosition,
-        this.stack.length - this.stackPosition,
+        this.stack.length - this.stackPosition
       );
     }
     const path = Path.from(p);

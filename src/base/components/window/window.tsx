@@ -16,7 +16,9 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
       ]}
     >
       <LocationBar explorer={props.explorer} />
-      <DirView explorer={props.explorer} />
+      <div class={[ACSS.Box.className({ bg: 2 }), "explorer-content"]}>
+        <DirView explorer={props.explorer} />
+      </div>
     </div>
   );
 }

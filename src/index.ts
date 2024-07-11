@@ -17,10 +17,14 @@ export interface FileAction {
   readonly run: (file: FStat) => void;
 }
 
+export interface FileActionApi {
+  openContextMenu(): void;
+}
+
 export interface ExplorerOptions {
   readonly openAction?: (
     filepath: string
-  ) => undefined | ((file: FStat) => void);
+  ) => undefined | ((file: FStat, api: FileActionApi) => void);
   /**
    * List of actions that can be performed on different files. If an action
    * matches a file, it will be displayed in the context menu, when that

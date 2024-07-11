@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="64"
+   height="64"
+   viewBox="0 0 16.933329 16.933329"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25, custom)"
+   sodipodi:docname="arrow-up.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="5.8709306"
+     inkscape:cx="37.643095"
+     inkscape:cy="44.37116"
+     inkscape:window-width="2504"
+     inkscape:window-height="1371"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1">
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter4240"
+       x="-0.023830708"
+       width="1.0476614"
+       y="-0.024171716"
+       height="1.0483434">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="3.8803953"
+         id="feGaussianBlur4242" />
+    </filter>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g4368"
+       style="display:inline;enable-background:new"
+       transform="matrix(-1.8170565e-4,0.03291194,-0.03291194,-1.8170565e-4,9.5973887,-6.7542192)">
+      <path
+         sodipodi:nodetypes="cccccccccc"
+         inkscape:connector-curvature="0"
+         id="path4244"
+         style="opacity:0.1;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;filter:url(#filter4240)"
+         d="m 457.23186,-159.98434 44.32288,44.34722 L 385.23698,0 H 656.0005 V 64 H 385.23698 L 501.55474,180.97568 457.23186,225.29856 265.20434,31.99904 Z" />
+      <path
+         d="m 457.23186,-159.98434 44.32288,44.34722 L 385.23698,0 H 656.0005 V 64 H 385.23698 L 501.55474,180.97568 457.23186,225.29856 265.20434,31.99904 Z"
+         style="opacity:0.2;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;filter:url(#filter4240)"
+         id="path4238"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cccccccccc" />
+      <path
+         sodipodi:nodetypes="cccccccccc"
+         inkscape:connector-curvature="0"
+         id="path4236"
+         style="opacity:0.2;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         d="m 457.23186,-161.98434 44.32288,44.34722 L 385.23698,-2 H 656.0005 V 62 H 385.23698 L 501.55474,178.97568 457.23186,223.29856 265.20434,29.99904 Z" />
+      <path
+         d="m 457.23186,-163.98434 44.32288,44.34722 L 385.23698,-4 H 656.0005 V 60 H 385.23698 L 501.55474,176.97568 457.23186,221.29856 265.20434,27.99904 Z"
+         style="fill:#e6e6e6;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         id="path4167"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cccccccccc" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path4231"
+         d="M 457.23242,-163.98437 265.20508,28 l 0.99609,1.00391 191.03125,-190.98828 43.32031,43.34375 1.00196,-0.9961 z M 387.24805,-4 385.23633,-2 H 656 v -2 z m -2.01172,66 115.32031,115.97461 0.99805,-0.99805 L 387.22461,62 Z"
+         style="opacity:0.2;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none" />
+      <rect
+         style="display:inline;overflow:visible;visibility:visible;fill:none;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate"
+         id="rect4357"
+         width="512"
+         height="512"
+         x="-720"
+         y="-228"
+         inkscape:label="48x48"
+         transform="scale(-1,1)" />
+    </g>
+  </g>
+</svg>

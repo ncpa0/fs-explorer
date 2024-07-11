@@ -4,6 +4,13 @@
 
 @import "./base/components/dir-view/styles.css";
 
-.explorer-window .dcontents {
-    display: contents;
+.explorer-window {
+    & * {
+        font-size: inherit;
+        user-select: none;
+    }
+
+    & .dcontents {
+        display: contents;
+    }
 }

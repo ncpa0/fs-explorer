@@ -1,6 +1,16 @@
 .explorer-window {
     display: flex;
+    align-items: stretch;
     flex-direction: column;
     height: 100%;
     width: 100%;
+    max-height: 100vh;
+    min-height: 16em;
+
+    & .explorer-content {
+        flex: 1;
+        flex-direction: column;
+        align-items: stretch;
+        max-height: 100%;
+    }
 }

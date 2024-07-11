@@ -2,7 +2,26 @@
     display: flex;
     margin: 1em 1em;
 
+    & button.btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        & .control-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            & svg {
+                width: 1.5em;
+                height: 1.5em;
+            }
+        }
+    }
+
     & .control-buttons {
+        display: flex;
+        flex-direction: row;
         margin-right: .6em;
     }
 
