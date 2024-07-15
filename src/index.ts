@@ -19,11 +19,12 @@ export interface FileAction {
 
 export interface FileActionApi {
   openContextMenu(): void;
+  openPreview(): void;
 }
 
 export interface ExplorerOptions {
   readonly openAction?: (
-    filepath: string
+    filepath: string,
   ) => undefined | ((file: FStat, api: FileActionApi) => void);
   /**
    * List of actions that can be performed on different files. If an action
@@ -53,10 +54,11 @@ export class Explorer {
   public readonly currentDir = sig<ReadonlyArray<FStat>>([]);
   public readonly places = sig<ReadonlyArray<Place>>([]);
   public readonly staticPlaces = sig<ReadonlyArray<Place>>([]);
+  public readonly preview = sig<undefined | FStat>(undefined);
 
   constructor(
     public readonly filesystem: Filesystem,
-    public readonly options: ExplorerOptions = {}
+    public readonly options: ExplorerOptions = {},
   ) {
     ExplorerLocation.signal(this.location).observe((path) => {
       this.updateDirContents(path);

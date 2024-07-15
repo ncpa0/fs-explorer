@@ -1,0 +1,40 @@
+.preview-pane {
+    width: 26em;
+    height: 100%;
+    display: none;
+
+    &.preview-visible {
+        display: flex;
+        flex-direction: column;
+    }
+
+    & .info-header {
+        display: flex;
+        justify-content: flex-end;
+        margin: .4em 1em;
+    }
+
+    & .file-info {
+        margin: 0em 1em;
+        display: grid;
+        grid-template-columns: 2fr 5fr;
+
+        & * {
+            user-select: text;
+        }
+
+        & .info-label,
+        & .info-value {
+            margin: .3em 0;
+        }
+
+        & .info-label {
+            text-align: end;
+            margin-right: 1em;
+        }
+
+        & .info-value {
+            word-break: break-all;
+        }
+    }
+}

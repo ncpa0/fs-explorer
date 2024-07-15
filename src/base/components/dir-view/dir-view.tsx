@@ -54,6 +54,7 @@ export function DirView(props: DirViewProps) {
       <Range data={visibleFiles} into={<div class="dcontents" />}>
         {(file) => <FileEntry explorer={props.explorer} file={file} />}
       </Range>
+      <div class="gaper" />
     </div>
   );
 }
@@ -123,6 +124,18 @@ function FileEntry(props: { explorer: Explorer; file: FStat }) {
     if (props.file.directory) {
       const path = new Path(props.file.path);
       props.explorer.open(path);
+    } else {
+      const actionCtx = new FileActionContext(
+        props.explorer,
+        props.file,
+        event.target as any,
+      );
+      const action = props.explorer.options?.openAction?.(props.file.path);
+      if (action) {
+        action(props.file, actionCtx);
+      } else {
+        actionCtx.openPreview();
+      }
     }
   };
 
@@ -144,4 +157,18 @@ function FileEntry(props: { explorer: Explorer; file: FStat }) {
       </div>
     </div>
   );
+}
+
+class FileActionContext {
+  constructor(
+    protected explorer: Explorer,
+    protected file: FStat,
+    protected element: HTMLDivElement,
+  ) {}
+
+  openContextMenu() {}
+
+  openPreview() {
+    this.explorer.preview.dispatch(this.file);
+  }
 }

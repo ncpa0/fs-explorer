@@ -4,6 +4,10 @@
 
 @import "./base/components/dir-view/styles.css";
 
+@import "./base/components/left-pane/styles.css";
+
+@import "./base/components/preview-pane/styles.css";
+
 .explorer-window {
     & * {
         font-size: inherit;

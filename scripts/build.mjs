@@ -112,14 +112,24 @@ function svgLoaderPlugin() {
 
 function JsxComponentForSvg(svgContent) {
   const code = /** js */ `
-    const sanitizer = trustedTypes.createPolicy("known-trusted", {
-      createHTML: (input) => input,
-    });
-    const content = sanitizer.createHTML(${JSON.stringify(svgContent)});
+    function htmlstr(html) {
+      if (typeof window.trustedTypes !== "undefined") {
+        const sanitizer = trustedTypes.createPolicy("known-trusted", {
+          createHTML: (input) => input,
+        });
+        const content = sanitizer.createHTML(html);
+      }
+      return html;
+    }
+
+    const content = htmlstr(${JSON.stringify(svgContent)});
 
     export default function Svg(props) {
-      const elem = document.createElement("svg");
-      elem.innerHTML = content;
+      const tmp = document.createElement("div");
+      tmp.innerHTML = content;
+
+      const elem = tmp.children[0];
+
       for (const [key, value] of Object.entries(props)) {
         if (key in elem) {
           elem[key] = value;

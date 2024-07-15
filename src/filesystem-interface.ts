@@ -11,12 +11,14 @@ export interface FStat {
   readonly read: boolean;
   readonly write: boolean;
 
-  /** Creation Time */
-  readonly ctime: number;
   /** Last Modification Time */
   readonly mtime: number;
+  /** Creation Time */
+  readonly ctime?: number;
   /** Last Access Time */
-  readonly atime: number;
+  readonly atime?: number;
+
+  readonly mimetype?: string;
 }
 
 export interface Filesystem {

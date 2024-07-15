@@ -1,9 +1,12 @@
 /* transition: background-color .2s; */
 .dir-view {
+    flex: 1;
     display: grid;
-    grid-template-columns: 3em 1fr 10em 16em;
+    grid-template-columns: 3.5em 1fr 10em 16em;
     overflow-y: auto;
     max-height: 100%;
+    height: fit-content;
+    --icon-size: 2em;
 
     &.empty {
         display: flex;
@@ -66,13 +69,13 @@
         }
 
         & .file-icon svg {
-            width: 1.75em;
-            height: 1.75em;
+            width: var(--icon-size);
+            height: var(--icon-size);
             margin-bottom: .1em;
         }
 
         & > * {
-            padding: .5em .5em;
+            padding: .25em .5em;
             margin-block: .2em;
 
             &:first-child {
@@ -95,5 +98,9 @@
                 background-color: #86868646;
             }
         }
+    }
+
+    & .gaper {
+        height: .5em;
     }
 }

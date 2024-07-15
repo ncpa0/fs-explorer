@@ -7,8 +7,8 @@
    viewBox="0 0 16.933329 16.933329"
    version="1.1"
    id="svg1"
+   sodipodi:docname="yaml.svg"
    inkscape:version="1.3.2 (091e20ef0f, 2023-11-25, custom)"
-   sodipodi:docname="text-file.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="5.8709306"
-     inkscape:cx="-0.93681911"
-     inkscape:cy="46.074467"
+     inkscape:zoom="5.6568542"
+     inkscape:cx="24.660349"
+     inkscape:cy="27.488776"
      inkscape:window-width="2504"
      inkscape:window-height="1371"
      inkscape:window-x="0"
@@ -34,32 +34,6 @@
      inkscape:current-layer="layer1" />
   <defs
      id="defs1">
-    <filter
-       inkscape:collect="always"
-       style="color-interpolation-filters:sRGB"
-       id="filter4507"
-       x="-0.027272727"
-       width="1.0545455"
-       y="-0.021428571"
-       height="1.0428571">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="4"
-         id="feGaussianBlur4509" />
-    </filter>
-    <filter
-       inkscape:collect="always"
-       style="color-interpolation-filters:sRGB"
-       id="filter4497"
-       x="-0.027272727"
-       width="1.0545455"
-       y="-0.021428571"
-       height="1.0428571">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="4"
-         id="feGaussianBlur4499" />
-    </filter>
     <clipPath
        clipPathUnits="userSpaceOnUse"
        id="clipPath5158">
@@ -83,6 +57,32 @@
          stdDeviation="0.4625"
          id="feGaussianBlur5164" />
     </filter>
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter4497"
+       x="-0.027272727"
+       width="1.0545455"
+       y="-0.021428571"
+       height="1.0428571">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="4"
+         id="feGaussianBlur4499" />
+    </filter>
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter4507"
+       x="-0.027272727"
+       width="1.0545455"
+       y="-0.021428571"
+       height="1.0428571">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="4"
+         id="feGaussianBlur4509" />
+    </filter>
   </defs>
   <g
      inkscape:label="Layer 1"
@@ -93,18 +93,18 @@
        id="path4501"
        d="m 312,-192 c -13.296,0 -24,10.704 -24,24 v 400 c 0,13.296 10.704,24 24,24 h 304 c 13.296,0 24,-10.704 24,-24 V -48 L 496,-192 Z"
        style="display:inline;opacity:0.1;fill:#000000;fill-opacity:1;stroke:none;filter:url(#filter4507);enable-background:new"
-       transform="matrix(0.03117425,0,0,0.03117425,-5.998857,7.440729)" />
+       transform="matrix(0.03117425,0,0,0.03117425,-5.9132103,7.4608822)" />
     <path
        style="display:inline;opacity:0.2;fill:#000000;fill-opacity:1;stroke:none;filter:url(#filter4497);enable-background:new"
        d="m 312,-192 c -13.296,0 -24,10.704 -24,24 v 400 c 0,13.296 10.704,24 24,24 h 304 c 13.296,0 24,-10.704 24,-24 V -48 L 496,-192 Z"
        id="path4491"
        inkscape:connector-curvature="0"
-       transform="matrix(0.03117425,0,0,0.03117425,-5.998857,7.440729)" />
+       transform="matrix(0.03117425,0,0,0.03117425,-5.9132103,7.4608822)" />
     <path
        sodipodi:nodetypes="sssssscccs"
        inkscape:connector-curvature="0"
        id="rect3362"
-       d="m 3.7275087,1.3305764 c -0.4144926,0 -0.7481821,0.3336891 -0.7481821,0.7481817 V 14.548458 c 0,0.414492 0.3336895,0.748181 0.7481821,0.748181 H 13.20448 c 0.414493,0 0.748182,-0.333689 0.748182,-0.748181 V 5.8196681 c -1.371666,-0.1246967 -4.115,-0.3740909 -4.115,-0.3740909 L 9.4635706,1.3305764 Z"
+       d="m 3.8131554,1.3507296 c -0.4144926,0 -0.7481821,0.3336891 -0.7481821,0.7481817 V 14.568611 c 0,0.414492 0.3336895,0.748181 0.7481821,0.748181 h 9.4769716 c 0.414493,0 0.748181,-0.333689 0.748181,-0.748181 V 5.8398213 C 12.666643,5.7151246 9.9233087,5.4657304 9.9233087,5.4657304 L 9.5492173,1.3507296 Z"
        style="display:inline;fill:#ececec;fill-opacity:1;stroke:none;stroke-width:0.0311742;enable-background:new" />
     <path
        clip-path="url(#clipPath5158)"
@@ -113,27 +113,37 @@
        id="path4104"
        d="m 235.75,223.5 v 16 c 0,1.65685 1.34315,3 3,3 l 15.09,0.14 v -4.5 l -16,-17 z"
        style="display:inline;opacity:0.1;fill:#000000;fill-opacity:1;stroke:none;filter:url(#filter5162);enable-background:new"
-       transform="matrix(0.24939399,0,0,0.24939399,-49.353511,-54.443896)" />
+       transform="matrix(0.24939399,0,0,0.24939399,-49.267865,-54.423743)" />
+    <g
+       id="g1"
+       transform="matrix(1.3043775,0,0,1.3043775,-2.6799826,-3.5382052)">
+      <polygon
+         id="Y"
+         points="87.702,137.674 0,0 63.25,0 119.018,88.646 175.243,0 235.793,0 143.978,137.674 143.978,224.949 87.702,224.949 "
+         transform="matrix(0.01470622,0,0,0.01470622,4.8095088,7.0144479)" />
+      <path
+         id="A"
+         fill="#cb171e"
+         d="M 9.6668853,9.5946692 H 8.1688948 L 7.8642261,10.330333 H 7.2008872 L 8.6035665,7.0221834 H 9.2820676 L 10.627834,10.330333 H 9.9189941 L 9.6668705,9.5946692 Z M 9.418056,8.9341982 8.9588396,7.7201995 8.446519,8.9341982 Z"
+         style="stroke-width:0.0147062" />
+      <polygon
+         id="M"
+         points="87.701,250.177 87.701,470.647 135.004,470.647 135.004,318.569 184.509,420.789 221.743,420.789 272.939,314.976 272.939,470.602 318.318,470.602 318.318,250.177 256.358,250.177 201.381,349.883 149.021,250.177 "
+         transform="matrix(0.01470622,0,0,0.01470622,4.8095088,7.0144479)" />
+      <polygon
+         id="L"
+         points="512,422.737 512,422.735 395.638,422.735 395.638,250.125 347.442,250.125 347.442,469.647 512,469.647 "
+         transform="matrix(0.01470622,0,0,0.01470622,4.8095088,7.0144479)" />
+    </g>
     <path
        style="display:inline;fill:#f2f2f2;fill-opacity:1;stroke:none;stroke-width:0.0311742;enable-background:new"
-       d="m 9.4635706,1.3305764 v 3.7409099 c 0,0.4132083 0.3349739,0.7481818 0.7481824,0.7481818 h 3.740909 z"
+       d="m 9.5492173,1.3507296 v 3.7409099 c 0,0.4132083 0.3349739,0.7481818 0.7481827,0.7481818 h 3.740908 z"
        id="path4060"
        inkscape:connector-curvature="0" />
     <path
        id="path4233"
-       d="m 3.7275087,1.3305764 c -0.4144926,0 -0.7481821,0.3336891 -0.7481821,0.7481817 v 0.062349 c 0,-0.4144931 0.3336895,-0.7481822 0.7481821,-0.7481822 h 5.7360619 v -0.062348 z"
+       d="m 3.8131554,1.3507296 c -0.4144926,0 -0.7481821,0.3336891 -0.7481821,0.7481817 v 0.062349 c 0,-0.4144931 0.3336895,-0.7481822 0.7481821,-0.7481822 h 5.7360619 v -0.062348 z"
        style="display:inline;opacity:0.2;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0311742;enable-background:new"
        inkscape:connector-curvature="0" />
-    <path
-       style="display:inline;opacity:0.05;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.0311742;enable-background:new"
-       d="m 2.9793266,14.486109 v 0.06235 c 0,0.414492 0.3336895,0.748182 0.7481821,0.748182 H 13.20448 c 0.414493,0 0.748182,-0.33369 0.748182,-0.748182 v -0.06235 c 0,0.414493 -0.333689,0.748182 -0.748182,0.748182 H 3.7275087 c -0.4144926,0 -0.7481821,-0.333689 -0.7481821,-0.748182 z"
-       id="path4672"
-       inkscape:connector-curvature="0" />
-    <path
-       style="display:inline;fill:#4d4d4d;fill-opacity:1;stroke:none;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;enable-background:new"
-       d="M 4.4240385,14.104063 V 13.41988 H 9.213319 v 0.684183 z m 0,-2.052548 v -0.684183 h 8.2101945 v 0.684183 z m 0,-2.0525491 V 9.314783 h 8.2101945 v 0.6841829 z m 0,-2.0525491 V 7.2622341 h 8.2101945 v 0.6841827 z"
-       id="path4556"
-       inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cccccccccccccccccccc" />
   </g>
 </svg>
