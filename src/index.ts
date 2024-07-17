@@ -45,7 +45,7 @@ export interface ExplorerOptions {
 }
 
 export interface ContextMenuData {
-  file: FStat;
+  file?: FStat;
   posX: number;
   posY: number;
 }
@@ -60,7 +60,7 @@ export class Explorer {
   public readonly places = sig<ReadonlyArray<Place>>([]);
   public readonly staticPlaces = sig<ReadonlyArray<Place>>([]);
   public readonly preview = sig<undefined | FStat>(undefined);
-  public readonly contextMenu = sig<undefined | ContextMenuData>(undefined);
+  public readonly contextMenu = sig<ContextMenuData>({ posX: 0, posY: 0 });
 
   constructor(
     public readonly filesystem: Filesystem,

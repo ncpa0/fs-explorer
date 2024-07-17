@@ -1,3 +1,4 @@
+import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../..";
 import { FileActionContext } from "../../../interfaces/file-action";
 import { ACSS } from "../../../utils/css";
@@ -7,13 +8,9 @@ export type ContextMenuProps = {
 };
 
 export function ContextMenu(props: ContextMenuProps) {
-  const file = props.explorer.contextMenu.derive(v => v?.file);
-  const posX = props.explorer.contextMenu.derive(v =>
-    v?.posX ? `${v.posX}px` : undefined
-  );
-  const posY = props.explorer.contextMenu.derive(v =>
-    v?.posY ? `${v.posY}px` : undefined
-  );
+  const data = props.explorer.contextMenu;
+  const posX = sig.literal`${data.derive(d => d.posX)}px`;
+  const posY = sig.literal`${data.derive(d => d.posY)}px`;
 
   return (
     <div
@@ -23,7 +20,7 @@ export function ContextMenu(props: ContextMenuProps) {
         left: posX,
       }}
     >
-      {file.derive(file => {
+      {data.derive(({ file }) => {
         if (!file) {
           return <span />;
         }
