@@ -1,0 +1,6 @@
+.context-menu {
+    position: absolute;
+    padding: .5em;
+    background: var(--clr-bg-4);
+    z-index: 10;
+}

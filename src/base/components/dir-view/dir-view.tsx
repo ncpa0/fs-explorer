@@ -3,6 +3,7 @@ import { sig, Signal } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Typography } from "adwavecss";
 import { Explorer } from "../../..";
 import { FStat } from "../../../filesystem-interface";
+import { FileActionContext } from "../../../interfaces/file-action";
 import { ACSS } from "../../../utils/css";
 import { Fmt } from "../../../utils/formatters";
 import { getFileIcon } from "../../../utils/get-file-icon";
@@ -116,9 +117,20 @@ function FileViewHeader(props: {
 
 const isLmb = (event: MouseEvent) =>
   event.button === 0 && !event.ctrlKey && !event.shiftKey && !event.altKey;
+const isRmb = (event: MouseEvent) =>
+  event.button === 2 && !event.ctrlKey && !event.shiftKey && !event.altKey;
 
 function FileEntry(props: { explorer: Explorer; file: FStat }) {
   const handleClick = (event: MouseEvent) => {
+    if (isRmb(event)) {
+      props.explorer.contextMenu.dispatch({
+        file: props.file,
+        posX: event.clientX,
+        posY: event.clientY,
+      });
+      return;
+    }
+
     if (!isLmb(event)) return;
 
     if (props.file.directory) {
@@ -128,7 +140,6 @@ function FileEntry(props: { explorer: Explorer; file: FStat }) {
       const actionCtx = new FileActionContext(
         props.explorer,
         props.file,
-        event.target as any,
       );
       const action = props.explorer.options?.openAction?.(props.file.path);
       if (action) {
@@ -157,18 +168,4 @@ function FileEntry(props: { explorer: Explorer; file: FStat }) {
       </div>
     </div>
   );
-}
-
-class FileActionContext {
-  constructor(
-    protected explorer: Explorer,
-    protected file: FStat,
-    protected element: HTMLDivElement,
-  ) {}
-
-  openContextMenu() {}
-
-  openPreview() {
-    this.explorer.preview.dispatch(this.file);
-  }
 }

@@ -1,30 +1,24 @@
 {
   "languages": {
     "JavaScript": {
-      "language_servers": ["!eslint", "..."]
+      "language_servers": ["!eslint", "vtsls"]
     },
     "TypeScript": {
-      "language_servers": ["!eslint", "..."],
+      "language_servers": ["!eslint", "vtsls"],
       "format_on_save": {
         "external": {
           "command": "bun",
           "arguments": ["run", "dprint", "fmt", "--stdin", "{buffer_path}"]
         }
-      },
-      "code_actions_on_format": {
-        "source.organizeImports": true
       }
     },
     "TSX": {
-      "language_servers": ["!eslint", "..."],
+      "language_servers": ["!eslint", "vtsls"],
       "format_on_save": {
         "external": {
           "command": "bun",
           "arguments": ["run", "dprint", "fmt", "--stdin", "{buffer_path}"]
         }
-      },
-      "code_actions_on_format": {
-        "source.organizeImports": true
       }
     },
     "CSS": {

@@ -18,7 +18,6 @@ export interface FileAction {
 }
 
 export interface FileActionApi {
-  openContextMenu(): void;
   openPreview(): void;
 }
 
@@ -45,6 +44,12 @@ export interface ExplorerOptions {
   readonly showLeftPane?: boolean;
 }
 
+export interface ContextMenuData {
+  file: FStat;
+  posX: number;
+  posY: number;
+}
+
 export class Explorer {
   private cleanups: Array<() => void> = [];
 
@@ -55,6 +60,7 @@ export class Explorer {
   public readonly places = sig<ReadonlyArray<Place>>([]);
   public readonly staticPlaces = sig<ReadonlyArray<Place>>([]);
   public readonly preview = sig<undefined | FStat>(undefined);
+  public readonly contextMenu = sig<undefined | ContextMenuData>(undefined);
 
   constructor(
     public readonly filesystem: Filesystem,
