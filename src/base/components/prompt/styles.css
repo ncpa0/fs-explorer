@@ -1,0 +1,31 @@
+.prompt-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &.hidden {
+        display: none;
+    }
+
+    & .prompt {
+        padding: 1em;
+        background-color: var(--clr-bg-3);
+    }
+
+    & .prompt-header {
+        margin-bottom: .5em;
+        margin-left: .5em;
+    }
+
+    & .error-msg {
+        margin-top: .5em;
+        margin-left: .5em;
+        font-size: .7em;
+    }
+}

@@ -1,7 +1,9 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { ExplorerWindow } from "./base/components/window/window";
+import { FsController } from "./base/fs-controller";
 import { ExplorerHistory, ExplorerLocation } from "./base/history";
 import { Filesystem, FStat } from "./filesystem-interface";
+import { ActionError } from "./interfaces/action-error";
 import { Styles } from "./styles-component";
 import { Path } from "./utils/path";
 
@@ -45,37 +47,63 @@ export interface ExplorerOptions {
 }
 
 export interface ContextMenuData {
+  open: boolean;
   file?: FStat;
-  posX: number;
-  posY: number;
+  left?: number;
+  top?: number;
+  bottom?: number;
+}
+
+export interface FileClipboard {
+  file?: FStat;
+  cut?: boolean;
+}
+
+export interface PromptModal {
+  open: boolean;
+  prompt?: string;
+  onConfirm?: (value: string) => void;
+  validate?: (value: string) => "ok" | { msg: string };
+  initialValue?: string;
+  confirmBtnLabel?: string;
 }
 
 export class Explorer {
   private cleanups: Array<() => void> = [];
 
+  public window: Element | null = null;
+
   public readonly history = new ExplorerHistory();
   public readonly location: ExplorerLocation = this.history["location"];
+  public readonly fs;
 
-  public readonly currentDir = sig<ReadonlyArray<FStat>>([]);
+  // location visible on the left pane
   public readonly places = sig<ReadonlyArray<Place>>([]);
   public readonly staticPlaces = sig<ReadonlyArray<Place>>([]);
+
+  // currentyl opened directory
+  public readonly currentDirStat = sig<FStat | undefined>(undefined);
+  public readonly currentDir = sig<ReadonlyArray<FStat>>([]);
+
+  // right pane preview
   public readonly preview = sig<undefined | FStat>(undefined);
-  public readonly contextMenu = sig<ContextMenuData>({ posX: 0, posY: 0 });
+  public readonly actionError = sig<ActionError | undefined>(undefined);
+  public readonly clipboard = sig<FileClipboard>({});
+
+  public readonly promptModal = sig<PromptModal>({
+    open: false,
+  });
+  public readonly contextMenu = sig<ContextMenuData>({
+    open: false,
+    left: 0,
+    top: 0,
+  });
 
   constructor(
-    public readonly filesystem: Filesystem,
+    private readonly filesystem: Filesystem,
     public readonly options: ExplorerOptions = {},
   ) {
-    ExplorerLocation.signal(this.location).observe((path) => {
-      this.updateDirContents(path);
-    });
-
-    const onChange = () => {
-      this.refresh();
-    };
-
-    filesystem.onChange(onChange);
-    this.cleanups.push(() => filesystem.offChange(onChange));
+    this.fs = new FsController(this, filesystem);
 
     if (options.places) {
       this.places.dispatch(options.places.slice());
@@ -83,17 +111,59 @@ export class Explorer {
     if (options.staticPlaces) {
       this.staticPlaces.dispatch(options.staticPlaces.slice());
     }
+
+    const { detach } = ExplorerLocation.signal(this.location).observe(
+      (path) => {
+        this.preview.dispatch(undefined);
+        this.updateDirContents(path);
+      },
+    );
+    this.cleanups.push(detach);
+
+    const onChange = this.refresh.bind(this);
+    filesystem.onChange(onChange);
+    this.cleanups.push(() => filesystem.offChange(onChange));
+
+    window.addEventListener("keydown", this.globalKeyDownHandler);
+    this.cleanups.push(() => {
+      window.removeEventListener("keydown", this.globalKeyDownHandler);
+    });
   }
+
+  private globalKeyDownHandler = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      if (this.promptModal.get().open) {
+        this.promptModal.dispatch({
+          open: false,
+        });
+      }
+
+      if (this.contextMenu.get().open) {
+        this.contextMenu.dispatch({
+          open: false,
+        });
+      }
+    }
+  };
 
   private updateDirContents(path: Path | string) {
     const locationPath = path.toString();
     this.filesystem.readdirStat(locationPath).then((stats) => {
       this.currentDir.dispatch(stats);
     });
+    this.filesystem.stat(locationPath).then((stat) => {
+      this.currentDirStat.dispatch(stat);
+    });
   }
 
-  refresh() {
-    this.updateDirContents(this.location.pathname);
+  refresh(dir?: string) {
+    if (dir != null) {
+      if (this.location.path.equals(dir)) {
+        this.updateDirContents(this.location.pathname);
+      }
+    } else {
+      this.updateDirContents(this.location.pathname);
+    }
   }
 
   open(path: string | Path) {
@@ -107,9 +177,11 @@ export class Explorer {
   }
 
   mountTo(element: HTMLElement) {
-    const window = ExplorerWindow({ explorer: this });
-    window.prepend(Styles());
-    element.appendChild(window);
+    if (!this.window) {
+      this.window = ExplorerWindow({ explorer: this });
+      this.window.prepend(Styles());
+    }
+    element.appendChild(this.window);
   }
 
   dispose() {

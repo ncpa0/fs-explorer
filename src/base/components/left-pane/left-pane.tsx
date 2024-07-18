@@ -1,6 +1,6 @@
 import { Explorer, Place } from "../../..";
 import DirectoryIcon from "../../../assets/main-theme/icons/directory.svg";
-import { ACSS } from "../../../utils/css";
+import { ADW } from "../../../utils/css";
 
 export type LeftPaneProps = {
   explorer: Explorer;
@@ -12,9 +12,9 @@ export function LeftPane(props: LeftPaneProps) {
   };
 
   return (
-    <div class={["left-pane", ACSS.Box.box, ACSS.Box.bg3]}>
+    <div class={["left-pane", ADW.Box.box, ADW.Box.bg3]}>
       <div class="places-label">
-        <span class={ACSS.Typography.label}>Places</span>
+        <span class={ADW.Typography.label}>Places</span>
       </div>
       <div class={["left-pane-places"]}>
         {props.explorer.places.derive(places => {
@@ -28,7 +28,7 @@ export function LeftPane(props: LeftPaneProps) {
                 <DirectoryIcon />
               </div>
               <div class="label">
-                <span class={ACSS.Typography.text}>
+                <span class={ADW.Typography.text}>
                   {place.label}
                 </span>
               </div>
@@ -50,7 +50,7 @@ export function LeftPane(props: LeftPaneProps) {
                 <DirectoryIcon />
               </div>
               <div class="label">
-                <span class={ACSS.Typography.text}>
+                <span class={ADW.Typography.text}>
                   {place.label}
                 </span>
               </div>

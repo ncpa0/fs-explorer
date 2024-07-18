@@ -1,1 +1,1 @@
-export * as ACSS from "adwavecss";
+export * as ADW from "adwavecss";

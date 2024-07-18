@@ -1,6 +1,37 @@
+.context-backdrop {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
+
+    &.hidden {
+        display: none;
+    }
+}
+
 .context-menu {
     position: absolute;
-    padding: .5em;
+    padding: .3em;
     background: var(--clr-bg-4);
     z-index: 10;
+    border-radius: 6px;
+    transition: height 0.2s ease-in-out, width 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+
+    &&& {
+        font-size: .8em;
+    }
+
+    &.hidden,
+    & .hidden {
+        display: none;
+    }
+
+    & button {
+        text-align: start;
+    }
 }

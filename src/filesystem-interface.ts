@@ -32,6 +32,6 @@ export interface Filesystem {
   touch(path: string): Resolvable<void>;
   exists(path: string): Resolvable<boolean>;
   dirExists(path: string): Resolvable<boolean>;
-  onChange(callback: () => void): void;
-  offChange(callback: () => void): void;
+  onChange(callback: (dirPath?: string) => void): void;
+  offChange(callback: (dirPath?: string) => void): void;
 }

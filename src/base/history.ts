@@ -9,21 +9,25 @@ export class ExplorerPopEvent extends Event {
 
 export class ExplorerLocation {
   static set(location: ExplorerLocation, path: Path) {
-    location.path.dispatch(path);
+    location._path.dispatch(path);
   }
 
   static signal(location: ExplorerLocation) {
-    return location.path.readonly();
+    return location._path.readonly();
   }
 
   static pathOf(location: ExplorerLocation) {
-    return location.path.get();
+    return location._path.get();
   }
 
-  private path = sig(new Path("/"));
+  private _path = sig(new Path("/"));
 
   get pathname() {
-    return this.path.get().toString();
+    return this._path.get().toString();
+  }
+
+  get path() {
+    return this._path.get();
   }
 }
 
@@ -32,7 +36,7 @@ export class ExplorerHistory {
   private location = new ExplorerLocation();
 
   private stack: { path: Path }[] = [
-    { path: ExplorerLocation.pathOf(this.location) },
+    { path: this.location.path },
   ];
   private stackPosition = 1;
 
@@ -40,7 +44,7 @@ export class ExplorerHistory {
     if (this.stackPosition < this.stack.length) {
       this.stack.splice(
         this.stackPosition,
-        this.stack.length - this.stackPosition
+        this.stack.length - this.stackPosition,
       );
     }
     const path = Path.from(p);

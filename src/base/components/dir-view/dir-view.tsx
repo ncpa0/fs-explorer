@@ -4,7 +4,8 @@ import { Typography } from "adwavecss";
 import { Explorer } from "../../..";
 import { FStat } from "../../../filesystem-interface";
 import { FileActionContext } from "../../../interfaces/file-action";
-import { ACSS } from "../../../utils/css";
+import { ADW } from "../../../utils/css";
+import { isLmb, isRmb } from "../../../utils/events";
 import { Fmt } from "../../../utils/formatters";
 import { getFileIcon } from "../../../utils/get-file-icon";
 import { Path } from "../../../utils/path";
@@ -16,6 +17,7 @@ export type DirViewProps = {
 
 export function DirView(props: DirViewProps) {
   const files = props.explorer.currentDir;
+  const previewOpen = props.explorer.preview;
 
   const sorting = sig({ mode: SortMode.Alpha, reverse: false });
 
@@ -30,32 +32,66 @@ export function DirView(props: DirViewProps) {
       ),
   );
 
+  const handleClick = (event: MouseEvent) => {
+    if (isRmb(event)) {
+      const windowRect = props.explorer.window!.getBoundingClientRect();
+      const left = event.clientX - windowRect.left;
+      const top = event.clientY - windowRect.top;
+      const bottom = windowRect.height - top;
+
+      const halfPoint = windowRect.height / 2;
+      const isBelowHalf = top > halfPoint;
+
+      props.explorer.contextMenu.dispatch({
+        open: true,
+        left: left,
+        top: isBelowHalf ? undefined : top,
+        bottom: isBelowHalf ? bottom : undefined,
+      });
+      event.stopPropagation();
+      event.preventDefault();
+    }
+  };
+
+  const maxWidthSig = sig.literal`calc(100% - ${
+    sig.when(previewOpen, sig.as("32em"), sig.as("16em"))
+  })`;
+
   return (
     <div
-      class={{
-        [ACSS.Box.box]: true,
-        [ACSS.Box.bg2]: true,
-        "dir-view": true,
-        "empty": visibleFiles.derive(files => files.length === 0),
+      class="dir-view-container"
+      onmousedown={handleClick}
+      oncontextmenu={e => e.preventDefault()}
+      style={{
+        maxWidth: maxWidthSig,
       }}
     >
-      {visibleFiles.derive(visibleFiles => {
-        if (visibleFiles.length === 0) {
-          return (
-            <div class="empty-dir-msg">
-              <span class={[Typography.subtitle]}>
-                This directory is empty.
-              </span>
-            </div>
-          );
-        }
+      <div
+        class={{
+          [ADW.Box.box]: true,
+          [ADW.Box.bg2]: true,
+          "dir-view": true,
+          "empty": visibleFiles.derive(files => files.length === 0),
+        }}
+      >
+        {visibleFiles.derive(visibleFiles => {
+          if (visibleFiles.length === 0) {
+            return (
+              <div class="empty-dir-msg">
+                <span class={[Typography.subtitle]}>
+                  This directory is empty.
+                </span>
+              </div>
+            );
+          }
 
-        return <FileViewHeader sorting={sorting} />;
-      })}
-      <Range data={visibleFiles} into={<div class="dcontents" />}>
-        {(file) => <FileEntry explorer={props.explorer} file={file} />}
-      </Range>
-      <div class="gaper" />
+          return <FileViewHeader sorting={sorting} />;
+        })}
+        <Range data={visibleFiles} into={<div class="dcontents" />}>
+          {(file) => <FileEntry explorer={props.explorer} file={file} />}
+        </Range>
+        <div class="gaper" />
+      </div>
     </div>
   );
 }
@@ -115,19 +151,26 @@ function FileViewHeader(props: {
   );
 }
 
-const isLmb = (event: MouseEvent) =>
-  event.button === 0 && !event.ctrlKey && !event.shiftKey && !event.altKey;
-const isRmb = (event: MouseEvent) =>
-  event.button === 2 && !event.ctrlKey && !event.shiftKey && !event.altKey;
-
 function FileEntry(props: { explorer: Explorer; file: FStat }) {
   const handleClick = (event: MouseEvent) => {
     if (isRmb(event)) {
+      const windowRect = props.explorer.window!.getBoundingClientRect();
+      const left = event.clientX - windowRect.left;
+      const top = event.clientY - windowRect.top;
+      const bottom = windowRect.height - top;
+
+      const halfPoint = windowRect.height / 2;
+      const isBelowHalf = top > halfPoint;
+
       props.explorer.contextMenu.dispatch({
+        open: true,
         file: props.file,
-        posX: event.clientX,
-        posY: event.clientY,
+        left: left,
+        top: isBelowHalf ? undefined : top,
+        bottom: isBelowHalf ? bottom : undefined,
       });
+      event.stopPropagation();
+      event.preventDefault();
       return;
     }
 
@@ -148,12 +191,17 @@ function FileEntry(props: { explorer: Explorer; file: FStat }) {
         actionCtx.openPreview();
       }
     }
+    event.stopPropagation();
   };
 
   const Icon = getFileIcon(props.file);
 
   return (
-    <div class={["file-entry"]} onmousedown={handleClick}>
+    <div
+      class={["file-entry"]}
+      onmousedown={handleClick}
+      oncontextmenu={e => e.preventDefault()}
+    >
       <div class={{ "file-icon": true, directory: props.file.directory }}>
         <Icon />
       </div>

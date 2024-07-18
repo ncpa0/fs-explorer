@@ -1,4 +1,7 @@
-/* transition: background-color .2s; */
+.dir-view-container {
+    flex: 1;
+}
+
 .dir-view {
     flex: 1;
     display: grid;

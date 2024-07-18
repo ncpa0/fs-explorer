@@ -1,12 +1,16 @@
-@import "./base/components/window/styles.css";
-
-@import "./base/components/location-bar/styles.css";
+@import "./base/components/context-menu/styles.css";
 
 @import "./base/components/dir-view/styles.css";
 
 @import "./base/components/left-pane/styles.css";
 
+@import "./base/components/location-bar/styles.css";
+
 @import "./base/components/preview-pane/styles.css";
+
+@import "./base/components/prompt/styles.css";
+
+@import "./base/components/window/styles.css";
 
 .explorer-window {
     & * {

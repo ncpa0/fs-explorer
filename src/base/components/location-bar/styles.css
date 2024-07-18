@@ -1,6 +1,6 @@
 .location-bar {
     display: flex;
-    margin: 1em 1em;
+    margin: .5em .8em;
 
     & button.btn {
         display: flex;

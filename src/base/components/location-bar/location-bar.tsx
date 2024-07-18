@@ -3,7 +3,7 @@ import { Explorer } from "../../..";
 import ArrowBackwardIcon from "../../../assets/main-theme/icons/arrow-back.svg";
 import ArrowForwardIcon from "../../../assets/main-theme/icons/arrow-forward.svg";
 import ArrowUpIcon from "../../../assets/main-theme/icons/arrow-up.svg";
-import { ACSS } from "../../../utils/css";
+import { ADW } from "../../../utils/css";
 import { Path } from "../../../utils/path";
 import { ExplorerLocation } from "../../history";
 
@@ -112,7 +112,7 @@ function LocationEditor(
 
   const input = (
     <input
-      class={[ACSS.Input.input, "location-editor"]}
+      class={[ADW.Input.input, "location-editor"]}
       value={props.location.get().toString()}
       onchange={handleChange}
       onkeydown={handleKeyDown}
@@ -131,25 +131,25 @@ function ControlButtons(props: {
     <div class={["control-buttons"]}>
       <button
         onmousedown={props.onBack}
-        class={[ACSS.Button.button, ACSS.Button.flat, ACSS.Button.square]}
+        class={[ADW.Button.button, ADW.Button.flat, ADW.Button.square]}
       >
-        <span class={["control-icon", ACSS.Typography.text]}>
+        <span class={["control-icon", ADW.Typography.text]}>
           <ArrowBackwardIcon />
         </span>
       </button>
       <button
         onmousedown={props.onForward}
-        class={[ACSS.Button.button, ACSS.Button.flat, ACSS.Button.square]}
+        class={[ADW.Button.button, ADW.Button.flat, ADW.Button.square]}
       >
-        <span class={["control-icon", ACSS.Typography.text]}>
+        <span class={["control-icon", ADW.Typography.text]}>
           <ArrowForwardIcon />
         </span>
       </button>
       <button
         onmousedown={props.onUp}
-        class={[ACSS.Button.button, ACSS.Button.flat, ACSS.Button.square]}
+        class={[ADW.Button.button, ADW.Button.flat, ADW.Button.square]}
       >
-        <span class={["control-icon", ACSS.Typography.text]}>
+        <span class={["control-icon", ADW.Typography.text]}>
           <ArrowUpIcon />
         </span>
       </button>
@@ -179,7 +179,7 @@ export function LocationBar(props: LocationBarProps) {
         onBack={() => explorer.history.back()}
         onForward={() => explorer.history.forward()}
         onUp={() => {
-          const p = ExplorerLocation.pathOf(explorer.location);
+          const p = explorer.location.path;
           const up = p.base();
           if (!up.equals(p)) {
             explorer.history.push(up);
