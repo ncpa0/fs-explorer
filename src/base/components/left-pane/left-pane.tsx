@@ -1,5 +1,5 @@
-import { Explorer, Place } from "../../..";
 import DirectoryIcon from "../../../assets/main-theme/icons/directory.svg";
+import { Explorer, Place } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 
 export type LeftPaneProps = {

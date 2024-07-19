@@ -1,4 +1,4 @@
-import { Explorer } from "../../..";
+import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 import { ContextMenu } from "../context-menu/context-menu";
 import { DirView } from "../dir-view/dir-view";

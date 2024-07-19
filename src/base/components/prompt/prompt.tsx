@@ -1,6 +1,6 @@
 import { $component } from "@ncpa0cpl/vanilla-jsx";
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
-import { Explorer } from "../../..";
+import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 
 export interface PropmptProps {

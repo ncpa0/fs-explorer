@@ -1,4 +1,4 @@
-import { Explorer } from "../../..";
+import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { ADW } from "../../../utils/css";
 import { Fmt } from "../../../utils/formatters";

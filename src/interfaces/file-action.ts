@@ -1,4 +1,4 @@
-import { Explorer } from "..";
+import { Explorer } from "../explorer";
 import { FStat } from "../filesystem-interface";
 
 export class FileActionContext {

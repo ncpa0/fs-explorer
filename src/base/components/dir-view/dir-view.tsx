@@ -1,7 +1,7 @@
 import { Range } from "@ncpa0cpl/vanilla-jsx";
 import { sig, Signal } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Typography } from "adwavecss";
-import { Explorer } from "../../..";
+import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { FileActionContext } from "../../../interfaces/file-action";
 import { ADW } from "../../../utils/css";

@@ -1,4 +1,4 @@
-import { Explorer } from "../../..";
+import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { FileActionContext } from "../../../interfaces/file-action";
 import { ADW } from "../../../utils/css";

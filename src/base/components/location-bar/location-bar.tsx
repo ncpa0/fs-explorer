@@ -1,8 +1,8 @@
 import { ReadonlySignal, sig } from "@ncpa0cpl/vanilla-jsx/signals";
-import { Explorer } from "../../..";
 import ArrowBackwardIcon from "../../../assets/main-theme/icons/arrow-back.svg";
 import ArrowForwardIcon from "../../../assets/main-theme/icons/arrow-forward.svg";
 import ArrowUpIcon from "../../../assets/main-theme/icons/arrow-up.svg";
+import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 import { Path } from "../../../utils/path";
 import { ExplorerLocation } from "../../history";
