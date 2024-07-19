@@ -94,6 +94,18 @@
             }
         }
 
+        &.selected {
+            & > * {
+                background-color: var(--clr-primary-100);
+            }
+
+            &:hover {
+                & > * {
+                    background-color: var(--clr-primary-200);
+                }
+            }
+        }
+
         &:hover {
             cursor: pointer;
 

@@ -1,7 +1,12 @@
 {
   "name": "fs-explorer",
   "version": "1.0.0",
-  "main": "./dist/index.js",
+  "main": "./dist/legacy/index.js",
+  "exports": {
+    "import": "./dist/esm/index.mjs",
+    "require": "./dist/cjs/index.cjs",
+    "types": "./dist/types/index.d.ts"
+  },
   "keywords": [],
   "repository": {
     "type": "git",

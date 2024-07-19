@@ -48,14 +48,14 @@ export interface ExplorerOptions {
 
 export interface ContextMenuData {
   open: boolean;
-  file?: FStat;
+  file?: FStat[];
   left?: number;
   top?: number;
   bottom?: number;
 }
 
 export interface FileClipboard {
-  file?: FStat;
+  file: FStat[];
   cut?: boolean;
 }
 
@@ -70,6 +70,7 @@ export interface PromptModal {
 
 export class Explorer {
   private cleanups: Array<() => void> = [];
+  private escapeKeyHandlers: Array<(e: KeyboardEvent) => void> = [];
 
   public window: Element | null = null;
 
@@ -88,7 +89,7 @@ export class Explorer {
   // right pane preview
   public readonly preview = sig<undefined | FStat>(undefined);
   public readonly actionError = sig<ActionError | undefined>(undefined);
-  public readonly clipboard = sig<FileClipboard>({});
+  public readonly clipboard = sig<FileClipboard>({ file: [] });
 
   public readonly promptModal = sig<PromptModal>({
     open: false,
@@ -136,12 +137,18 @@ export class Explorer {
         this.promptModal.dispatch({
           open: false,
         });
+        return;
       }
 
       if (this.contextMenu.get().open) {
         this.contextMenu.dispatch({
           open: false,
         });
+        return;
+      }
+
+      for (const handler of this.escapeKeyHandlers) {
+        handler(e);
       }
     }
   };
@@ -154,6 +161,16 @@ export class Explorer {
     this.filesystem.stat(locationPath).then((stat) => {
       this.currentDirStat.dispatch(stat);
     });
+  }
+
+  onEscapePress(handler: (e: KeyboardEvent) => void) {
+    this.escapeKeyHandlers.push(handler);
+    return () => {
+      const idx = this.escapeKeyHandlers.indexOf(handler);
+      if (idx !== -1) {
+        this.escapeKeyHandlers.splice(idx, 1);
+      }
+    };
   }
 
   refresh(dir?: string) {

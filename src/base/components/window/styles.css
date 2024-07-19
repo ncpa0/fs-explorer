@@ -1,3 +1,4 @@
+/** top bar is 3em, statusbar is 2em */
 .explorer-window {
     position: relative;
     display: flex;
@@ -11,7 +12,7 @@
     & .explorer-content {
         flex: 1;
         flex-direction: row;
-        max-height: calc(100% - 3em);
+        max-height: calc(100% - 5.1em);
     }
 
     & * {

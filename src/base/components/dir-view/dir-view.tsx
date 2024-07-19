@@ -9,16 +9,21 @@ import { isLmb, isRmb } from "../../../utils/events";
 import { Fmt } from "../../../utils/formatters";
 import { getFileIcon } from "../../../utils/get-file-icon";
 import { Path } from "../../../utils/path";
+import { ExplorerLocation } from "../../history";
+import { DirStat } from "../statusbar/statusbar";
 import { sortFiles, SortMode } from "./sort-files";
 
 export type DirViewProps = {
   explorer: Explorer;
+  selectedFilesStat: Signal<DirStat | undefined>;
 };
 
 export function DirView(props: DirViewProps) {
-  const files = props.explorer.currentDir;
-  const previewOpen = props.explorer.preview;
+  const { explorer, selectedFilesStat } = props;
+  const files = explorer.currentDir;
+  const previewOpen = explorer.preview;
 
+  const selectedFiles = sig<FStat[]>([]);
   const sorting = sig({ mode: SortMode.Alpha, reverse: false });
 
   const visibleFiles = sig.derive(
@@ -32,6 +37,43 @@ export function DirView(props: DirViewProps) {
       ),
   );
 
+  visibleFiles.add((visible) => {
+    const selected = selectedFiles.get();
+    const visibleSelected: FStat[] = [];
+    for (let i = 0; i < selected.length; i++) {
+      const sfile = selected[i]!;
+      const isVisible = visible.some(f => f.path === sfile.path);
+      if (isVisible) {
+        visibleSelected.push(sfile);
+      }
+    }
+    if (visibleSelected.length !== selected.length) {
+      selectedFiles.dispatch(visibleSelected);
+    }
+  });
+
+  explorer.onEscapePress(() => {
+    selectedFiles.dispatch([]);
+  });
+
+  ExplorerLocation.signal(explorer.location).add(() => {
+    selectedFiles.dispatch([]);
+  });
+
+  selectedFiles.add((selected) => {
+    if (selected.length === 0) {
+      selectedFilesStat.dispatch(undefined);
+      return;
+    }
+    const nonDirs = selected.filter(f => !f.directory);
+    const sizeTotal = nonDirs.reduce((acc, f) => acc + f.size, 0);
+    selectedFilesStat.dispatch({
+      size: Fmt.size(sizeTotal),
+      filecount: String(nonDirs.length),
+      dircount: String(selected.length - nonDirs.length),
+    });
+  });
+
   const handleClick = (event: MouseEvent) => {
     if (isRmb(event)) {
       const windowRect = props.explorer.window!.getBoundingClientRect();
@@ -42,8 +84,10 @@ export function DirView(props: DirViewProps) {
       const halfPoint = windowRect.height / 2;
       const isBelowHalf = top > halfPoint;
 
+      const selected = selectedFiles.get();
       props.explorer.contextMenu.dispatch({
         open: true,
+        file: selected.length > 0 ? selected : undefined,
         left: left,
         top: isBelowHalf ? undefined : top,
         bottom: isBelowHalf ? bottom : undefined,
@@ -88,7 +132,13 @@ export function DirView(props: DirViewProps) {
           return <FileViewHeader sorting={sorting} />;
         })}
         <Range data={visibleFiles} into={<div class="dcontents" />}>
-          {(file) => <FileEntry explorer={props.explorer} file={file} />}
+          {(file) => (
+            <FileEntry
+              explorer={props.explorer}
+              selectedFiles={selectedFiles}
+              file={file}
+            />
+          )}
         </Range>
         <div class="gaper" />
       </div>
@@ -151,10 +201,36 @@ function FileViewHeader(props: {
   );
 }
 
-function FileEntry(props: { explorer: Explorer; file: FStat }) {
+function FileEntry(
+  props: { explorer: Explorer; file: FStat; selectedFiles: Signal<FStat[]> },
+) {
+  const { explorer, file, selectedFiles } = props;
+
+  const isSelected = selectedFiles.derive(selected =>
+    selected.some(f => f.path === file.path)
+  );
+
+  const toggleSelect = () => {
+    const fpath = file.path;
+    selectedFiles.dispatch(selected => {
+      const idx = selected.findIndex(f => f.path === fpath);
+      if (idx === -1) {
+        return [...selected, file];
+      }
+      const copy = selected.slice();
+      copy.splice(idx, 1);
+      return copy;
+    });
+  };
+
   const handleClick = (event: MouseEvent) => {
+    if (isLmb(event, "ctrl")) {
+      toggleSelect();
+      return;
+    }
+
     if (isRmb(event)) {
-      const windowRect = props.explorer.window!.getBoundingClientRect();
+      const windowRect = explorer.window!.getBoundingClientRect();
       const left = event.clientX - windowRect.left;
       const top = event.clientY - windowRect.top;
       const bottom = windowRect.height - top;
@@ -162,9 +238,10 @@ function FileEntry(props: { explorer: Explorer; file: FStat }) {
       const halfPoint = windowRect.height / 2;
       const isBelowHalf = top > halfPoint;
 
-      props.explorer.contextMenu.dispatch({
+      const selected = selectedFiles.get();
+      explorer.contextMenu.dispatch({
         open: true,
-        file: props.file,
+        file: selected.length ? selected : [file],
         left: left,
         top: isBelowHalf ? undefined : top,
         bottom: isBelowHalf ? bottom : undefined,
@@ -176,17 +253,17 @@ function FileEntry(props: { explorer: Explorer; file: FStat }) {
 
     if (!isLmb(event)) return;
 
-    if (props.file.directory) {
-      const path = new Path(props.file.path);
-      props.explorer.open(path);
+    if (file.directory) {
+      const path = new Path(file.path);
+      explorer.open(path);
     } else {
       const actionCtx = new FileActionContext(
-        props.explorer,
-        props.file,
+        explorer,
+        file,
       );
-      const action = props.explorer.options?.openAction?.(props.file.path);
+      const action = explorer.options?.openAction?.(file.path);
       if (action) {
-        action(props.file, actionCtx);
+        action(file, actionCtx);
       } else {
         actionCtx.openPreview();
       }
@@ -194,25 +271,28 @@ function FileEntry(props: { explorer: Explorer; file: FStat }) {
     event.stopPropagation();
   };
 
-  const Icon = getFileIcon(props.file);
+  const Icon = getFileIcon(file);
 
   return (
     <div
-      class={["file-entry"]}
+      class={{
+        "file-entry": true,
+        selected: isSelected,
+      }}
       onmousedown={handleClick}
       oncontextmenu={e => e.preventDefault()}
     >
-      <div class={{ "file-icon": true, directory: props.file.directory }}>
+      <div class={{ "file-icon": true, directory: file.directory }}>
         <Icon />
       </div>
       <div class="filename">
-        <span class={[Typography.text]}>{props.file.name}</span>
+        <span class={[Typography.text]}>{file.name}</span>
       </div>
       <div class="file-size">
-        <span class={[Typography.text]}>{Fmt.size(props.file.size)}</span>
+        <span class={[Typography.text]}>{Fmt.size(file.size)}</span>
       </div>
       <div class="file-modified">
-        <span class={[Typography.text]}>{Fmt.date(props.file.mtime)}</span>
+        <span class={[Typography.text]}>{Fmt.date(file.mtime)}</span>
       </div>
     </div>
   );

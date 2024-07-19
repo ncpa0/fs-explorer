@@ -19,6 +19,7 @@ export class Path {
         }
         result._segments.push(segment);
       }
+      Object.freeze(result._segments);
       return result;
     }
 
@@ -41,6 +42,7 @@ export class Path {
       }
       this._segments.push(segment);
     }
+    Object.freeze(this._segments);
   }
 
   private concatSegments(): string {
@@ -58,6 +60,7 @@ export class Path {
     const result = Object.create(Path.prototype) as Path;
     result._segments = this._segments.concat(path._segments);
     result._type = path._type;
+    Object.freeze(result._segments);
     return result;
   }
 
@@ -69,6 +72,7 @@ export class Path {
     result._segments = this._segments.slice();
     result._segments.push(segment);
     result._type = this._type;
+    Object.freeze(result._segments);
     return result;
   }
 
@@ -77,6 +81,7 @@ export class Path {
     const result = Object.create(Path.prototype) as Path;
     result._segments = this._segments.slice(0, -1);
     result._type = this._type;
+    Object.freeze(result._segments);
     return result;
   }
 
@@ -99,6 +104,7 @@ export class Path {
         result._segments.push(segment);
       }
     }
+    Object.freeze(result._segments);
     return result;
   }
 

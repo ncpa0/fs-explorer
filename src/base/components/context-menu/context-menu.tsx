@@ -1,3 +1,4 @@
+import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { FileActionContext } from "../../../interfaces/file-action";
@@ -51,7 +52,7 @@ export function ContextMenu(props: ContextMenuProps) {
             return (
               <FileMenuButtons
                 explorer={props.explorer}
-                file={file}
+                files={file}
               />
             );
           }
@@ -69,10 +70,11 @@ export function ContextMenu(props: ContextMenuProps) {
 
 function FileMenuButtons(props: {
   explorer: Explorer;
-  file: FStat;
+  files: FStat[];
 }) {
-  const { explorer, file } = props;
-  const cantPaste = explorer.clipboard.derive(c => !c.file);
+  const { explorer, files } = props;
+  const singleFile = files.length === 1 ? files[0]! : undefined;
+  const cantPaste = explorer.clipboard.derive(c => c.file.length === 0);
   const cantWrite = explorer.currentDirStat.derive(f => !f?.write);
 
   const closeContextMenu = () => {
@@ -92,18 +94,24 @@ function FileMenuButtons(props: {
     closeContextMenu,
   );
 
-  const openAction = explorer.options?.openAction?.(file.path);
+  const openAction = singleFile
+    ? explorer.options?.openAction?.(files[0]!.path)
+    : undefined;
   const handleMainActionClick = () => {
     closeContextMenu();
     const ctx = new FileActionContext(
       props.explorer,
-      file,
+      singleFile!,
     );
-    openAction!(file, ctx);
+    openAction!(singleFile!, ctx);
   };
 
-  const customActions =
-    props.explorer.options?.actions?.filter(a => a.match.test(file.path)) ?? [];
+  const customActions = singleFile
+    ? props.explorer.options?.actions?.filter(a =>
+      a.match.test(singleFile.path)
+    )
+      ?? []
+    : [];
 
   return (
     <div class="dcontents">
@@ -147,7 +155,7 @@ function FileMenuButtons(props: {
               {customActions.map(action => {
                 const handler = () => {
                   closeContextMenu();
-                  action.run(file);
+                  action.run(singleFile!);
                 };
                 return (
                   <button
@@ -182,28 +190,28 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          [ADW.Button.disabled]: cantPaste,
-          hidden: !file.directory || !file.write,
+          [ADW.Button.disabled]: sig.or(cantPaste, !singleFile),
+          hidden: !singleFile || !singleFile?.directory || !singleFile?.write,
         }}
-        disabled={cantPaste}
+        disabled={sig.or(cantPaste, !singleFile)}
         onmousedown={() => {
           closeContextMenu();
-          if (file.directory && file.write) {
-            props.explorer.fs.clipboardPaste(file.path);
+          if (singleFile && singleFile.directory && singleFile.write) {
+            props.explorer.fs.clipboardPaste(singleFile.path);
           }
         }}
       >
-        Paste To {trimTo(file.name, 8)}
+        Paste To {!!singleFile && trimTo(singleFile.name, 12)}
       </button>
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: !file.read,
+          hidden: files.some(f => !f.read),
         }}
         onmousedown={() => {
           closeContextMenu();
           props.explorer.clipboard.dispatch({
-            file,
+            file: files,
             cut: false,
           });
         }}
@@ -213,12 +221,12 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: !file.write || !file.read,
+          hidden: files.some(f => !f.read || !f.write),
         }}
         onmousedown={() => {
           closeContextMenu();
           props.explorer.clipboard.dispatch({
-            file,
+            file: files,
             cut: true,
           });
         }}
@@ -228,11 +236,13 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: !file.write,
+          hidden: files.some(f => !f.write),
         }}
         onmousedown={() => {
           closeContextMenu();
-          props.explorer.fs.remove(file);
+          for (const file of files) {
+            props.explorer.fs.remove(file);
+          }
         }}
       >
         Delete
@@ -240,17 +250,20 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: !file.write,
+          hidden: !singleFile || !singleFile.write,
         }}
         onmousedown={() => {
+          if (!singleFile) return;
           closeContextMenu();
           explorer.promptModal.dispatch({
             open: true,
             prompt: "New name:",
-            initialValue: file.name,
+            initialValue: singleFile.name,
             onConfirm: (name) => {
-              const newPath = Path.from(file.path).base().joinSegment(name);
-              explorer.fs.move(file, newPath);
+              const newPath = Path.from(singleFile.path).base().joinSegment(
+                name,
+              );
+              explorer.fs.move(singleFile, newPath);
             },
             validate: (name) => {
               if (!name) {

@@ -12,10 +12,15 @@
 
 @import "./base/components/window/styles.css";
 
+@import "./base/components/statusbar/styles.css";
+
 .explorer-window {
+    box-sizing: border-box;
+
     & * {
         font-size: inherit;
         user-select: none;
+        box-sizing: border-box;
     }
 
     & .dcontents {

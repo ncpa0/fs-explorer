@@ -42,11 +42,23 @@ export const Prompt = $component(function Prompt(props: PropmptProps, api) {
   };
 
   api.onChange(() => {
-    const initialValue = promptModal.get().initialValue;
+    const { open, initialValue } = promptModal.get();
     if (initialValue != null && inputValue.get() === "") {
       inputValue.dispatch(initialValue);
     }
+    if (open) {
+      inputElem.focus();
+    }
   }, [promptModal]);
+
+  const inputElem = (
+    <input
+      class={ADW.Input.input}
+      value={inputValue}
+      oninput={handleInput}
+      onkeydown={handleKeyDown}
+    />
+  ) as HTMLInputElement;
 
   return (
     <div
@@ -63,12 +75,7 @@ export const Prompt = $component(function Prompt(props: PropmptProps, api) {
         </div>
         <div class="prompt-body">
           <div class={["prompt-buttons", ADW.Input.linked]}>
-            <input
-              class={ADW.Input.input}
-              value={inputValue}
-              oninput={handleInput}
-              onkeydown={handleKeyDown}
-            />
+            {inputElem}
             <button
               class={{
                 [ADW.Button.button]: true,

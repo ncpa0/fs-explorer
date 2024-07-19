@@ -23,7 +23,7 @@
     justify-content: stretch;
 
     &&& {
-        font-size: .8em;
+        font-size: .9em;
     }
 
     &.hidden,

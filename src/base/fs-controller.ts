@@ -92,13 +92,16 @@ export class FsController {
     const clip = this.explorer.clipboard.get();
 
     if (clip.file) {
+      this.explorer.clipboard.dispatch({ file: [] });
       if (clip.cut) {
-        this.move(clip.file, to);
+        for (const f of clip.file) {
+          this.move(f, to.joinSegment(f.name));
+        }
       } else {
-        this.copy(clip.file, to);
+        for (const f of clip.file) {
+          this.copy(f, to.joinSegment(f.name));
+        }
       }
-
-      this.explorer.clipboard.dispatch({});
     }
   }
 }
