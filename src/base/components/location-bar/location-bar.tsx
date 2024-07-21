@@ -126,6 +126,8 @@ function ControlButtons(props: {
   onBack: () => void;
   onForward: () => void;
   onUp: () => void;
+  onReload: () => void;
+  onGoHome: () => void;
 }) {
   return (
     <div class={["control-buttons"]}>
@@ -153,6 +155,23 @@ function ControlButtons(props: {
           <ArrowUpIcon />
         </span>
       </button>
+      <button
+        onmousedown={props.onReload}
+        class={[ADW.Button.button, ADW.Button.flat, ADW.Button.square]}
+      >
+        <span class={["control-icon", ADW.Typography.text]}>
+          R
+        </span>
+      </button>
+      <button
+        onmousedown={props.onGoHome}
+        class={[ADW.Button.button, ADW.Button.flat, ADW.Button.square]}
+        style={{ placeSelf: "flex-end" }}
+      >
+        <span class={["control-icon", ADW.Typography.text]}>
+          H
+        </span>
+      </button>
     </div>
   );
 }
@@ -174,7 +193,7 @@ export function LocationBar(props: LocationBarProps) {
   };
 
   return (
-    <div class={["location-bar"]}>
+    <div class={["location-bar", ADW.Box.box, ADW.Box.bg2]}>
       <ControlButtons
         onBack={() => explorer.history.back()}
         onForward={() => explorer.history.forward()}
@@ -185,6 +204,8 @@ export function LocationBar(props: LocationBarProps) {
             explorer.history.push(up);
           }
         }}
+        onReload={() => explorer.refresh()}
+        onGoHome={() => explorer.open("/")}
       />
       {mode.derive(m => {
         if (m === BarMode.Preview) {

@@ -79,7 +79,6 @@
 
         & > * {
             padding: .25em .5em;
-            margin-block: .2em;
 
             &:first-child {
                 border-top-left-radius: 4px;

@@ -131,6 +131,7 @@ export function DirView(props: DirViewProps) {
 
           return <FileViewHeader sorting={sorting} />;
         })}
+        <Gap />
         <Range data={visibleFiles} into={<div class="dcontents" />}>
           {(file) => (
             <FileEntry
@@ -140,9 +141,20 @@ export function DirView(props: DirViewProps) {
             />
           )}
         </Range>
-        <div class="gaper" />
+        <Gap />
       </div>
     </div>
+  );
+}
+
+function Gap() {
+  return (
+    <>
+      <div class="gaper" />
+      <div class="gaper" />
+      <div class="gaper" />
+      <div class="gaper" />
+    </>
   );
 }
 
