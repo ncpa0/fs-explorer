@@ -67,12 +67,10 @@ function FileMenuButtons(props: {
   explorer: Explorer;
   files: readonly FStat[];
 }) {
-  const { explorer, files } = props;
-  const dir = explorer.directory;
+  const { explorer } = props;
   const menu = explorer.contextMenu;
 
-  const cantPaste = explorer.clipboard.files.derive(f => f.length === 0);
-  const cantWrite = dir.stat.derive(f => !f?.write);
+  const canPaste = menu.actions.isPossibleTo.paste();
 
   let singleFile = menu.getTargetFile();
 
@@ -83,7 +81,7 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: !menu.actions.canOpen(),
+          hidden: !menu.actions.isPossibleTo.open(),
         }}
         onmousedown={() => menu.actions.open()}
       >
@@ -92,7 +90,7 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: cantWrite,
+          hidden: !menu.actions.isPossibleTo.createFile(),
         }}
         onmousedown={() => menu.actions.createFile()}
       >
@@ -101,7 +99,7 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: cantWrite,
+          hidden: !menu.actions.isPossibleTo.createDirectory(),
         }}
         onmousedown={() => menu.actions.createDirectory()}
       >
@@ -142,10 +140,10 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          [ADW.Button.disabled]: cantPaste,
-          hidden: cantWrite,
+          [ADW.Button.disabled]: !canPaste,
+          hidden: !canPaste,
         }}
-        disabled={cantPaste}
+        disabled={!canPaste}
         onmousedown={() => menu.actions.paste()}
       >
         Paste Here
@@ -153,10 +151,11 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          [ADW.Button.disabled]: sig.or(cantPaste, !singleFile),
-          hidden: !singleFile || !singleFile?.directory || !singleFile?.write,
+          [ADW.Button.disabled]: !menu.actions.isPossibleTo.pasteTo()
+            || !singleFile,
+          hidden: !menu.actions.isPossibleTo.pasteTo(),
         }}
-        disabled={sig.or(cantPaste, !singleFile)}
+        disabled={!menu.actions.isPossibleTo.pasteTo() || !singleFile}
         onmousedown={() => menu.actions.pasteTo()}
       >
         Paste To {!!singleFile && trimTo(singleFile.name, 12)}
@@ -164,7 +163,7 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: files.some(f => !f.read),
+          hidden: !menu.actions.isPossibleTo.copy(),
         }}
         onmousedown={() => menu.actions.copy()}
       >
@@ -173,7 +172,7 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: files.some(f => !f.read || !f.write),
+          hidden: !menu.actions.isPossibleTo.cut(),
         }}
         onmousedown={() => menu.actions.cut()}
       >
@@ -182,7 +181,7 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: files.some(f => !f.write),
+          hidden: !menu.actions.isPossibleTo.delete(),
         }}
         onmousedown={() => menu.actions.delete()}
       >
@@ -191,7 +190,7 @@ function FileMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: !singleFile || !singleFile.write,
+          hidden: !menu.actions.isPossibleTo.rename(),
         }}
         onmousedown={() => menu.actions.rename()}
       >
@@ -205,18 +204,16 @@ function DirMenuButtons(props: {
   explorer: Explorer;
 }) {
   const { explorer } = props;
-  const dir = explorer.directory;
   const menu = explorer.contextMenu;
 
-  const cantWrite = dir.stat.derive(f => !f?.write);
-  const cantPaste = explorer.clipboard.files.derive(f => !f.length);
+  const canPaste = menu.actions.isPossibleTo.paste();
 
   return (
     <div class="dcontents">
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: cantWrite,
+          hidden: menu.actions.isPossibleTo.createFile(),
         }}
         onmousedown={() => menu.actions.createFile()}
       >
@@ -225,7 +222,7 @@ function DirMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: cantWrite,
+          hidden: menu.actions.isPossibleTo.createDirectory(),
         }}
         onmousedown={() => menu.actions.createDirectory()}
       >
@@ -234,10 +231,10 @@ function DirMenuButtons(props: {
       <button
         class={{
           [ADW.Button.button]: true,
-          [ADW.Button.disabled]: cantPaste,
-          hidden: cantWrite,
+          [ADW.Button.disabled]: !canPaste,
+          hidden: !canPaste,
         }}
-        disabled={cantPaste}
+        disabled={!canPaste}
         onmousedown={() => menu.actions.paste()}
       >
         Paste Here

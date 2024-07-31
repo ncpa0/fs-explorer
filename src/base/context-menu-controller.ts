@@ -19,21 +19,73 @@ export interface OpenMenuParams {
 
 export class ContextMenuController {
   static ContextMenuActions = class ContextMenuActions {
+    canWrite;
+
     constructor(
       public menu: ContextMenuController,
-    ) {}
-
-    canOpen() {
-      const explorer = this.menu.explorer;
-      const file = this.menu.triggerFile.get();
-
-      if (!file) {
-        return false;
-      }
-
-      const action = explorer.options.openAction?.(file);
-      return !!action;
+    ) {
+      this.canWrite = this.menu.explorer.directory.stat.derive(f =>
+        f && f.write
+      );
     }
+
+    isPossibleTo = {
+      open: () => {
+        const explorer = this.menu.explorer;
+        const file = this.menu.triggerFile.get();
+
+        if (!file) {
+          return false;
+        }
+
+        const action = explorer.options.openAction?.(file);
+        return !!action;
+      },
+      createFile: () => {
+        return this.canWrite.get();
+      },
+      createDirectory: () => {
+        return this.canWrite.get();
+      },
+      paste: () => {
+        return this.canWrite.get();
+      },
+      pasteTo: () => {
+        const target = this.menu.getTargetFile();
+        return target && target.directory && target.write;
+      },
+      copy: () => {
+        const target = this.menu.getTargetFile();
+        if (target) {
+          return target.read;
+        }
+        return this.menu.selectedFiles.get().every(f => f.read);
+      },
+      cut: () => {
+        const target = this.menu.getTargetFile();
+        if (target) {
+          return this.canWrite.get() && target.read && target.write;
+        }
+        return this.canWrite.get()
+          && this.menu.selectedFiles.get().every(f => f.read && f.write);
+      },
+      delete: () => {
+        const target = this.menu.getTargetFile();
+        if (target) {
+          return this.canWrite.get() && target.write;
+        }
+        return this.canWrite.get()
+          && this.menu.selectedFiles.get().every(f => f.write);
+      },
+      rename: () => {
+        const target = this.menu.getTargetFile();
+        if (target) {
+          return this.canWrite.get() && target.write;
+        }
+        return this.canWrite.get()
+          && this.menu.selectedFiles.get().every(f => f.write);
+      },
+    };
 
     open() {
       const explorer = this.menu.explorer;

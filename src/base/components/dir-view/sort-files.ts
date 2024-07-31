@@ -40,7 +40,7 @@ function SortDateReverse(a: FStat, b: FStat): number {
 export function sortFiles(
   data: FStat[],
   mode: SortMode,
-  reverse = false
+  reverse = false,
 ): FStat[] {
   const dirs: FStat[] = [];
   const files: FStat[] = [];
