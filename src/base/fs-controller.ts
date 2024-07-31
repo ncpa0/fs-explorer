@@ -89,16 +89,17 @@ export class FsController {
   clipboardPaste(to: string | Path) {
     to = Path.from(to);
 
-    const clip = this.explorer.clipboard.get();
+    const files = this.explorer.clipboard.files.get();
+    const mode = this.explorer.clipboard.mode.get();
 
-    if (clip.file) {
-      this.explorer.clipboard.dispatch({ file: [] });
-      if (clip.cut) {
-        for (const f of clip.file) {
+    if (files) {
+      this.explorer.clipboard.clear();
+      if (mode === "move") {
+        for (const f of files) {
           this.move(f, to.joinSegment(f.name));
         }
       } else {
-        for (const f of clip.file) {
+        for (const f of files) {
           this.copy(f, to.joinSegment(f.name));
         }
       }

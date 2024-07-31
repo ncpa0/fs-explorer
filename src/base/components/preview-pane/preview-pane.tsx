@@ -9,15 +9,18 @@ export type PreviewPaneProps = {
 };
 
 export function PreviewPane(props: PreviewPaneProps) {
+  const explorer = props.explorer;
+  const preview = explorer.previewPane;
+
   const handleCloseClick = () => {
-    props.explorer.preview.dispatch(undefined);
+    preview.close();
   };
 
   return (
     <div
       class={{
         "preview-pane": true,
-        "preview-visible": props.explorer.preview.derive(v => v != null),
+        "preview-visible": preview.file.derive(v => v != null),
         [ADW.Box.box]: true,
         [ADW.Box.bg3]: true,
       }}
@@ -30,7 +33,7 @@ export function PreviewPane(props: PreviewPaneProps) {
           X
         </button>
       </div>
-      {props.explorer.preview.derive(file => {
+      {preview.file.derive(file => {
         if (file) return <FileInfo file={file} />;
         return <div />;
       })}

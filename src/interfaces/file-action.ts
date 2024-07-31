@@ -8,6 +8,6 @@ export class FileActionContext {
   ) {}
 
   openPreview() {
-    this.explorer.preview.dispatch(this.file);
+    this.explorer.previewPane.open(this.file);
   }
 }

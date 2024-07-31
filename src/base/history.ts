@@ -22,6 +22,8 @@ export class ExplorerLocation {
 
   private _path = sig(new Path("/"));
 
+  signal = this._path.readonly();
+
   get pathname() {
     return this._path.get().toString();
   }

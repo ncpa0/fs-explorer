@@ -1,5 +1,5 @@
 import { Range } from "@ncpa0cpl/vanilla-jsx";
-import { sig, Signal } from "@ncpa0cpl/vanilla-jsx/signals";
+import { ReadonlySignal, sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Typography } from "adwavecss";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
@@ -9,70 +9,18 @@ import { isLmb, isRmb } from "../../../utils/events";
 import { Fmt } from "../../../utils/formatters";
 import { getFileIcon } from "../../../utils/get-file-icon";
 import { Path } from "../../../utils/path";
-import { ExplorerLocation } from "../../history";
-import { DirStat } from "../statusbar/statusbar";
-import { sortFiles, SortMode } from "./sort-files";
+import { DirViewController } from "../../dir-view-controller";
+import { SortMode } from "./sort-files";
 
 export type DirViewProps = {
   explorer: Explorer;
-  selectedFilesStat: Signal<DirStat | undefined>;
 };
 
 export function DirView(props: DirViewProps) {
-  const { explorer, selectedFilesStat } = props;
-  const files = explorer.currentDir;
-  const previewOpen = explorer.preview;
-
-  const selectedFiles = sig<FStat[]>([]);
-  const sorting = sig({ mode: SortMode.Alpha, reverse: false });
-
-  const visibleFiles = sig.derive(
-    files,
-    sorting,
-    (fs, sorting) =>
-      sortFiles(
-        fs.filter(f => !f.hidden),
-        sorting.mode,
-        sorting.reverse,
-      ),
-  );
-
-  visibleFiles.add((visible) => {
-    const selected = selectedFiles.get();
-    const visibleSelected: FStat[] = [];
-    for (let i = 0; i < selected.length; i++) {
-      const sfile = selected[i]!;
-      const isVisible = visible.some(f => f.path === sfile.path);
-      if (isVisible) {
-        visibleSelected.push(sfile);
-      }
-    }
-    if (visibleSelected.length !== selected.length) {
-      selectedFiles.dispatch(visibleSelected);
-    }
-  });
-
-  explorer.onEscapePress(() => {
-    selectedFiles.dispatch([]);
-  });
-
-  ExplorerLocation.signal(explorer.location).add(() => {
-    selectedFiles.dispatch([]);
-  });
-
-  selectedFiles.add((selected) => {
-    if (selected.length === 0) {
-      selectedFilesStat.dispatch(undefined);
-      return;
-    }
-    const nonDirs = selected.filter(f => !f.directory);
-    const sizeTotal = nonDirs.reduce((acc, f) => acc + f.size, 0);
-    selectedFilesStat.dispatch({
-      size: Fmt.size(sizeTotal),
-      filecount: String(nonDirs.length),
-      dircount: String(selected.length - nonDirs.length),
-    });
-  });
+  const { explorer } = props;
+  const menu = explorer.contextMenu;
+  const preview = explorer.previewPane;
+  const dir = explorer.directory;
 
   const handleClick = (event: MouseEvent) => {
     if (isRmb(event)) {
@@ -84,13 +32,14 @@ export function DirView(props: DirViewProps) {
       const halfPoint = windowRect.height / 2;
       const isBelowHalf = top > halfPoint;
 
-      const selected = selectedFiles.get();
-      props.explorer.contextMenu.dispatch({
-        open: true,
-        file: selected.length > 0 ? selected : undefined,
-        left: left,
-        top: isBelowHalf ? undefined : top,
-        bottom: isBelowHalf ? bottom : undefined,
+      const selected = dir.selection.get();
+      menu.open({
+        relatedFiles: selected,
+        position: {
+          left: left,
+          top: isBelowHalf ? undefined : top,
+          bottom: isBelowHalf ? bottom : undefined,
+        },
       });
       event.stopPropagation();
       event.preventDefault();
@@ -98,7 +47,7 @@ export function DirView(props: DirViewProps) {
   };
 
   const maxWidthSig = sig.literal`calc(100% - ${
-    sig.when(previewOpen, sig.as("32em"), sig.as("16em"))
+    sig.when(preview.file, sig.as("32em"), sig.as("16em"))
   })`;
 
   return (
@@ -115,11 +64,11 @@ export function DirView(props: DirViewProps) {
           [ADW.Box.box]: true,
           [ADW.Box.bg2]: true,
           "dir-view": true,
-          "empty": visibleFiles.derive(files => files.length === 0),
+          "empty": dir.filesView.derive(files => files.length === 0),
         }}
       >
-        {visibleFiles.derive(visibleFiles => {
-          if (visibleFiles.length === 0) {
+        {dir.filesView.derive(files => {
+          if (files.length === 0) {
             return (
               <div class="empty-dir-msg">
                 <span class={[Typography.subtitle]}>
@@ -129,14 +78,14 @@ export function DirView(props: DirViewProps) {
             );
           }
 
-          return <FileViewHeader sorting={sorting} />;
+          return <FileViewHeader sorting={dir.sorting} dir={dir} />;
         })}
         <Gap />
-        <Range data={visibleFiles} into={<div class="dcontents" />}>
+        <Range data={dir.filesView} into={<div class="dcontents" />}>
           {(file) => (
             <FileEntry
               explorer={props.explorer}
-              selectedFiles={selectedFiles}
+              selectedFiles={dir.selection}
               file={file}
             />
           )}
@@ -159,33 +108,19 @@ function Gap() {
 }
 
 function FileViewHeader(props: {
-  sorting: Signal<{ mode: SortMode; reverse: boolean }>;
+  sorting: ReadonlySignal<{ mode: SortMode; reverse: boolean }>;
+  dir: DirViewController;
 }) {
   const handleNameClick = () => {
-    props.sorting.dispatch(s => {
-      if (s.mode === SortMode.Alpha) {
-        return { mode: SortMode.Alpha, reverse: !s.reverse };
-      }
-      return { mode: SortMode.Alpha, reverse: false };
-    });
+    props.dir.toggleSorting("name");
   };
 
   const handleSizeClick = () => {
-    props.sorting.dispatch(s => {
-      if (s.mode === SortMode.Size) {
-        return { mode: SortMode.Size, reverse: !s.reverse };
-      }
-      return { mode: SortMode.Size, reverse: false };
-    });
+    props.dir.toggleSorting("size");
   };
 
   const handleDateClick = () => {
-    props.sorting.dispatch(s => {
-      if (s.mode === SortMode.Date) {
-        return { mode: SortMode.Date, reverse: !s.reverse };
-      }
-      return { mode: SortMode.Date, reverse: false };
-    });
+    props.dir.toggleSorting("date");
   };
 
   return (
@@ -214,25 +149,22 @@ function FileViewHeader(props: {
 }
 
 function FileEntry(
-  props: { explorer: Explorer; file: FStat; selectedFiles: Signal<FStat[]> },
+  props: {
+    explorer: Explorer;
+    file: FStat;
+    selectedFiles: ReadonlySignal<readonly FStat[]>;
+  },
 ) {
   const { explorer, file, selectedFiles } = props;
+  const dir = explorer.directory;
+  const menu = explorer.contextMenu;
 
   const isSelected = selectedFiles.derive(selected =>
     selected.some(f => f.path === file.path)
   );
 
   const toggleSelect = () => {
-    const fpath = file.path;
-    selectedFiles.dispatch(selected => {
-      const idx = selected.findIndex(f => f.path === fpath);
-      if (idx === -1) {
-        return [...selected, file];
-      }
-      const copy = selected.slice();
-      copy.splice(idx, 1);
-      return copy;
-    });
+    dir.toggleSelectFile(file);
   };
 
   const handleClick = (event: MouseEvent) => {
@@ -251,12 +183,14 @@ function FileEntry(
       const isBelowHalf = top > halfPoint;
 
       const selected = selectedFiles.get();
-      explorer.contextMenu.dispatch({
-        open: true,
-        file: selected.length ? selected : [file],
-        left: left,
-        top: isBelowHalf ? undefined : top,
-        bottom: isBelowHalf ? bottom : undefined,
+      menu.open({
+        triggerFile: file,
+        relatedFiles: selected,
+        position: {
+          left: left,
+          top: isBelowHalf ? undefined : top,
+          bottom: isBelowHalf ? bottom : undefined,
+        },
       });
       event.stopPropagation();
       event.preventDefault();
@@ -273,7 +207,7 @@ function FileEntry(
         explorer,
         file,
       );
-      const action = explorer.options?.openAction?.(file.path);
+      const action = explorer.options?.openAction?.(file);
       if (action) {
         action(file, actionCtx);
       } else {

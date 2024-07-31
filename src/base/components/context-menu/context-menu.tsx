@@ -1,9 +1,7 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
-import { FileActionContext } from "../../../interfaces/file-action";
 import { ADW } from "../../../utils/css";
-import { Path } from "../../../utils/path";
 import { trimTo } from "../../../utils/trim-to";
 
 export type ContextMenuProps = {
@@ -11,18 +9,17 @@ export type ContextMenuProps = {
 };
 
 export function ContextMenu(props: ContextMenuProps) {
-  const data = props.explorer.contextMenu;
-  const isClosed = data.derive(d => !d.open);
-  const left = data.derive(d => d.left ? `${d.left}px` : undefined);
-  const top = data.derive(d => d.top ? `${d.top}px` : undefined);
-  const bottom = data.derive(d => d.bottom ? `${d.bottom}px` : undefined);
+  const menu = props.explorer.contextMenu;
+  const isClosed = menu.isOpen.derive(v => !v);
+  const top = menu.position.derive(d => d.top ? `${d.top}px` : undefined);
+  const right = menu.position.derive(d => d.right ? `${d.right}px` : undefined);
+  const bottom = menu.position.derive(d =>
+    d.bottom ? `${d.bottom}px` : undefined
+  );
+  const left = menu.position.derive(d => d.left ? `${d.left}px` : undefined);
 
   const handleBackdropClick = () => {
-    props.explorer.contextMenu.dispatch({
-      open: false,
-      left: 0,
-      top: 0,
-    });
+    menu.close();
   };
 
   const handleMenuClick = (e: MouseEvent) => {
@@ -37,22 +34,20 @@ export function ContextMenu(props: ContextMenuProps) {
       onmousedown={handleBackdropClick}
     >
       <div
-        class={{
-          "context-menu": true,
-        }}
-        style={{ left, top, bottom }}
+        class="context-menu"
+        style={{ left, top, bottom, right }}
         onmousedown={handleMenuClick}
       >
-        {data.derive(({ file, open }) => {
+        {sig.derive(menu.isOpen, menu.selectedFiles, (open, files) => {
           if (!open) {
             return <span />;
           }
 
-          if (file) {
+          if (files.length) {
             return (
               <FileMenuButtons
                 explorer={props.explorer}
-                files={file}
+                files={files}
               />
             );
           }
@@ -70,57 +65,27 @@ export function ContextMenu(props: ContextMenuProps) {
 
 function FileMenuButtons(props: {
   explorer: Explorer;
-  files: FStat[];
+  files: readonly FStat[];
 }) {
   const { explorer, files } = props;
-  const singleFile = files.length === 1 ? files[0]! : undefined;
-  const cantPaste = explorer.clipboard.derive(c => c.file.length === 0);
-  const cantWrite = explorer.currentDirStat.derive(f => !f?.write);
+  const dir = explorer.directory;
+  const menu = explorer.contextMenu;
 
-  const closeContextMenu = () => {
-    explorer.contextMenu.dispatch({
-      open: false,
-    });
-  };
+  const cantPaste = explorer.clipboard.files.derive(f => f.length === 0);
+  const cantWrite = dir.stat.derive(f => !f?.write);
 
-  const createFile = createFileFactory(
-    explorer,
-    cantWrite.get(),
-    closeContextMenu,
-  );
-  const createDir = createDirFactory(
-    explorer,
-    cantWrite.get(),
-    closeContextMenu,
-  );
+  let singleFile = menu.getTargetFile();
 
-  const openAction = singleFile
-    ? explorer.options?.openAction?.(files[0]!.path)
-    : undefined;
-  const handleMainActionClick = () => {
-    closeContextMenu();
-    const ctx = new FileActionContext(
-      props.explorer,
-      singleFile!,
-    );
-    openAction!(singleFile!, ctx);
-  };
-
-  const customActions = singleFile
-    ? props.explorer.options?.actions?.filter(a =>
-      a.match.test(singleFile.path)
-    )
-      ?? []
-    : [];
+  const customActions = menu.customActions;
 
   return (
     <div class="dcontents">
       <button
         class={{
           [ADW.Button.button]: true,
-          hidden: !openAction,
+          hidden: !menu.actions.canOpen(),
         }}
-        onmousedown={handleMainActionClick}
+        onmousedown={() => menu.actions.open()}
       >
         Open
       </button>
@@ -129,7 +94,7 @@ function FileMenuButtons(props: {
           [ADW.Button.button]: true,
           hidden: cantWrite,
         }}
-        onmousedown={createFile}
+        onmousedown={() => menu.actions.createFile()}
       >
         New File
       </button>
@@ -138,12 +103,16 @@ function FileMenuButtons(props: {
           [ADW.Button.button]: true,
           hidden: cantWrite,
         }}
-        onmousedown={createDir}
+        onmousedown={() => menu.actions.createDirectory()}
       >
         New Directory
       </button>
-      {customActions.length
-        ? (
+      {customActions.derive(customActions => {
+        if (customActions.length === 0) {
+          return <span />;
+        }
+
+        return (
           <>
             <button
               class={ADW.Button.button}
@@ -154,7 +123,7 @@ function FileMenuButtons(props: {
             <div class="custom-ctions">
               {customActions.map(action => {
                 const handler = () => {
-                  closeContextMenu();
+                  menu.close();
                   action.run(singleFile!);
                 };
                 return (
@@ -168,8 +137,8 @@ function FileMenuButtons(props: {
               })}
             </div>
           </>
-        )
-        : <></>}
+        );
+      })}
       <button
         class={{
           [ADW.Button.button]: true,
@@ -177,13 +146,7 @@ function FileMenuButtons(props: {
           hidden: cantWrite,
         }}
         disabled={cantPaste}
-        onmousedown={() => {
-          closeContextMenu();
-          const to = props.explorer.currentDirStat.get()!;
-          if (to.write) {
-            props.explorer.fs.clipboardPaste(to.path);
-          }
-        }}
+        onmousedown={() => menu.actions.paste()}
       >
         Paste Here
       </button>
@@ -194,12 +157,7 @@ function FileMenuButtons(props: {
           hidden: !singleFile || !singleFile?.directory || !singleFile?.write,
         }}
         disabled={sig.or(cantPaste, !singleFile)}
-        onmousedown={() => {
-          closeContextMenu();
-          if (singleFile && singleFile.directory && singleFile.write) {
-            props.explorer.fs.clipboardPaste(singleFile.path);
-          }
-        }}
+        onmousedown={() => menu.actions.pasteTo()}
       >
         Paste To {!!singleFile && trimTo(singleFile.name, 12)}
       </button>
@@ -208,13 +166,7 @@ function FileMenuButtons(props: {
           [ADW.Button.button]: true,
           hidden: files.some(f => !f.read),
         }}
-        onmousedown={() => {
-          closeContextMenu();
-          props.explorer.clipboard.dispatch({
-            file: files,
-            cut: false,
-          });
-        }}
+        onmousedown={() => menu.actions.copy()}
       >
         Copy
       </button>
@@ -223,13 +175,7 @@ function FileMenuButtons(props: {
           [ADW.Button.button]: true,
           hidden: files.some(f => !f.read || !f.write),
         }}
-        onmousedown={() => {
-          closeContextMenu();
-          props.explorer.clipboard.dispatch({
-            file: files,
-            cut: true,
-          });
-        }}
+        onmousedown={() => menu.actions.cut()}
       >
         Cut
       </button>
@@ -238,12 +184,7 @@ function FileMenuButtons(props: {
           [ADW.Button.button]: true,
           hidden: files.some(f => !f.write),
         }}
-        onmousedown={() => {
-          closeContextMenu();
-          for (const file of files) {
-            props.explorer.fs.remove(file);
-          }
-        }}
+        onmousedown={() => menu.actions.delete()}
       >
         Delete
       </button>
@@ -252,30 +193,7 @@ function FileMenuButtons(props: {
           [ADW.Button.button]: true,
           hidden: !singleFile || !singleFile.write,
         }}
-        onmousedown={() => {
-          if (!singleFile) return;
-          closeContextMenu();
-          explorer.promptModal.dispatch({
-            open: true,
-            prompt: "New name:",
-            initialValue: singleFile.name,
-            onConfirm: (name) => {
-              const newPath = Path.from(singleFile.path).base().joinSegment(
-                name,
-              );
-              explorer.fs.move(singleFile, newPath);
-            },
-            validate: (name) => {
-              if (!name) {
-                return { msg: "Name cannot be empty" };
-              }
-              if (name.includes("/")) {
-                return { msg: "Name cannot contain '/' character" };
-              }
-              return "ok";
-            },
-          });
-        }}
+        onmousedown={() => menu.actions.rename()}
       >
         Rename
       </button>
@@ -287,26 +205,11 @@ function DirMenuButtons(props: {
   explorer: Explorer;
 }) {
   const { explorer } = props;
+  const dir = explorer.directory;
+  const menu = explorer.contextMenu;
 
-  const cantWrite = explorer.currentDirStat.derive(f => !f?.write);
-  const cantPaste = explorer.clipboard.derive(c => !c.file);
-
-  const closeContextMenu = () => {
-    explorer.contextMenu.dispatch({
-      open: false,
-    });
-  };
-
-  const createFile = createFileFactory(
-    explorer,
-    cantWrite.get(),
-    closeContextMenu,
-  );
-  const createDir = createDirFactory(
-    explorer,
-    cantWrite.get(),
-    closeContextMenu,
-  );
+  const cantWrite = dir.stat.derive(f => !f?.write);
+  const cantPaste = explorer.clipboard.files.derive(f => !f.length);
 
   return (
     <div class="dcontents">
@@ -315,7 +218,7 @@ function DirMenuButtons(props: {
           [ADW.Button.button]: true,
           hidden: cantWrite,
         }}
-        onmousedown={createFile}
+        onmousedown={() => menu.actions.createFile()}
       >
         New File
       </button>
@@ -324,7 +227,7 @@ function DirMenuButtons(props: {
           [ADW.Button.button]: true,
           hidden: cantWrite,
         }}
-        onmousedown={createDir}
+        onmousedown={() => menu.actions.createDirectory()}
       >
         New Directory
       </button>
@@ -335,92 +238,10 @@ function DirMenuButtons(props: {
           hidden: cantWrite,
         }}
         disabled={cantPaste}
-        onmousedown={() => {
-          closeContextMenu();
-          const to = explorer.currentDirStat.get()!;
-          if (to.write) {
-            explorer.fs.clipboardPaste(to.path);
-          }
-        }}
+        onmousedown={() => menu.actions.paste()}
       >
         Paste Here
       </button>
     </div>
   );
-}
-
-function createFileFactory(
-  explorer: Explorer,
-  cantWrite: boolean,
-  closeContextMenu: () => void,
-) {
-  return () => {
-    if (cantWrite) {
-      return;
-    }
-
-    closeContextMenu();
-
-    const existingFiles = explorer.currentDir.get()!.map(f => f.name);
-
-    explorer.promptModal.dispatch({
-      open: true,
-      prompt: "Name of the new file:",
-      confirmBtnLabel: "Create",
-      initialValue: "New File",
-      onConfirm(name) {
-        const filepath = explorer.location.path.joinSegment(name);
-        explorer.fs.touch(filepath);
-      },
-      validate(name) {
-        if (!name) {
-          return { msg: "Name cannot be empty" };
-        }
-        if (existingFiles.includes(name)) {
-          return {
-            msg: "File with this name already exists.",
-          };
-        }
-        return "ok";
-      },
-    });
-  };
-}
-
-function createDirFactory(
-  explorer: Explorer,
-  cantWrite: boolean,
-  closeContextMenu: () => void,
-) {
-  return () => {
-    if (cantWrite) {
-      return;
-    }
-
-    closeContextMenu();
-
-    const existingFiles = explorer.currentDir.get()!.map(f => f.name);
-
-    explorer.promptModal.dispatch({
-      open: true,
-      prompt: "Name of the new directory:",
-      confirmBtnLabel: "Create",
-      initialValue: "New Directory",
-      onConfirm(name) {
-        const filepath = explorer.location.path.joinSegment(name);
-        explorer.fs.mkdir(filepath);
-      },
-      validate(name) {
-        if (existingFiles.includes(name)) {
-          if (!name) {
-            return { msg: "Name cannot be empty" };
-          }
-          return {
-            msg: "File with this name already exists.",
-          };
-        }
-        return "ok";
-      },
-    });
-  };
 }

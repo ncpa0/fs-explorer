@@ -1,7 +1,11 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
+import { ClipcoardController } from "./base/clipboard-controller";
 import { ExplorerWindow } from "./base/components/window/window";
+import { ContextMenuController } from "./base/context-menu-controller";
+import { DirViewController } from "./base/dir-view-controller";
 import { FsController } from "./base/fs-controller";
 import { ExplorerHistory, ExplorerLocation } from "./base/history";
+import { PreviewPaneController } from "./base/preview-pane-controller";
 import { Filesystem, FStat } from "./filesystem-interface";
 import { ActionError } from "./interfaces/action-error";
 import { Styles } from "./styles-component";
@@ -15,7 +19,7 @@ export interface Place {
 
 export interface FileAction {
   readonly label: string;
-  readonly match: { test(filepath: string): boolean };
+  readonly match: (file: FStat) => boolean;
   readonly run: (file: FStat) => void;
 }
 
@@ -25,7 +29,7 @@ export interface FileActionApi {
 
 export interface ExplorerOptions {
   readonly openAction?: (
-    filepath: string,
+    file: FStat,
   ) => undefined | ((file: FStat, api: FileActionApi) => void);
   /**
    * List of actions that can be performed on different files. If an action
@@ -46,19 +50,6 @@ export interface ExplorerOptions {
   readonly showLeftPane?: boolean;
 }
 
-export interface ContextMenuData {
-  open: boolean;
-  file?: FStat[];
-  left?: number;
-  top?: number;
-  bottom?: number;
-}
-
-export interface FileClipboard {
-  file: FStat[];
-  cut?: boolean;
-}
-
 export interface PromptModal {
   open: boolean;
   prompt?: string;
@@ -76,28 +67,20 @@ export class Explorer {
 
   public readonly history = new ExplorerHistory();
   public readonly location: ExplorerLocation = this.history["location"];
+  public readonly directory = new DirViewController(this);
+  public readonly contextMenu = new ContextMenuController(this);
+  public readonly previewPane = new PreviewPaneController(this);
+  public readonly clipboard = new ClipcoardController(this);
   public readonly fs;
 
   // location visible on the left pane
   public readonly places = sig<ReadonlyArray<Place>>([]);
   public readonly staticPlaces = sig<ReadonlyArray<Place>>([]);
 
-  // currentyl opened directory
-  public readonly currentDirStat = sig<FStat | undefined>(undefined);
-  public readonly currentDir = sig<ReadonlyArray<FStat>>([]);
-
-  // right pane preview
-  public readonly preview = sig<undefined | FStat>(undefined);
   public readonly actionError = sig<ActionError | undefined>(undefined);
-  public readonly clipboard = sig<FileClipboard>({ file: [] });
 
   public readonly promptModal = sig<PromptModal>({
     open: false,
-  });
-  public readonly contextMenu = sig<ContextMenuData>({
-    open: false,
-    left: 0,
-    top: 0,
   });
 
   constructor(
@@ -113,9 +96,9 @@ export class Explorer {
       this.staticPlaces.dispatch(options.staticPlaces.slice());
     }
 
-    const { detach } = ExplorerLocation.signal(this.location).observe(
+    const { detach } = this.location.signal.add(
       (path) => {
-        this.preview.dispatch(undefined);
+        this.previewPane.close();
         this.updateDirContents(path);
       },
     );
@@ -140,10 +123,8 @@ export class Explorer {
         return;
       }
 
-      if (this.contextMenu.get().open) {
-        this.contextMenu.dispatch({
-          open: false,
-        });
+      if (this.contextMenu.isOpen.get()) {
+        this.contextMenu.close();
         return;
       }
 
@@ -155,11 +136,20 @@ export class Explorer {
 
   private updateDirContents(path: Path | string) {
     const locationPath = path.toString();
-    this.filesystem.readdirStat(locationPath).then((stats) => {
-      this.currentDir.dispatch(stats);
-    });
+
+    let dirstat: FStat;
+    let files: FStat[];
     this.filesystem.stat(locationPath).then((stat) => {
-      this.currentDirStat.dispatch(stat);
+      dirstat = stat;
+      if (files) {
+        this.directory.changeDirectory(dirstat, files);
+      }
+    });
+    this.filesystem.readdirStat(locationPath).then((files) => {
+      files = files;
+      if (dirstat) {
+        this.directory.changeDirectory(dirstat, files);
+      }
     });
   }
 

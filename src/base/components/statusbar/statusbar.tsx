@@ -1,7 +1,6 @@
-import { ReadonlySignal, Signal } from "@ncpa0cpl/vanilla-jsx/signals";
+import { ReadonlySignal } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
-import { Fmt } from "../../../utils/formatters";
 
 export interface DirStat {
   filecount: string;
@@ -11,30 +10,19 @@ export interface DirStat {
 
 export interface StatusbarProps {
   explorer: Explorer;
-  selectedFilesStat: Signal<DirStat | undefined>;
 }
 
 export function Statusbar(props: StatusbarProps) {
-  const { explorer, selectedFilesStat } = props;
-
-  const dirStat = explorer.currentDir.derive((files): DirStat => {
-    files = files.filter(f => !f.hidden);
-    const nonDirs = files.filter(f => !f.directory);
-    const totalSize = nonDirs.reduce(
-      (totalSize, f) => totalSize + f.size,
-      0,
-    );
-    return {
-      size: Fmt.size(totalSize),
-      filecount: String(nonDirs.length),
-      dircount: String(files.length - nonDirs.length),
-    };
-  });
+  const { explorer } = props;
+  const dir = explorer.directory;
 
   return (
     <div class="statusbar">
-      <DirStat stat={dirStat} />
-      <DirStat prefix="Selection:" stat={selectedFilesStat} />
+      <DirStat stat={dir.directoryInfo} />
+      <DirStat
+        prefix="Selection:"
+        stat={dir.directoryInfo.derive(info => info.selection)}
+      />
     </div>
   );
 }
