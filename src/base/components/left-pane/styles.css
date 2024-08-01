@@ -2,6 +2,32 @@
     display: flex;
     flex-direction: column;
 
+    & .pane-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+        margin: .5em .2em .5em .2em;
+
+        & .header-title {
+            place-self: center;
+            flex: 1;
+            text-align: center;
+            margin-left: 2.5em;
+            font-weight: 600;
+        }
+
+        & .btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            & svg {
+                height: 1.2em;
+                width: 1.2em;
+            }
+        }
+    }
+
     & .places-label {
         padding: .4em 0em .4em 1.25em;
     }
@@ -16,6 +42,10 @@
 
     & .seps {
         margin-block: 2em;
+
+        &.hidden {
+            display: none;
+        }
     }
 
     & .place-link {
@@ -48,7 +78,7 @@
 
         &:hover {
             & > * {
-                background-color: var(--clr-bg-4);
+                background-color: var(--clr-btn-adaptive-hover);
             }
         }
     }

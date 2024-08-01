@@ -250,26 +250,27 @@ export class ContextMenuController {
     }
   };
 
-  public readonly actions = new ContextMenuController.ContextMenuActions(this);
-
   public readonly isOpen = sig(false);
   public readonly selectedFiles = sig<readonly FStat[]>([]);
   public readonly triggerFile = sig<undefined | FStat>(undefined);
   public readonly position = sig<ContextMenuPosition>({});
 
-  public readonly customActions = this.deriveCustomActions();
+  public readonly actions;
+  public readonly customActions;
 
   constructor(
     protected explorer: Explorer,
-  ) {}
+  ) {
+    this.actions = new ContextMenuController.ContextMenuActions(this);
+    this.customActions = this.deriveCustomActions();
+  }
 
   private deriveCustomActions() {
-    const actionDefs = this.explorer.options.actions;
-
     return sig.derive(
       this.selectedFiles,
       this.triggerFile,
       (files, targetFile) => {
+        const actionDefs = this.explorer.options.actions;
         if (!actionDefs) return [];
 
         if (files.length === 0 && targetFile) {

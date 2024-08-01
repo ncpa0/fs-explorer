@@ -1,4 +1,6 @@
 .preview-pane {
+    border-radius: 6px;
+    margin-right: .8em;
     width: 26em;
     height: 100%;
     display: none;

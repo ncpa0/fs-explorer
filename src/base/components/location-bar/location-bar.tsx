@@ -2,6 +2,7 @@ import { ReadonlySignal, sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import ArrowBackwardIcon from "../../../assets/main-theme/icons/arrow-back.svg";
 import ArrowForwardIcon from "../../../assets/main-theme/icons/arrow-forward.svg";
 import ArrowUpIcon from "../../../assets/main-theme/icons/arrow-up.svg";
+import RefreshIcon from "../../../assets/main-theme/icons/refresh.svg";
 import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 import { Path } from "../../../utils/path";
@@ -14,6 +15,125 @@ export type LocationBarProps = {
 enum BarMode {
   Preview = "preview",
   Edit = "edit",
+}
+
+export function LocationBar(props: LocationBarProps) {
+  const { explorer } = props;
+  const location = ExplorerLocation.signal(explorer.location);
+  const mode = sig(BarMode.Preview);
+
+  const handleSegmentClick = (segmentPath: Path) => {
+    explorer.open(segmentPath);
+  };
+
+  const handleEditorSubmit = (path: Path) => {
+    explorer.open(path);
+    if (!path.equals(explorer.location.pathname)) {
+      mode.dispatch(BarMode.Preview);
+    }
+  };
+
+  return (
+    <div class={["location-bar", ADW.Box.box, ADW.Box.bg2]}>
+      <ControlButtons
+        onBack={() => explorer.history.back()}
+        onForward={() => explorer.history.forward()}
+        onUp={() => {
+          const p = explorer.location.path;
+          const up = p.base();
+          if (!up.equals(p)) {
+            explorer.history.push(up);
+          }
+        }}
+        onReload={() => explorer.refresh()}
+        onGoHome={() => explorer.open("/")}
+      />
+      {mode.derive(m => {
+        if (m === BarMode.Preview) {
+          return (
+            <LocationPreview
+              location={location}
+              changeMode={() => mode.dispatch(BarMode.Edit)}
+              onSegmentClick={handleSegmentClick}
+            />
+          );
+        } else {
+          return (
+            <LocationEditor
+              location={location}
+              changeMode={() => mode.dispatch(BarMode.Preview)}
+              onSubmit={handleEditorSubmit}
+            />
+          );
+        }
+      })}
+    </div>
+  );
+}
+
+function ControlButtons(props: {
+  onBack: () => void;
+  onForward: () => void;
+  onUp: () => void;
+  onReload: () => void;
+  onGoHome: () => void;
+}) {
+  return (
+    <div class={["control-buttons"]}>
+      <button
+        onmousedown={props.onBack}
+        class={[
+          ADW.Button.button,
+          ADW.Button.flat,
+          ADW.Button.square,
+          ADW.Button.adaptive,
+        ]}
+      >
+        <span class={["control-icon", ADW.Typography.text]}>
+          <ArrowBackwardIcon />
+        </span>
+      </button>
+      <button
+        onmousedown={props.onForward}
+        class={[
+          ADW.Button.button,
+          ADW.Button.flat,
+          ADW.Button.square,
+          ADW.Button.adaptive,
+        ]}
+      >
+        <span class={["control-icon", ADW.Typography.text]}>
+          <ArrowForwardIcon />
+        </span>
+      </button>
+      <button
+        onmousedown={props.onUp}
+        class={[
+          ADW.Button.button,
+          ADW.Button.flat,
+          ADW.Button.square,
+          ADW.Button.adaptive,
+        ]}
+      >
+        <span class={["control-icon", ADW.Typography.text]}>
+          <ArrowUpIcon />
+        </span>
+      </button>
+      <button
+        onmousedown={props.onReload}
+        class={[
+          ADW.Button.button,
+          ADW.Button.flat,
+          ADW.Button.square,
+          ADW.Button.adaptive,
+        ]}
+      >
+        <span class={["control-icon", ADW.Typography.text]}>
+          <RefreshIcon />
+        </span>
+      </button>
+    </div>
+  );
 }
 
 function LocationPreview(
@@ -120,112 +240,4 @@ function LocationEditor(
     />
   ) as HTMLInputElement;
   return input;
-}
-
-function ControlButtons(props: {
-  onBack: () => void;
-  onForward: () => void;
-  onUp: () => void;
-  onReload: () => void;
-  onGoHome: () => void;
-}) {
-  return (
-    <div class={["control-buttons"]}>
-      <button
-        onmousedown={props.onBack}
-        class={[ADW.Button.button, ADW.Button.flat, ADW.Button.square]}
-      >
-        <span class={["control-icon", ADW.Typography.text]}>
-          <ArrowBackwardIcon />
-        </span>
-      </button>
-      <button
-        onmousedown={props.onForward}
-        class={[ADW.Button.button, ADW.Button.flat, ADW.Button.square]}
-      >
-        <span class={["control-icon", ADW.Typography.text]}>
-          <ArrowForwardIcon />
-        </span>
-      </button>
-      <button
-        onmousedown={props.onUp}
-        class={[ADW.Button.button, ADW.Button.flat, ADW.Button.square]}
-      >
-        <span class={["control-icon", ADW.Typography.text]}>
-          <ArrowUpIcon />
-        </span>
-      </button>
-      <button
-        onmousedown={props.onReload}
-        class={[ADW.Button.button, ADW.Button.flat, ADW.Button.square]}
-      >
-        <span class={["control-icon", ADW.Typography.text]}>
-          R
-        </span>
-      </button>
-      <button
-        onmousedown={props.onGoHome}
-        class={[ADW.Button.button, ADW.Button.flat, ADW.Button.square]}
-        style={{ placeSelf: "flex-end" }}
-      >
-        <span class={["control-icon", ADW.Typography.text]}>
-          H
-        </span>
-      </button>
-    </div>
-  );
-}
-
-export function LocationBar(props: LocationBarProps) {
-  const { explorer } = props;
-  const location = ExplorerLocation.signal(explorer.location);
-  const mode = sig(BarMode.Preview);
-
-  const handleSegmentClick = (segmentPath: Path) => {
-    explorer.open(segmentPath);
-  };
-
-  const handleEditorSubmit = (path: Path) => {
-    explorer.open(path);
-    if (!path.equals(explorer.location.pathname)) {
-      mode.dispatch(BarMode.Preview);
-    }
-  };
-
-  return (
-    <div class={["location-bar", ADW.Box.box, ADW.Box.bg2]}>
-      <ControlButtons
-        onBack={() => explorer.history.back()}
-        onForward={() => explorer.history.forward()}
-        onUp={() => {
-          const p = explorer.location.path;
-          const up = p.base();
-          if (!up.equals(p)) {
-            explorer.history.push(up);
-          }
-        }}
-        onReload={() => explorer.refresh()}
-        onGoHome={() => explorer.open("/")}
-      />
-      {mode.derive(m => {
-        if (m === BarMode.Preview) {
-          return (
-            <LocationPreview
-              location={location}
-              changeMode={() => mode.dispatch(BarMode.Edit)}
-              onSegmentClick={handleSegmentClick}
-            />
-          );
-        } else {
-          return (
-            <LocationEditor
-              location={location}
-              changeMode={() => mode.dispatch(BarMode.Preview)}
-              onSubmit={handleEditorSubmit}
-            />
-          );
-        }
-      })}
-    </div>
-  );
 }

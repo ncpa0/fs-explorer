@@ -1,5 +1,6 @@
 .dir-view-container {
     flex: 1;
+    height: 100%;
 }
 
 .dir-view {

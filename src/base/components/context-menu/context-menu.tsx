@@ -1,7 +1,8 @@
-import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
+import { ReadonlySignal, sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { ADW } from "../../../utils/css";
+import { isLmb } from "../../../utils/events";
 import { trimTo } from "../../../utils/trim-to";
 
 export type ContextMenuProps = {
@@ -38,26 +39,40 @@ export function ContextMenu(props: ContextMenuProps) {
         style={{ left, top, bottom, right }}
         onmousedown={handleMenuClick}
       >
-        {sig.derive(menu.isOpen, menu.selectedFiles, (open, files) => {
-          if (!open) {
-            return <span />;
-          }
+        {sig.derive(
+          menu.isOpen,
+          menu.selectedFiles,
+          menu.triggerFile,
+          (open, files, target) => {
+            if (!open) {
+              return <span />;
+            }
 
-          if (files.length) {
+            if (files.length > 0) {
+              return (
+                <FileMenuButtons
+                  explorer={props.explorer}
+                  files={files}
+                />
+              );
+            }
+
+            if (target) {
+              return (
+                <FileMenuButtons
+                  explorer={props.explorer}
+                  files={[target]}
+                />
+              );
+            }
+
             return (
-              <FileMenuButtons
+              <DirMenuButtons
                 explorer={props.explorer}
-                files={files}
               />
             );
-          }
-
-          return (
-            <DirMenuButtons
-              explorer={props.explorer}
-            />
-          );
-        })}
+          },
+        )}
       </div>
     </div>
   );
@@ -78,33 +93,21 @@ function FileMenuButtons(props: {
 
   return (
     <div class="dcontents">
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          hidden: !menu.actions.isPossibleTo.open(),
-        }}
-        onmousedown={() => menu.actions.open()}
-      >
-        Open
-      </button>
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          hidden: !menu.actions.isPossibleTo.createFile(),
-        }}
-        onmousedown={() => menu.actions.createFile()}
-      >
-        New File
-      </button>
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          hidden: !menu.actions.isPossibleTo.createDirectory(),
-        }}
-        onmousedown={() => menu.actions.createDirectory()}
-      >
-        New Directory
-      </button>
+      <MenuButton
+        hidden={!menu.actions.isPossibleTo.open()}
+        action={() => menu.actions.open()}
+        title="Open"
+      />
+      <MenuButton
+        hidden={!menu.actions.isPossibleTo.createFile()}
+        action={() => menu.actions.createFile()}
+        title="New File"
+      />
+      <MenuButton
+        hidden={!menu.actions.isPossibleTo.createDirectory()}
+        action={() => menu.actions.createDirectory()}
+        title="New Directory"
+      />
       {customActions.derive(customActions => {
         if (customActions.length === 0) {
           return <span />;
@@ -112,12 +115,10 @@ function FileMenuButtons(props: {
 
         return (
           <>
-            <button
-              class={ADW.Button.button}
-              onmousedown={() => {}}
-            >
-              {"Actions >"}
-            </button>
+            <MenuButton
+              action={() => {}}
+              title="Action >"
+            />
             <div class="custom-ctions">
               {customActions.map(action => {
                 const handler = () => {
@@ -125,77 +126,48 @@ function FileMenuButtons(props: {
                   action.run(singleFile!);
                 };
                 return (
-                  <button
-                    class={ADW.Button.button}
-                    onmousedown={handler}
-                  >
-                    {action.label}
-                  </button>
+                  <MenuButton
+                    action={handler}
+                    title={action.label}
+                  />
                 );
               })}
             </div>
           </>
         );
       })}
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          [ADW.Button.disabled]: !canPaste,
-          hidden: !canPaste,
-        }}
+      <MenuButton
+        hidden={!canPaste}
         disabled={!canPaste}
-        onmousedown={() => menu.actions.paste()}
-      >
-        Paste Here
-      </button>
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          [ADW.Button.disabled]: !menu.actions.isPossibleTo.pasteTo()
-            || !singleFile,
-          hidden: !menu.actions.isPossibleTo.pasteTo(),
-        }}
+        action={() => menu.actions.paste()}
+        title={"Paste Here"}
+      />
+      <MenuButton
+        hidden={!menu.actions.isPossibleTo.pasteTo()}
         disabled={!menu.actions.isPossibleTo.pasteTo() || !singleFile}
-        onmousedown={() => menu.actions.pasteTo()}
-      >
-        Paste To {!!singleFile && trimTo(singleFile.name, 12)}
-      </button>
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          hidden: !menu.actions.isPossibleTo.copy(),
-        }}
-        onmousedown={() => menu.actions.copy()}
-      >
-        Copy
-      </button>
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          hidden: !menu.actions.isPossibleTo.cut(),
-        }}
-        onmousedown={() => menu.actions.cut()}
-      >
-        Cut
-      </button>
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          hidden: !menu.actions.isPossibleTo.delete(),
-        }}
-        onmousedown={() => menu.actions.delete()}
-      >
-        Delete
-      </button>
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          hidden: !menu.actions.isPossibleTo.rename(),
-        }}
-        onmousedown={() => menu.actions.rename()}
-      >
-        Rename
-      </button>
+        action={() => menu.actions.pasteTo()}
+        title={`Paste To ${!!singleFile && trimTo(singleFile.name, 12)}`}
+      />
+      <MenuButton
+        hidden={!menu.actions.isPossibleTo.copy()}
+        action={() => menu.actions.copy()}
+        title="Copy"
+      />
+      <MenuButton
+        hidden={!menu.actions.isPossibleTo.cut()}
+        action={() => menu.actions.cut()}
+        title="Cut"
+      />
+      <MenuButton
+        hidden={!menu.actions.isPossibleTo.delete()}
+        action={() => menu.actions.delete()}
+        title="Delete"
+      />
+      <MenuButton
+        hidden={!menu.actions.isPossibleTo.rename()}
+        action={() => menu.actions.rename()}
+        title="Rename"
+      />
     </div>
   );
 }
@@ -240,5 +212,34 @@ function DirMenuButtons(props: {
         Paste Here
       </button>
     </div>
+  );
+}
+
+function MenuButton(
+  props: {
+    action(ev: MouseEvent): void;
+    hidden?: boolean | ReadonlySignal<boolean>;
+    disabled?: boolean | ReadonlySignal<boolean>;
+    title: string | ReadonlySignal<string>;
+  },
+) {
+  return (
+    <button
+      class={{
+        [ADW.Button.button]: true,
+        [ADW.Button.flat]: true,
+        [ADW.Button.adaptive]: true,
+        [ADW.Button.disabled]: props.disabled,
+        hidden: props.hidden,
+      }}
+      onmousedown={(event) => {
+        if (isLmb(event)) {
+          props.action(event);
+        }
+      }}
+      disabled={props.disabled}
+    >
+      {props.title}
+    </button>
   );
 }

@@ -22,11 +22,15 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
         "explorer-window",
       ]}
     >
-      <LocationBar explorer={explorer} />
       <div class={[ADW.Box.className({ bg: 2 }), "explorer-content"]}>
         <LeftPane explorer={explorer} />
-        <DirView explorer={explorer} />
-        <PreviewPane explorer={explorer} />
+        <div class="main-view-container">
+          <LocationBar explorer={explorer} />
+          <div class="dir-view-wrapper">
+            <DirView explorer={explorer} />
+            <PreviewPane explorer={explorer} />
+          </div>
+        </div>
       </div>
       <Statusbar explorer={explorer} />
       <ContextMenu explorer={explorer} />

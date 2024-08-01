@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@ncpa0cpl/vanilla-jsx": "^0.0.1-alpha.26",
-    "adwavecss": "^0.0.14",
+    "adwavecss": "^0.1.0",
     "luxon": "^3.4.4"
   },
   "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"

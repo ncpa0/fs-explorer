@@ -47,8 +47,8 @@ export function DirView(props: DirViewProps) {
   };
 
   const maxWidthSig = sig.literal`calc(100% - ${
-    sig.when(preview.file, sig.as("32em"), sig.as("16em"))
-  })`;
+    // 26.8em is the width with margin of the preview pane
+    sig.when(preview.file, sig.as("26.8em"), sig.as("0em"))})`;
 
   return (
     <div

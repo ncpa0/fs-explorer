@@ -43,10 +43,10 @@ export const Prompt = $component(function Prompt(props: PropmptProps, api) {
 
   api.onChange(() => {
     const { open, initialValue } = promptModal.get();
-    if (initialValue != null && inputValue.get() === "") {
-      inputValue.dispatch(initialValue);
-    }
     if (open) {
+      if (initialValue != null) {
+        inputValue.dispatch(initialValue);
+      }
       inputElem.focus();
     }
   }, [promptModal]);
