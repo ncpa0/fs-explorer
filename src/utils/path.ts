@@ -95,12 +95,8 @@ export class Path {
       if (segment === "..") {
         if (result._segments.length > 0) {
           result._segments.pop();
-        } else {
-          result._segments.push(segment);
         }
-      } else if (segment === ".") {
-        continue;
-      } else {
+      } else if (segment !== ".") {
         result._segments.push(segment);
       }
     }

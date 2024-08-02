@@ -48,11 +48,14 @@ export class ContextMenuController {
         return this.canWrite.get();
       },
       paste: () => {
-        return this.canWrite.get();
+        const clipboard = this.menu.explorer.clipboard;
+        return clipboard.files.get().length && this.canWrite.get();
       },
       pasteTo: () => {
+        const clipboard = this.menu.explorer.clipboard;
         const target = this.menu.getTargetFile();
-        return target && target.directory && target.write;
+        return clipboard.files.get().length && target && target.directory
+          && target.write;
       },
       copy: () => {
         const target = this.menu.getTargetFile();

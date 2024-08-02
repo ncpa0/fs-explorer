@@ -19,7 +19,7 @@ enum BarMode {
 
 export function LocationBar(props: LocationBarProps) {
   const { explorer } = props;
-  const location = ExplorerLocation.signal(explorer.location);
+  const location = explorer.location.signal;
   const mode = sig(BarMode.Preview);
 
   const handleSegmentClick = (segmentPath: Path) => {
@@ -209,7 +209,8 @@ function LocationEditor(
 ) {
   const handleChange = (ev: Event) => {
     const input = ev.target as HTMLInputElement;
-    const newPath = new Path(input.value.trim());
+    const newPath = new Path(input.value.trim()).normalize();
+    console.log(newPath.toString());
     props.onSubmit(newPath);
   };
 

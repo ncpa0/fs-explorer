@@ -6,9 +6,11 @@ import { DirViewController } from "./base/dir-view-controller";
 import { FsController } from "./base/fs-controller";
 import { ExplorerHistory, ExplorerLocation } from "./base/history";
 import { PreviewPaneController } from "./base/preview-pane-controller";
+import { RaceQueue } from "./base/race-queue";
 import { Filesystem, FStat } from "./filesystem-interface";
 import { ActionError } from "./interfaces/action-error";
 import { Styles } from "./styles-component";
+import { Immediate } from "./utils/immediate";
 import { Path } from "./utils/path";
 
 export interface Place {
@@ -83,6 +85,8 @@ export class Explorer {
     open: false,
   });
 
+  private updateQueue = new RaceQueue();
+
   constructor(
     private readonly filesystem: Filesystem,
     public readonly options: ExplorerOptions = {},
@@ -137,18 +141,15 @@ export class Explorer {
   private updateDirContents(path: Path | string) {
     const locationPath = path.toString();
 
-    let dirstat: FStat;
-    let files: FStat[];
-    this.filesystem.stat(locationPath).then((stat) => {
-      dirstat = stat;
-      if (files) {
-        this.directory.changeDirectory(dirstat, files);
-      }
-    });
-    this.filesystem.readdirStat(locationPath).then((files) => {
-      files = files;
-      if (dirstat) {
-        this.directory.changeDirectory(dirstat, files);
+    const data = Immediate.all(
+      this.filesystem.stat(locationPath),
+      this.filesystem.readdirStat(locationPath),
+    );
+
+    this.updateQueue.add(data, (result) => {
+      if (result.ok) {
+        const [stat, files] = result.value;
+        this.directory.changeDirectory(stat, files);
       }
     });
   }
@@ -174,9 +175,31 @@ export class Explorer {
   }
 
   open(path: string | Path) {
+    path = Path.from(path);
+
+    if (this.location.path.equals(path)) {
+      return;
+    }
+
     return this.filesystem.dirExists(path.toString()).then((exists) => {
       if (exists) {
         this.history.push(path);
+        return true;
+      }
+      return false;
+    });
+  }
+
+  replace(path: string | Path) {
+    path = Path.from(path);
+
+    if (this.location.path.equals(path)) {
+      return;
+    }
+
+    return this.filesystem.dirExists(path.toString()).then((exists) => {
+      if (exists) {
+        this.history.replace(path);
         return true;
       }
       return false;

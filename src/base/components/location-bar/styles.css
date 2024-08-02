@@ -1,7 +1,7 @@
 .location-bar {
     display: flex;
     flex-direction: row;
-    padding: .5em .8em .5em .2em;
+    padding: .5em .3em .5em .2em;
 
     & button.btn {
         display: flex;
@@ -23,7 +23,7 @@
     & .control-buttons {
         display: flex;
         flex-direction: row;
-        margin-right: .6em;
+        margin-right: .3em;
     }
 
     & .location-editor {

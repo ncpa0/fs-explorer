@@ -182,35 +182,22 @@ function DirMenuButtons(props: {
 
   return (
     <div class="dcontents">
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          hidden: menu.actions.isPossibleTo.createFile(),
-        }}
-        onmousedown={() => menu.actions.createFile()}
-      >
-        New File
-      </button>
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          hidden: menu.actions.isPossibleTo.createDirectory(),
-        }}
-        onmousedown={() => menu.actions.createDirectory()}
-      >
-        New Directory
-      </button>
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          [ADW.Button.disabled]: !canPaste,
-          hidden: !canPaste,
-        }}
+      <MenuButton
+        hidden={!menu.actions.isPossibleTo.createFile()}
+        action={() => menu.actions.createFile()}
+        title="New File"
+      />
+      <MenuButton
+        hidden={!menu.actions.isPossibleTo.createDirectory()}
+        action={() => menu.actions.createDirectory()}
+        title="New Directory"
+      />
+      <MenuButton
+        hidden={!canPaste}
         disabled={!canPaste}
-        onmousedown={() => menu.actions.paste()}
-      >
-        Paste Here
-      </button>
+        action={() => menu.actions.paste()}
+        title={"Paste Here"}
+      />
     </div>
   );
 }

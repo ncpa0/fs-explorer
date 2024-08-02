@@ -3,7 +3,49 @@ export type Resolvable<T> = {
   catch<U = void>(cb?: (err: any) => U): Resolvable<T | U>;
 };
 
+type ImmediateType<T> = T extends Resolvable<infer U> ? U : T;
+
+type MapImmediates<T extends Resolvable<any>[]> = T extends
+  [infer First, ...infer Rest extends Resolvable<any>[]]
+  ? [ImmediateType<First>, ...MapImmediates<Rest>]
+  : [];
+
 export class Immediate<T = void> implements Resolvable<T> {
+  static all<const T extends Resolvable<any>[]>(
+    ...resolvables: T
+  ): Resolvable<MapImmediates<T>> {
+    const promises: Promise<[idx: number, value: unknown]>[] = [];
+    const results = [] as MapImmediates<T>;
+
+    for (let i = 0; i < resolvables.length; i++) {
+      const imm = resolvables[i];
+      if (imm instanceof Immediate) {
+        if (imm.error) {
+          return Immediate.reject(imm.error);
+        } else {
+          results[i] = imm.value;
+        }
+      } else {
+        const placeholder = Symbol("promise_placeholder");
+        results[i] = placeholder;
+
+        const promise = imm as Promise<unknown>;
+        promises.push(promise.then((v) => [i, v]));
+      }
+    }
+
+    if (promises.length > 0) {
+      return Promise.all(promises).then(presults => {
+        for (const [idx, value] of presults) {
+          results[idx] = value;
+        }
+        return results;
+      });
+    }
+
+    return Immediate.resolve(results);
+  }
+
   static unpack<T>(v: T | Immediate<T>): T {
     if (v instanceof Immediate) {
       if (!v.success) {

@@ -12,14 +12,6 @@ export class ExplorerLocation {
     location._path.dispatch(path);
   }
 
-  static signal(location: ExplorerLocation) {
-    return location._path.readonly();
-  }
-
-  static pathOf(location: ExplorerLocation) {
-    return location._path.get();
-  }
-
   private _path = sig(new Path("/"));
 
   signal = this._path.readonly();
