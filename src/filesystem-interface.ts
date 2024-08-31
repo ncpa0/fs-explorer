@@ -26,7 +26,11 @@ export interface Filesystem {
   readdirStat(path: string): Resolvable<FStat[]>;
   stat(path: string): Resolvable<FStat>;
   copy(from: string, to: string): Resolvable<void>;
-  move(from: string, to: string): Resolvable<void>;
+  move(
+    from: string,
+    to: string,
+    options?: { overwrite?: boolean },
+  ): Resolvable<void>;
   remove(path: string): Resolvable<void>;
   mkdir(path: string): Resolvable<void>;
   touch(path: string): Resolvable<void>;

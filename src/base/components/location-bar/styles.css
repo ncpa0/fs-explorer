@@ -1,39 +1,46 @@
-.location-bar {
-    display: flex;
-    flex-direction: row;
-    padding: .5em .3em .5em .2em;
-
-    & button.btn {
+.explorer-window.explorer-window.explorer-window.explorer-window {
+    .location-bar {
         display: flex;
-        justify-content: center;
-        align-items: center;
+        flex-direction: row;
+        padding: .5em .3em .5em .2em;
 
-        & .control-icon {
+        & button.btn {
             display: flex;
             justify-content: center;
             align-items: center;
 
-            & svg {
-                width: 1.2em;
-                height: 1.2em;
+            & .control-icon {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+
+                & svg {
+                    width: 1.2em;
+                    height: 1.2em;
+
+                    & path,
+                    & rect {
+                        fill: var(--clr-text) !important;
+                    }
+                }
             }
         }
-    }
 
-    & .control-buttons {
-        display: flex;
-        flex-direction: row;
-        margin-right: .3em;
-    }
+        & .control-buttons {
+            display: flex;
+            flex-direction: row;
+            margin-right: .3em;
+        }
 
-    & .location-editor {
-        flex: 1;
-        padding: .6em .8em;
-        background-color: var(--clr-bg-3);
-        border-radius: 4px;
-    }
+        & .location-editor {
+            flex: 1;
+            padding: .6em .8em;
+            background-color: var(--clr-bg-3);
+            border-radius: 4px;
+        }
 
-    & .location-preview {
-        flex: 1;
+        & .location-preview {
+            flex: 1;
+        }
     }
 }

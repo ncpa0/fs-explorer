@@ -2,7 +2,10 @@ import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../explorer";
 import { FStat } from "../filesystem-interface";
 import { Fmt } from "../utils/formatters";
+import { Immediate } from "../utils/immediate";
+import { Path } from "../utils/path";
 import { sortFiles, SortMode } from "./components/dir-view/sort-files";
+import { RaceQueue } from "./race-queue";
 
 export interface DirectoryInfo {
   filecount: string;
@@ -16,10 +19,15 @@ export interface DirectoryInfo {
 }
 
 export class DirViewController {
+  private readonly updateQueue = new RaceQueue();
+
+  public readonly activeEntry = sig<FStat | null>(null);
   public readonly stat = sig<FStat | undefined>(undefined);
   public readonly files = sig<ReadonlyArray<FStat>>([]);
   public readonly sorting = sig({ mode: SortMode.Alpha, reverse: false });
+  public readonly showHidden = sig(false);
   public readonly selection = sig<ReadonlyArray<FStat>>([]);
+  public readonly loading = sig(false);
 
   public readonly filesView = this.deriveFilesView();
   public readonly directoryInfo = this.deriveDirectoryInfo();
@@ -27,10 +35,11 @@ export class DirViewController {
   constructor(
     protected explorer: Explorer,
   ) {
-    const clearSelection = () => {
+    const onEscape = () => {
+      this.activeEntry.dispatch(null);
       this.selection.dispatch([]);
     };
-    explorer.onEscapePress(clearSelection);
+    explorer.onEscapePress(onEscape);
 
     // unselect any files that disappear from the view
     this.filesView.add((filesView) => {
@@ -53,9 +62,12 @@ export class DirViewController {
     return sig.derive(
       this.files,
       this.sorting,
-      (files, sorting) => {
+      this.showHidden,
+      (files, sorting, showHidden) => {
         return sortFiles(
-          files.filter(f => !f.hidden),
+          showHidden
+            ? files
+            : files.filter(f => !f.hidden),
           sorting.mode,
           sorting.reverse,
         );
@@ -98,12 +110,28 @@ export class DirViewController {
   }
 
   changeDirectory(
-    dirStat: FStat,
-    files: FStat[],
+    dirpath: string | Path,
   ) {
-    this.selection.dispatch([]);
-    this.stat.dispatch(dirStat);
-    this.files.dispatch(files);
+    this.loading.dispatch(true);
+
+    const locationPath = Path.from(dirpath).toString();
+
+    const data = Immediate.all(
+      this.explorer.filesystem.stat(locationPath),
+      this.explorer.filesystem.readdirStat(locationPath),
+    );
+
+    this.updateQueue.add(data, (res) => {
+      if (!res.ok) return;
+
+      const [stat, files] = res.value;
+      sig.startBatch();
+      this.selection.dispatch([]);
+      this.stat.dispatch(stat);
+      this.files.dispatch(files);
+      this.loading.dispatch(false);
+      sig.commitBatch();
+    });
   }
 
   toggleSelectFile(file: FStat) {
@@ -142,5 +170,21 @@ export class DirViewController {
         }
       }
     });
+  }
+
+  showHiddenFilesToggle() {
+    this.showHidden.dispatch(v => !v);
+  }
+
+  getActionableFiles() {
+    const sel = this.selection.get();
+    if (sel.length) {
+      return sel;
+    }
+    const active = this.activeEntry.get();
+    if (active) {
+      return [active];
+    }
+    return null;
   }
 }

@@ -32,6 +32,7 @@
   "devDependencies": {
     "@ncpa0cpl/nodepack": "^2.3.3",
     "@types/bun": "latest",
+    "@types/lodash.throttle": "^4.1.9",
     "@types/luxon": "^3.4.2",
     "dedent": "^1.5.3",
     "dprint": "^0.47.1",
@@ -45,8 +46,9 @@
     "typescript": "^5.5.3"
   },
   "dependencies": {
-    "@ncpa0cpl/vanilla-jsx": "^0.0.1-alpha.26",
+    "@ncpa0cpl/vanilla-jsx": "^0.0.1-alpha.27",
     "adwavecss": "^0.1.0",
+    "lodash.throttle": "^4.1.1",
     "luxon": "^3.4.4"
   },
   "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"

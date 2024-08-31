@@ -15,6 +15,10 @@ export type ExplorerWindowProps = {
 export function ExplorerWindow(props: ExplorerWindowProps) {
   const { explorer } = props;
 
+  const mainViewMaxWidth = explorer.hideLeftPane.derive(hide => {
+    return hide ? "100%" : "calc(100% - 16em)";
+  });
+
   return (
     <div
       class={[
@@ -24,7 +28,7 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
     >
       <div class={[ADW.Box.className({ bg: 2 }), "explorer-content"]}>
         <LeftPane explorer={explorer} />
-        <div class="main-view-container">
+        <div class="main-view-container" style={{ maxWidth: mainViewMaxWidth }}>
           <LocationBar explorer={explorer} />
           <div class="dir-view-wrapper">
             <DirView explorer={explorer} />

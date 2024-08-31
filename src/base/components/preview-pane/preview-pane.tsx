@@ -42,10 +42,13 @@ export function PreviewPane(props: PreviewPaneProps) {
 }
 
 function FileInfo(props: { file: FStat }) {
-  const type = props.file.mimetype && mimeName(props.file.mimetype);
+  let type = props.file.mimetype && mimeName(props.file.mimetype);
+  if (props.file.directory) {
+    type = "Directory";
+  }
 
   return (
-    <div class="file-info">
+    <div class="file-info scrollview">
       <div class={["dcontents", "info-entry", ADW.Typography.text]}>
         <span class="info-label">Filename:</span>
         <span class="info-value">{props.file.name}</span>
@@ -95,7 +98,7 @@ function FileInfo(props: { file: FStat }) {
       </div>
       <div class={["dcontents", "info-entry", ADW.Typography.text]}>
         <span class="info-label">Write:</span>
-        <span class="info-value">{String(props.file.read)}</span>
+        <span class="info-value">{String(props.file.write)}</span>
       </div>
     </div>
   );

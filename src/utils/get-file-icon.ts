@@ -79,7 +79,16 @@ const IconToExtMap: Array<[Svg, string[]]> = [
   [audioIcon, [".mp3", ".wav", ".flac", ".ogg", ".m4a", ".wma"]],
   [binaryIcon, [".exe", ".dll", ".so", ".dylib", ".bin"]],
   [document, [".doc", ".docx", ".odt", ".pdf", ".rtf", ".tex"]],
-  [imageIcon, [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".ico"]],
+  [imageIcon, [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".bmp",
+    ".svg",
+    ".ico",
+    ".webp",
+  ]],
   [pdfIcon, [".pdf"]],
   [
     script,

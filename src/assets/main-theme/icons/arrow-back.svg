@@ -85,15 +85,6 @@
          id="path4231"
          d="M 457.23242,-163.98437 265.20508,28 l 0.99609,1.00391 191.03125,-190.98828 43.32031,43.34375 1.00196,-0.9961 z M 387.24805,-4 385.23633,-2 H 656 v -2 z m -2.01172,66 115.32031,115.97461 0.99805,-0.99805 L 387.22461,62 Z"
          style="opacity:0.2;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none" />
-      <rect
-         style="display:inline;overflow:visible;visibility:visible;fill:none;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate"
-         id="rect4357"
-         width="512"
-         height="512"
-         x="-720"
-         y="-228"
-         inkscape:label="48x48"
-         transform="scale(-1,1)" />
     </g>
   </g>
 </svg>

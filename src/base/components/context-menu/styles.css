@@ -1,37 +1,72 @@
-.context-backdrop {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 5;
+.explorer-window.explorer-window.explorer-window.explorer-window {
+    .context-backdrop {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 5;
 
-    &.hidden {
-        display: none;
-    }
-}
-
-.context-menu {
-    position: absolute;
-    padding: .3em;
-    background: var(--clr-bg-4);
-    z-index: 10;
-    border-radius: 6px;
-    transition: height 0.2s ease-in-out, width 0.2s ease-in-out;
-    display: flex;
-    flex-direction: column;
-    justify-content: stretch;
-
-    &&& {
-        font-size: .9em;
+        &.hidden {
+            display: none;
+        }
     }
 
-    &.hidden,
-    & .hidden {
-        display: none;
-    }
+    .context-menu {
+        position: absolute;
+        padding: .3em;
+        background: var(--clr-bg-5);
+        z-index: 10;
+        border-radius: 8px;
+        transition: height 0.2s ease-in-out, width 0.2s ease-in-out;
+        display: flex;
+        flex-direction: column;
+        justify-content: stretch;
+        width: 12em;
 
-    & button {
-        text-align: start;
+        & .buttons-list {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        &&& {
+            font-size: .9em;
+        }
+
+        &.hidden,
+        & .hidden {
+            display: none;
+        }
+
+        & button {
+            text-align: start;
+        }
+
+        & .custom-actions {
+            display: none;
+            position: absolute;
+            left: -9999999px;
+            top: -9999999px;
+        }
+
+        & .custom-actions-visible {
+            & > button,
+            & > .separator {
+                opacity: 0;
+            }
+
+            & .custom-actions {
+                display: flex;
+            }
+        }
+
+        & .main-btn-no-display {
+            & > button,
+            & > .separator {
+                display: none;
+            }
+        }
     }
 }

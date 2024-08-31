@@ -6,7 +6,7 @@ import { DirViewController } from "./base/dir-view-controller";
 import { FsController } from "./base/fs-controller";
 import { ExplorerHistory, ExplorerLocation } from "./base/history";
 import { PreviewPaneController } from "./base/preview-pane-controller";
-import { RaceQueue } from "./base/race-queue";
+import { PromptController } from "./base/prompt-controller";
 import { Filesystem, FStat } from "./filesystem-interface";
 import { ActionError } from "./interfaces/action-error";
 import { Styles } from "./styles-component";
@@ -21,8 +21,16 @@ export interface Place {
 
 export interface FileAction {
   readonly label: string;
-  readonly match: (file: FStat) => boolean;
-  readonly run: (file: FStat) => void;
+  readonly match: (
+    file: readonly FStat[],
+    info: { isCurrentDir: boolean },
+  ) => boolean;
+  readonly run: (file: readonly FStat[]) => void;
+}
+
+export interface ExplorerAction {
+  readonly label: string;
+  readonly run: (explorer: Explorer) => void;
 }
 
 export interface FileActionApi {
@@ -40,6 +48,10 @@ export interface ExplorerOptions {
    */
   readonly actions?: ReadonlyArray<FileAction>;
   /**
+   * Action available in the explorer toolbar menu.
+   */
+  readonly explorerActions?: ReadonlyArray<ExplorerAction>;
+  /**
    * Initial list of links that will appear in the left pane. User can add,
    * remove or reorder these as they see fit.
    */
@@ -49,7 +61,11 @@ export interface ExplorerOptions {
    * remove or reorder these.
    */
   readonly staticPlaces?: ReadonlyArray<Place>;
-  readonly showLeftPane?: boolean;
+  readonly hideLeftPane?: boolean;
+  /**
+   * Path to the directory that will be opened when the explorer is initieated. The Default is `/`.
+   */
+  readonly initDir?: string;
 }
 
 export interface PromptModal {
@@ -73,6 +89,7 @@ export class Explorer {
   public readonly contextMenu = new ContextMenuController(this);
   public readonly previewPane = new PreviewPaneController(this);
   public readonly clipboard = new ClipcoardController(this);
+  public readonly prompt = new PromptController(this);
   public readonly fs;
 
   // location visible on the left pane
@@ -80,15 +97,10 @@ export class Explorer {
   public readonly staticPlaces = sig<ReadonlyArray<Place>>([]);
 
   public readonly actionError = sig<ActionError | undefined>(undefined);
-
-  public readonly promptModal = sig<PromptModal>({
-    open: false,
-  });
-
-  private updateQueue = new RaceQueue();
+  public readonly hideLeftPane = sig<boolean>(false);
 
   constructor(
-    private readonly filesystem: Filesystem,
+    public readonly filesystem: Filesystem,
     public readonly options: ExplorerOptions = {},
   ) {
     this.fs = new FsController(this, filesystem);
@@ -99,7 +111,13 @@ export class Explorer {
     if (options.staticPlaces) {
       this.staticPlaces.dispatch(options.staticPlaces.slice());
     }
+    if ("hideLeftPane" in options) {
+      this.hideLeftPane.dispatch(!!options.hideLeftPane);
+    }
 
+    if (options.initDir) {
+      this.history.replace(options.initDir);
+    }
     const { detach } = this.location.signal.add(
       (path) => {
         this.previewPane.close();
@@ -119,39 +137,88 @@ export class Explorer {
   }
 
   private globalKeyDownHandler = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
-      if (this.promptModal.get().open) {
-        this.promptModal.dispatch({
-          open: false,
-        });
-        return;
-      }
+    switch (e.key) {
+      case "Escape": {
+        if (this.prompt.isOpen.get()) {
+          this.prompt.internal.cancel();
+          return;
+        }
 
-      if (this.contextMenu.isOpen.get()) {
-        this.contextMenu.close();
-        return;
-      }
+        if (this.contextMenu.isOpen.get()) {
+          this.contextMenu.close();
+          return;
+        }
 
-      for (const handler of this.escapeKeyHandlers) {
-        handler(e);
+        for (const handler of this.escapeKeyHandlers) {
+          handler(e);
+        }
+        break;
+      }
+      case "c": {
+        if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+          const files = this.directory.getActionableFiles();
+          if (files) {
+            this.clipboard.put(files, "copy");
+          }
+        }
+        break;
+      }
+      case "x": {
+        if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+          const files = this.directory.getActionableFiles();
+          if (files) {
+            this.clipboard.put(files, "move");
+          }
+        }
+        break;
+      }
+      case "v": {
+        if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+          const dstat = this.directory.stat.get();
+          if (dstat && dstat.write) {
+            this.fs.clipboardPaste(dstat.path);
+          }
+        }
+        break;
+      }
+      case "F2": {
+        if (!e.ctrlKey && !e.shiftKey && !e.altKey) {
+          const selected = this.directory.getActionableFiles();
+          if (selected && selected.length === 1) {
+            const file = selected[0]!;
+            this.prompt.input({
+              title: "Rename",
+              message: "Enter new name:",
+              initialValue: file.name,
+              placeholder: "Filename",
+              validate: this.contextMenu.nameValidator(file.name),
+            }).then((name) => {
+              const newPath = Path.from(file.path).base().joinSegment(
+                name,
+              );
+              this.fs.move(file, newPath);
+            });
+          }
+        }
+        break;
+      }
+      case "Delete": {
+        if (!e.ctrlKey && !e.shiftKey && !e.altKey) {
+          const files = this.directory.getActionableFiles();
+          if (files) {
+            Immediate.all(...files.map(f => this.fs.remove(f))).then(() => {
+              this.refresh();
+            });
+          }
+        }
       }
     }
   };
 
   private updateDirContents(path: Path | string) {
-    const locationPath = path.toString();
-
-    const data = Immediate.all(
-      this.filesystem.stat(locationPath),
-      this.filesystem.readdirStat(locationPath),
+    this.directory.changeDirectory(
+      path,
     );
-
-    this.updateQueue.add(data, (result) => {
-      if (result.ok) {
-        const [stat, files] = result.value;
-        this.directory.changeDirectory(stat, files);
-      }
-    });
   }
 
   onEscapePress(handler: (e: KeyboardEvent) => void) {
@@ -206,12 +273,16 @@ export class Explorer {
     });
   }
 
-  mountTo(element: HTMLElement) {
+  element(): Element {
     if (!this.window) {
       this.window = ExplorerWindow({ explorer: this });
       this.window.prepend(Styles());
     }
-    element.appendChild(this.window);
+    return this.window;
+  }
+
+  mountTo(element: HTMLElement) {
+    element.appendChild(this.element());
   }
 
   dispose() {
@@ -242,5 +313,24 @@ export class Explorer {
     this.staticPlaces.dispatch((places) => {
       return places.filter((place) => place.id !== id);
     });
+  }
+
+  getActiveFile() {
+    return this.directory.activeEntry.get();
+  }
+
+  getCurrentDir() {
+    return {
+      stat: this.directory.stat.get(),
+      files: this.directory.files.get(),
+    };
+  }
+
+  getSelectedFiles() {
+    return this.directory.selection.get();
+  }
+
+  getClipboard() {
+    return this.clipboard.files.get();
   }
 }

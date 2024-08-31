@@ -5,10 +5,10 @@ import { FileActionContext } from "../interfaces/file-action";
 import { Path } from "../utils/path";
 
 export interface ContextMenuPosition {
-  top?: number;
-  right?: number;
-  bottom?: number;
-  left?: number;
+  top?: string;
+  right?: string;
+  bottom?: string;
+  left?: string;
 }
 
 export interface OpenMenuParams {
@@ -36,6 +36,10 @@ export class ContextMenuController {
 
         if (!file) {
           return false;
+        }
+
+        if (file.directory) {
+          return true;
         }
 
         const action = explorer.options.openAction?.(file);
@@ -95,126 +99,108 @@ export class ContextMenuController {
       const file = this.menu.triggerFile.get();
 
       if (file) {
-        const action = explorer.options.openAction?.(file);
-        if (action) {
-          const ctx = new FileActionContext(
-            explorer,
-            file,
-          );
-          action(file, ctx);
+        if (file.directory) {
+          explorer.open(file.path);
+        } else {
+          const action = explorer.options.openAction?.(file);
+          if (action) {
+            const ctx = new FileActionContext(
+              explorer,
+              file,
+            );
+            action(file, ctx);
+          }
         }
       }
+
+      this.menu.close();
     }
 
     createFile() {
       const explorer = this.menu.explorer;
-      const dir = explorer.directory;
+
+      explorer.prompt.input({
+        title: "Create File",
+        message: "Name of the new file:",
+        initialValue: "New File",
+        placeholder: "File name",
+        validate: this.menu.nameValidator(),
+      }).then(name => {
+        const filepath = explorer.location.path.joinSegment(name);
+        explorer.fs.touch(filepath);
+      });
 
       this.menu.close();
-      explorer.promptModal.dispatch({
-        open: true,
-        prompt: "Name of the new file:",
-        confirmBtnLabel: "Create",
-        initialValue: "New File",
-        onConfirm(name) {
-          const filepath = explorer.location.path.joinSegment(name);
-          explorer.fs.touch(filepath);
-        },
-        validate(name) {
-          if (!name) {
-            return { msg: "Name cannot be empty" };
-          }
-
-          const existingFiles = dir.files.get()!.map(f => f.name);
-          if (existingFiles.includes(name)) {
-            return {
-              msg: "File with this name already exists.",
-            };
-          }
-
-          return "ok";
-        },
-      });
     }
 
     createDirectory() {
       const explorer = this.menu.explorer;
-      const dir = explorer.directory;
+
+      explorer.prompt.input({
+        title: "Create Directory",
+        message: "Name of the new directory:",
+        initialValue: "New Directory",
+        placeholder: "Directory name",
+        validate: this.menu.nameValidator(),
+      }).then(name => {
+        const filepath = explorer.location.path.joinSegment(name);
+        explorer.fs.mkdir(filepath);
+      });
 
       this.menu.close();
-      explorer.promptModal.dispatch({
-        open: true,
-        prompt: "Name of the new directory:",
-        confirmBtnLabel: "Create",
-        initialValue: "New Directory",
-        onConfirm(name) {
-          const filepath = explorer.location.path.joinSegment(name);
-          explorer.fs.mkdir(filepath);
-        },
-        validate(name) {
-          const existingFiles = dir.files.get()!.map(f => f.name);
-          if (existingFiles.includes(name)) {
-            if (!name) {
-              return { msg: "Name cannot be empty" };
-            }
-            return {
-              msg: "File with this name already exists.",
-            };
-          }
-
-          return "ok";
-        },
-      });
     }
 
     paste() {
       const explorer = this.menu.explorer;
       const dir = explorer.directory;
 
-      this.menu.close();
       const to = dir.stat.get()!;
       if (to.write) {
         explorer.fs.clipboardPaste(to.path);
       }
+
+      this.menu.close();
     }
 
     pasteTo() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
 
-      this.menu.close();
       if (file && file.directory && file.write) {
         explorer.fs.clipboardPaste(file.path);
       }
+
+      this.menu.close();
     }
 
     copy() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
 
-      this.menu.close();
       explorer.clipboard.put(
         file ? file : this.menu.selectedFiles.get(),
         "copy",
       );
+
+      this.menu.close();
     }
 
     cut() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
 
-      this.menu.close();
       explorer.clipboard.put(
         file ? file : this.menu.selectedFiles.get(),
         "move",
       );
+
+      this.menu.close();
     }
 
     delete() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
 
-      this.menu.close();
       if (file) {
         explorer.fs.remove(file);
       } else {
@@ -222,34 +208,42 @@ export class ContextMenuController {
           explorer.fs.remove(file);
         }
       }
+
+      this.menu.close();
     }
 
     rename() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
 
-      this.menu.close();
-      if (!file) return;
-      explorer.promptModal.dispatch({
-        open: true,
-        prompt: "New name:",
-        initialValue: file.name,
-        onConfirm: (name) => {
+      if (!file) {
+        this.menu.close();
+      } else {
+        explorer.prompt.input({
+          title: "Rename",
+          message: "Enter new name:",
+          initialValue: file.name,
+          placeholder: "Filename",
+          validate: this.menu.nameValidator(file.name),
+        }).then((name) => {
           const newPath = Path.from(file.path).base().joinSegment(
             name,
           );
           explorer.fs.move(file, newPath);
-        },
-        validate: (name) => {
-          if (!name) {
-            return { msg: "Name cannot be empty" };
-          }
-          if (name.includes("/")) {
-            return { msg: "Name cannot contain '/' character" };
-          }
-          return "ok";
-        },
-      });
+        });
+      }
+
+      this.menu.close();
+    }
+
+    showPreview() {
+      const explorer = this.menu.explorer;
+      const file = this.menu.triggerFile.get();
+      if (file) {
+        explorer.previewPane.open(file);
+      }
+
+      this.menu.close();
     }
   };
 
@@ -260,12 +254,38 @@ export class ContextMenuController {
 
   public readonly actions;
   public readonly customActions;
+  public readonly customDirActions;
 
   constructor(
     protected explorer: Explorer,
   ) {
     this.actions = new ContextMenuController.ContextMenuActions(this);
     this.customActions = this.deriveCustomActions();
+    this.customDirActions = this.deriveCustomDirectoryActions();
+  }
+
+  nameValidator(originalName?: string) {
+    return (name: string) => {
+      const dir = this.explorer.directory;
+      const existingFiles = dir.files.get()!.map(f => f.name);
+
+      if (name.includes("/")) {
+        return { msg: "Name cannot contain the '/' character." };
+      }
+
+      if (existingFiles.includes(name)) {
+        if (!name) {
+          return { msg: "Name cannot be empty." };
+        }
+        if (name !== originalName) {
+          return {
+            msg: "File with this name already exists.",
+          };
+        }
+      }
+
+      return "ok";
+    };
   }
 
   private deriveCustomActions() {
@@ -277,15 +297,32 @@ export class ContextMenuController {
         if (!actionDefs) return [];
 
         if (files.length === 0 && targetFile) {
-          return actionDefs.filter(def => def.match(targetFile));
+          return actionDefs.filter(def =>
+            def.match([targetFile], { isCurrentDir: false })
+          );
         }
 
-        if (files.length === 1) {
-          const file = files[0]!;
-          return actionDefs.filter(def => def.match(file));
+        if (files.length > 0) {
+          return actionDefs.filter(def =>
+            def.match(files, { isCurrentDir: false })
+          );
         }
 
         return [];
+      },
+    );
+  }
+
+  private deriveCustomDirectoryActions() {
+    return sig.derive(
+      this.explorer.directory.stat,
+      (dirStat) => {
+        const actionDefs = this.explorer.options.actions;
+        if (!actionDefs) return [];
+
+        return dirStat
+          ? actionDefs.filter(a => a.match([dirStat], { isCurrentDir: true }))
+          : [];
       },
     );
   }

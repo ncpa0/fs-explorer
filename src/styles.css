@@ -14,7 +14,9 @@
 
 @import "./base/components/statusbar/styles.css";
 
-.explorer-window {
+@import "./base/components/_common/loader-styles.css";
+
+.explorer-window.explorer-window.explorer-window.explorer-window {
     box-sizing: border-box;
 
     & * {

@@ -1,121 +1,184 @@
-.dir-view-container {
-    flex: 1;
-    height: 100%;
-}
-
-.dir-view {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 3.5em 1fr 10em 16em;
-    overflow-y: auto;
-    max-height: 100%;
-    height: fit-content;
-    --icon-size: 2em;
-
-    &.empty {
+.explorer-window.explorer-window.explorer-window.explorer-window {
+    .dir-view-container {
+        flex: 1;
+        height: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 10em;
 
-        & .empty-dir-msg {
-            font-size: 1.6em;
+        &.spinner {
+            font-size: 1.5em;
         }
     }
 
-    & .dirview-header {
-        & > * {
+    .dir-view {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 4em minmax(50px, auto) 8em 12em;
+        overflow-y: auto;
+        max-height: 100%;
+        height: fit-content;
+        min-height: 100%;
+        align-content: baseline;
+        --icon-size: 2em;
+
+        &.hidden {
+            animation: fsexplorer-dirview-hidden 100ms;
+            animation-fill-mode: forwards;
+        }
+
+        &.empty {
             display: flex;
-            align-items: center;
-            padding-top: .5em;
-            padding-bottom: .4em;
-            position: sticky;
-            top: 0;
-            left: 0;
-            background-color: var(--clr-bg-2);
-            z-index: 2;
-            border-bottom: 1px solid var(--clr-dimmed);
-        }
-
-        & .header-name {
-            cursor: pointer;
-            padding-left: .5em;
-        }
-
-        & .header-size {
-            cursor: pointer;
             justify-content: center;
-            border-left: 1px solid var(--clr-dimmed);
-        }
-
-        & .header-date {
-            cursor: pointer;
-            justify-content: center;
-            border-left: 1px solid var(--clr-dimmed);
-        }
-    }
-
-    & .file-entry {
-        display: contents;
-
-        & .filename,
-        & .file-size,
-        & .file-modified,
-        & .file-icon {
-            display: flex;
             align-items: center;
-        }
+            height: 100%;
 
-        & .file-size,
-        & .file-modified {
-            justify-content: flex-end;
-            padding-right: 2em;
-        }
-
-        & .file-icon svg {
-            width: var(--icon-size);
-            height: var(--icon-size);
-            margin-bottom: .1em;
-        }
-
-        & > * {
-            padding: .25em .5em;
-
-            &:first-child {
-                border-top-left-radius: 4px;
-                border-bottom-left-radius: 4px;
-                margin-left: .6em;
-            }
-
-            &:last-child {
-                border-top-right-radius: 4px;
-                border-bottom-right-radius: 4px;
-                margin-right: .6em;
+            & .empty-dir-msg {
+                font-size: 1.6em;
             }
         }
 
-        &.selected {
+        & .dirview-header {
             & > * {
-                background-color: var(--clr-primary-100);
+                display: flex;
+                align-items: center;
+                padding-top: .5em;
+                padding-bottom: .4em;
+                position: sticky;
+                top: 0;
+                left: 0;
+                background-color: var(--clr-bg-2);
+                z-index: 2;
+                border-bottom: 1px solid var(--clr-dimmed);
+            }
+
+            & .header-name {
+                cursor: pointer;
+                padding-left: .5em;
+            }
+
+            & .header-size {
+                cursor: pointer;
+                justify-content: center;
+                border-left: 1px solid var(--clr-dimmed);
+            }
+
+            & .header-date {
+                cursor: pointer;
+                justify-content: center;
+                border-left: 1px solid var(--clr-dimmed);
+            }
+        }
+
+        & .file-entry {
+            display: contents;
+
+            & .filename {
+                max-width: 100%;
+
+                & span {
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    max-width: 100%;
+                }
+            }
+
+            & .filename,
+            & .file-size,
+            & .file-modified,
+            & .file-icon {
+                display: flex;
+                align-items: center;
+                box-sizing: border-box;
+                height: 2.6em;
+            }
+
+            & .file-size,
+            & .file-modified {
+                justify-content: flex-end;
+                padding-right: .8em;
+            }
+
+            & .file-icon svg {
+                width: var(--icon-size);
+                height: var(--icon-size);
+                margin-bottom: .1em;
+            }
+
+            & > * {
+                padding: .25em .5em;
+
+                &:first-child {
+                    border-top-left-radius: 4px;
+                    border-bottom-left-radius: 4px;
+                    margin-left: 1em;
+                }
+
+                &:last-child {
+                    border-top-right-radius: 4px;
+                    border-bottom-right-radius: 4px;
+                    margin-right: 1em;
+                }
+            }
+
+            &.active-entry {
+                & > * {
+                    border: 1px solid var(--clr-primary-100);
+                }
+
+                & .file-icon {
+                    border-right: unset;
+                }
+
+                & .filename,
+                & .file-size {
+                    border-right: unset;
+                    border-left: unset;
+                }
+
+                & .file-modified {
+                    border-left: unset;
+                }
+            }
+
+            &.selected {
+                & > * {
+                    background-color: var(--clr-primary-100);
+                }
+
+                &:hover {
+                    & > * {
+                        background-color: var(--clr-primary-200);
+                    }
+                }
             }
 
             &:hover {
+                cursor: pointer;
+
                 & > * {
-                    background-color: var(--clr-primary-200);
+                    background-color: #86868646;
                 }
             }
         }
 
-        &:hover {
-            cursor: pointer;
+        & .page-filler {
+            height: 78em;
+        }
 
-            & > * {
-                background-color: #86868646;
-            }
+        & .gaper {
+            height: 1em;
         }
     }
+}
 
-    & .gaper {
-        height: .5em;
+@keyframes fsexplorer-dirview-hidden {
+    0% {}
+
+    99% {}
+
+    100% {
+        display: none;
     }
 }

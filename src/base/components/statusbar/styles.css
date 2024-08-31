@@ -1,15 +1,17 @@
-.statusbar {
-    height: 1.6em;
-    min-height: 1.6em;
-    width: 100%;
-    background: var(--clr-bg-2);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: .2em 1em .3em;
+.explorer-window.explorer-window.explorer-window.explorer-window {
+    .statusbar {
+        height: 1.6em;
+        min-height: 1.6em;
+        width: 100%;
+        background: var(--clr-bg-2);
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: .2em 1em .3em;
 
-    & .stats {
-        font-size: 0.85em;
-        margin-right: 1em;
+        & .stats {
+            font-size: 0.85em;
+            margin-right: 1em;
+        }
     }
 }

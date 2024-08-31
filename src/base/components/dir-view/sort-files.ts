@@ -38,7 +38,7 @@ function SortDateReverse(a: FStat, b: FStat): number {
 }
 
 export function sortFiles(
-  data: FStat[],
+  data: readonly FStat[],
   mode: SortMode,
   reverse = false,
 ): FStat[] {

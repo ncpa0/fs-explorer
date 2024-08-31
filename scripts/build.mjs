@@ -25,7 +25,7 @@ async function main() {
     watch: watch,
     esbuildOptions: {
       minify: !isDev,
-      sourcemap: isDev ? "inline" : false,
+      // sourcemap: isDev ? "inline" : false,
       jsxImportSource: "@ncpa0cpl/vanilla-jsx",
       plugins: [cssPlugin(), svgLoaderPlugin()],
     },

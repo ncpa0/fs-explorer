@@ -1,33 +1,47 @@
-import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
+import { sig, Signal } from "@ncpa0cpl/vanilla-jsx/signals";
 import DirectoryIcon from "../../../assets/main-theme/icons/directory.svg";
 import MoreIcon from "../../../assets/main-theme/icons/more.svg";
 import { Explorer, Place } from "../../../explorer";
 import { ADW } from "../../../utils/css";
+import { isLmb } from "../../../utils/events";
 
 export type LeftPaneProps = {
   explorer: Explorer;
 };
 
 export function LeftPane(props: LeftPaneProps) {
-  const { places, staticPlaces } = props.explorer;
+  const { explorer } = props;
+  const { places, staticPlaces } = explorer;
+  const showOptions = sig(false);
 
   const handlePlaceClick = (place: Place) => {
-    props.explorer.open(place.path);
+    explorer.open(place.path);
   };
 
   return (
-    <div class={["left-pane", ADW.Box.box, ADW.Box.bg3]}>
+    <div
+      class={{
+        "left-pane": true,
+        [ADW.Box.box]: true,
+        [ADW.Box.bg3]: true,
+        hidden: explorer.hideLeftPane,
+      }}
+    >
       <div class={"pane-header"}>
         <span class={[ADW.Typography.text, "header-title"]}>Places</span>
         <button
-          class={[
-            ADW.Button.button,
-            ADW.Button.flat,
-            ADW.Button.square,
-            ADW.Button.adaptive,
-          ]}
+          class={{
+            "options-btn": true,
+            [ADW.Button.button]: true,
+            [ADW.Button.flat]: true,
+            [ADW.Button.square]: true,
+            [ADW.Button.adaptive]: true,
+            "active": showOptions,
+          }}
+          onmousedown={() => showOptions.dispatch(v => !v)}
         >
           <MoreIcon />
+          <OptionsMenu explorer={explorer} show={showOptions} />
         </button>
       </div>
       <div class={["left-pane-places"]}>
@@ -82,6 +96,60 @@ export function LeftPane(props: LeftPaneProps) {
           ));
         })}
       </div>
+    </div>
+  );
+}
+
+function OptionsMenu(props: { explorer: Explorer; show: Signal<boolean> }) {
+  const { explorer } = props;
+
+  const hanldeShowHiddenClick = (ev: MouseEvent) => {
+    if (isLmb(ev)) {
+      props.explorer.directory.showHiddenFilesToggle();
+      props.show.dispatch(false);
+    }
+    ev.preventDefault();
+    ev.stopPropagation();
+  };
+
+  return (
+    <div class={{ ["options-menu"]: true, show: props.show }}>
+      {explorer.options.explorerActions?.map(action => (
+        <button
+          class={{
+            [ADW.Button.button]: true,
+            [ADW.Button.flat]: true,
+            [ADW.Button.adaptive]: true,
+          }}
+          onmousedown={(ev) => {
+            if (isLmb(ev)) {
+              props.show.dispatch(false);
+              action.run(explorer);
+            }
+            ev.preventDefault();
+            ev.stopPropagation();
+          }}
+        >
+          {action.label}
+        </button>
+      ))}
+      <button
+        class={{
+          "show-hidden-btn": true,
+          [ADW.Button.button]: true,
+          [ADW.Button.flat]: true,
+          [ADW.Button.adaptive]: true,
+        }}
+        onmousedown={hanldeShowHiddenClick}
+      >
+        <span>
+          Show hidden files
+        </span>
+        <input
+          type="radio"
+          checked={props.explorer.directory.showHidden}
+        />
+      </button>
     </div>
   );
 }

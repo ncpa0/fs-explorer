@@ -9,12 +9,15 @@ export interface PropmptProps {
 
 export const Prompt = $component(function Prompt(props: PropmptProps, api) {
   const { explorer } = props;
-  const { promptModal } = explorer;
+  const { prompt } = explorer;
+  const hide = prompt.isOpen.derive(open => !open);
   const inputValue = sig("");
   const validationResult = sig.derive(
-    promptModal,
     inputValue,
-    ({ validate = (): "ok" => "ok" }, value) => validate(value),
+    prompt.validateFn,
+    (value, validate) => {
+      return validate ? validate(value) : "ok";
+    },
   );
 
   const disabledSubmit = validationResult.derive(v => v !== "ok");
@@ -25,14 +28,14 @@ export const Prompt = $component(function Prompt(props: PropmptProps, api) {
 
   const handleConfirm = () => {
     if (validationResult.get() === "ok") {
-      const { onConfirm } = promptModal.get();
       const value = inputValue.get();
-
       inputValue.dispatch("");
-      promptModal.dispatch({ open: false });
-
-      onConfirm?.(value);
+      prompt.internal.confirm(value);
     }
+  };
+
+  const hanldeCancel = () => {
+    prompt.internal.cancel();
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -42,14 +45,16 @@ export const Prompt = $component(function Prompt(props: PropmptProps, api) {
   };
 
   api.onChange(() => {
-    const { open, initialValue } = promptModal.get();
+    const open = prompt.isOpen.get();
+    const initialValue = prompt.initialValue.get();
+
     if (open) {
       if (initialValue != null) {
         inputValue.dispatch(initialValue);
       }
       inputElem.focus();
     }
-  }, [promptModal]);
+  }, [prompt.isOpen]);
 
   const inputElem = (
     <input
@@ -57,6 +62,7 @@ export const Prompt = $component(function Prompt(props: PropmptProps, api) {
       value={inputValue}
       oninput={handleInput}
       onkeydown={handleKeyDown}
+      placeholder={prompt.placeholder}
     />
   ) as HTMLInputElement;
 
@@ -64,37 +70,57 @@ export const Prompt = $component(function Prompt(props: PropmptProps, api) {
     <div
       class={{
         "prompt-backdrop": true,
-        hidden: promptModal.derive(p => !p.open),
+        hidden: hide,
       }}
     >
-      <div class="prompt">
-        <div class="prompt-header">
-          <span class={["prompt-title", ADW.Typography.text]}>
-            {promptModal.derive(p => p.prompt)}
+      <div class={ADW.Dialog.dialog}>
+        <div class={ADW.Dialog.header}>
+          <button
+            class={{
+              [ADW.Button.button]: true,
+              [ADW.Button.flat]: true,
+            }}
+            onmousedown={hanldeCancel}
+          >
+            {prompt.cancelBtnLabel}
+          </button>
+          <span class={["dialog-title"]}>
+            {prompt.title}
           </span>
+          <button
+            class={{
+              [ADW.Button.button]: true,
+              [ADW.Button.primary]: true,
+              [ADW.Button.disabled]: disabledSubmit,
+            }}
+            disabled={disabledSubmit}
+            onmousedown={handleConfirm}
+          >
+            {prompt.confirmBtnLabel}
+          </button>
         </div>
-        <div class="prompt-body">
-          <div class={["prompt-buttons", ADW.Input.linked]}>
-            {inputElem}
-            <button
-              class={{
-                [ADW.Button.button]: true,
-                [ADW.Button.disabled]: disabledSubmit,
-              }}
-              disabled={disabledSubmit}
-              onmousedown={handleConfirm}
-            >
-              {promptModal.derive(p => p.confirmBtnLabel ?? "Confirm")}
-            </button>
-          </div>
-          {validationResult.derive(res =>
-            res !== "ok" && (
-              <div class="error-msg">
-                <span class={ADW.Message.className({ type: "error" })}>
-                  {res.msg}
-                </span>
-              </div>
-            )
+        <div class={[ADW.Dialog.body, "prompt-body"]}>
+          <span class={[ADW.Typography.text, "prompt-message"]}>
+            {prompt.message}
+          </span>
+          {sig.derive(
+            prompt.type,
+            validationResult,
+            (type, vres) => {
+              if (type === "input") {
+                if (vres === "ok") {
+                  return [inputElem];
+                }
+                return [
+                  inputElem,
+                  <div class="error-msg">
+                    <span class={ADW.Message.className({ type: "error" })}>
+                      {vres.msg}
+                    </span>
+                  </div>,
+                ];
+              }
+            },
           )}
         </div>
       </div>

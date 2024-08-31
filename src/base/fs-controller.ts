@@ -88,21 +88,34 @@ export class FsController {
 
   clipboardPaste(to: string | Path) {
     to = Path.from(to);
-
     const files = this.explorer.clipboard.files.get();
     const mode = this.explorer.clipboard.mode.get();
-
     if (files) {
       this.explorer.clipboard.clear();
-      if (mode === "move") {
+      this.filesystem.readdir(to.toString()).then(async (existingFiles) => {
         for (const f of files) {
-          this.move(f, to.joinSegment(f.name));
+          if (existingFiles.some((efname) => efname === f.name)) {
+            const res = await this.explorer.prompt.ask({
+              title: "File already exist",
+              message:
+                `File "${f.name}" already exists, do you want to overwrite it?`,
+              cancelBtnLabel: "Skip",
+              confirmBtnLabel: "Overwrite",
+            });
+
+            if (res.answer === false) {
+              continue;
+            }
+          }
+
+          const dest = to.joinSegment(f.name);
+          if (mode === "move") {
+            await this.move(f, dest).catch(err => {});
+          } else {
+            await this.copy(f, dest).catch(err => {});
+          }
         }
-      } else {
-        for (const f of files) {
-          this.copy(f, to.joinSegment(f.name));
-        }
-      }
+      });
     }
   }
 }

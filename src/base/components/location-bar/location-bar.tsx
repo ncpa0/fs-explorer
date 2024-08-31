@@ -6,7 +6,6 @@ import RefreshIcon from "../../../assets/main-theme/icons/refresh.svg";
 import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 import { Path } from "../../../utils/path";
-import { ExplorerLocation } from "../../history";
 
 export type LocationBarProps = {
   explorer: Explorer;
@@ -210,7 +209,6 @@ function LocationEditor(
   const handleChange = (ev: Event) => {
     const input = ev.target as HTMLInputElement;
     const newPath = new Path(input.value.trim()).normalize();
-    console.log(newPath.toString());
     props.onSubmit(newPath);
   };
 
