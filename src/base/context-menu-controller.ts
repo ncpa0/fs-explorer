@@ -17,80 +17,113 @@ export interface OpenMenuParams {
   triggerFile?: FStat;
 }
 
+class BtnAccessController {
+  constructor(
+    protected explorer: Explorer,
+  ) {}
+
+  canOpen(file?: FStat) {
+    if (!file) {
+      return false;
+    }
+
+    if (file.directory) {
+      return true;
+    }
+
+    const action = this.explorer.options.openAction?.(file);
+    return !!action;
+  }
+
+  canCreateNewFile(parentFile?: FStat) {
+    if (!parentFile) {
+      return false;
+    }
+
+    if (parentFile.directory) {
+      return parentFile.write;
+    }
+
+    return false;
+  }
+
+  canPaste(to?: FStat) {
+    const clipboard = this.explorer.clipboard;
+    return to && to.directory && to.write && clipboard.files.get().length;
+  }
+
+  canCopy(...files: FStat[]) {
+    return files.every(f => f.read);
+  }
+
+  canCut(...files: FStat[]) {
+    return files.every(f => f.read && f.write);
+  }
+
+  canDelete(...files: FStat[]) {
+    return files.every(f => f.write);
+  }
+
+  canRename(...files: FStat[]) {
+    return files.every(f => f.write);
+  }
+}
+
 export class ContextMenuController {
   static ContextMenuActions = class ContextMenuActions {
-    canWrite;
+    currentDir;
 
     constructor(
       public menu: ContextMenuController,
+      public btnAccessController: BtnAccessController,
     ) {
-      this.canWrite = this.menu.explorer.directory.stat.derive(f =>
-        f && f.write
-      );
+      this.currentDir = this.menu.explorer.directory.stat;
     }
 
     isPossibleTo = {
       open: () => {
-        const explorer = this.menu.explorer;
         const file = this.menu.triggerFile.get();
-
-        if (!file) {
-          return false;
-        }
-
-        if (file.directory) {
-          return true;
-        }
-
-        const action = explorer.options.openAction?.(file);
-        return !!action;
+        return this.btnAccessController.canOpen(file);
       },
       createFile: () => {
-        return this.canWrite.get();
-      },
-      createDirectory: () => {
-        return this.canWrite.get();
+        return this.btnAccessController.canCreateNewFile(
+          this.currentDir.get(),
+        );
       },
       paste: () => {
-        const clipboard = this.menu.explorer.clipboard;
-        return clipboard.files.get().length && this.canWrite.get();
+        return this.btnAccessController.canPaste(
+          this.currentDir.get(),
+        );
       },
       pasteTo: () => {
-        const clipboard = this.menu.explorer.clipboard;
         const target = this.menu.getTargetFile();
-        return clipboard.files.get().length && target && target.directory
-          && target.write;
+        return this.btnAccessController.canPaste(
+          target,
+        );
       },
       copy: () => {
         const target = this.menu.getTargetFile();
-        if (target) {
-          return target.read;
-        }
-        return this.menu.selectedFiles.get().every(f => f.read);
+        return this.btnAccessController.canCopy(
+          ...(target ? [target] : this.menu.selectedFiles.get()),
+        );
       },
       cut: () => {
         const target = this.menu.getTargetFile();
-        if (target) {
-          return this.canWrite.get() && target.read && target.write;
-        }
-        return this.canWrite.get()
-          && this.menu.selectedFiles.get().every(f => f.read && f.write);
+        return this.btnAccessController.canCut(
+          ...(target ? [target] : this.menu.selectedFiles.get()),
+        );
       },
       delete: () => {
         const target = this.menu.getTargetFile();
-        if (target) {
-          return this.canWrite.get() && target.write;
-        }
-        return this.canWrite.get()
-          && this.menu.selectedFiles.get().every(f => f.write);
+        return this.btnAccessController.canDelete(
+          ...(target ? [target] : this.menu.selectedFiles.get()),
+        );
       },
       rename: () => {
         const target = this.menu.getTargetFile();
-        if (target) {
-          return this.canWrite.get() && target.write;
-        }
-        return this.canWrite.get()
-          && this.menu.selectedFiles.get().every(f => f.write);
+        return this.btnAccessController.canRename(
+          ...(target ? [target] : this.menu.selectedFiles.get()),
+        );
       },
     };
 
@@ -252,6 +285,7 @@ export class ContextMenuController {
   public readonly triggerFile = sig<undefined | FStat>(undefined);
   public readonly position = sig<ContextMenuPosition>({});
 
+  protected btnAccessController: BtnAccessController;
   public readonly actions;
   public readonly customActions;
   public readonly customDirActions;
@@ -259,7 +293,11 @@ export class ContextMenuController {
   constructor(
     protected explorer: Explorer,
   ) {
-    this.actions = new ContextMenuController.ContextMenuActions(this);
+    this.btnAccessController = new BtnAccessController(explorer);
+    this.actions = new ContextMenuController.ContextMenuActions(
+      this,
+      this.btnAccessController,
+    );
     this.customActions = this.deriveCustomActions();
     this.customDirActions = this.deriveCustomDirectoryActions();
   }
@@ -345,6 +383,33 @@ export class ContextMenuController {
   }
 
   open(params: OpenMenuParams) {
+    // check if, given the relatedFiles and the triggerFile,
+    // any buttons will appear in the context menu, if not
+    // do not open the context menu as it will be empty anyway
+    if (!params.triggerFile && params.relatedFiles.length === 0) {
+      const currentDir = this.explorer.directory.stat.get();
+
+      if (!currentDir) {
+        return;
+      }
+
+      const canCreateFile = this.btnAccessController.canCreateNewFile(
+        currentDir,
+      );
+      const canPaste = this.btnAccessController.canPaste(currentDir);
+      if (!canCreateFile && !canPaste) {
+        const actionDefs = this.explorer.options.actions;
+        if (
+          !actionDefs
+          || actionDefs.every(def =>
+            !def.match([currentDir], { isCurrentDir: true })
+          )
+        ) {
+          return;
+        }
+      }
+    }
+
     sig.startBatch();
     this.isOpen.dispatch(true);
     this.position.dispatch(params.position);

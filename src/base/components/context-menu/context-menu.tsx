@@ -101,6 +101,9 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
     toggleSubMenu(showCustomActions.get());
   }, [showCustomActions]);
 
+  const hideOpenBtn = !menu.actions.isPossibleTo.open();
+  const hideNewFileBtn = !menu.actions.isPossibleTo.createFile();
+
   const mainBtnList = (
     <div
       class={{
@@ -109,17 +112,17 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
       }}
     >
       <MenuButton
-        hidden={!menu.actions.isPossibleTo.open()}
+        hidden={hideOpenBtn}
         action={() => menu.actions.open()}
         title="Open"
       />
       <MenuButton
-        hidden={!menu.actions.isPossibleTo.createFile()}
+        hidden={hideNewFileBtn}
         action={() => menu.actions.createFile()}
         title="New File"
       />
       <MenuButton
-        hidden={!menu.actions.isPossibleTo.createDirectory()}
+        hidden={hideNewFileBtn}
         action={() => menu.actions.createDirectory()}
         title="New Directory"
       />
@@ -136,9 +139,13 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
           action.run(f);
         };
 
+        const topSeparator = hideOpenBtn && hideNewFileBtn
+          ? <></>
+          : <span class={ADW.Separator.separator} />;
+
         if (customActions.length <= 3) {
           return [
-            <span class={ADW.Separator.separator} />,
+            topSeparator,
             customActions.map(action => (
               <MenuButton
                 action={handler(action)}
@@ -169,7 +176,7 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
         ) as HTMLElement;
 
         return [
-          <span class={ADW.Separator.separator} />,
+          topSeparator,
           <MenuButton
             action={handler(a1!)}
             title={a1!.label}
@@ -252,6 +259,8 @@ const DirMenuButtons = $component((props: {
     toggleSubMenu(showCustomActions.get());
   }, [showCustomActions]);
 
+  const hideCreateFileBtn = !menu.actions.isPossibleTo.createFile();
+
   const mainBtnList = (
     <div
       class={{
@@ -260,12 +269,12 @@ const DirMenuButtons = $component((props: {
       }}
     >
       <MenuButton
-        hidden={!menu.actions.isPossibleTo.createFile()}
+        hidden={hideCreateFileBtn}
         action={() => menu.actions.createFile()}
         title="New File"
       />
       <MenuButton
-        hidden={!menu.actions.isPossibleTo.createDirectory()}
+        hidden={hideCreateFileBtn}
         action={() => menu.actions.createDirectory()}
         title="New Directory"
       />
@@ -280,16 +289,23 @@ const DirMenuButtons = $component((props: {
           action.run([dirStat]);
         };
 
+        const topSeparator = hideCreateFileBtn
+          ? <></>
+          : <span class={ADW.Separator.separator} />;
+        const bottomSeparator = canPaste
+          ? <span class={ADW.Separator.separator} />
+          : <></>;
+
         if (customActions.length <= 3) {
           return [
-            <span class={ADW.Separator.separator} />,
+            topSeparator,
             customActions.map(action => (
               <MenuButton
                 action={handler(action)}
                 title={action.label}
               />
             )),
-            <span class={ADW.Separator.separator} />,
+            bottomSeparator,
           ].flat();
         }
 
@@ -313,7 +329,7 @@ const DirMenuButtons = $component((props: {
         ) as HTMLElement;
 
         return [
-          <span class={ADW.Separator.separator} />,
+          topSeparator,
           <MenuButton
             action={handler(a1!)}
             title={a1!.label}
@@ -328,7 +344,7 @@ const DirMenuButtons = $component((props: {
             }}
             title="More Action..."
           />,
-          <span class={ADW.Separator.separator} />,
+          bottomSeparator,
           subBtnsList,
         ];
       })}
