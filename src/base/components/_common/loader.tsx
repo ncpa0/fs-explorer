@@ -2,14 +2,14 @@ import { ReadonlySignal } from "@ncpa0cpl/vanilla-jsx/signals";
 import { ADW } from "../../../utils/css";
 
 export function LoadingIndicator(
-  props: { visible: boolean | ReadonlySignal<boolean> },
+  props: { visible: ReadonlySignal<boolean> },
 ) {
   const { visible } = props;
   return (
     <div
       class={{
         "loader-indicator": true,
-        visible,
+        visible: visible.derive(v => v),
       }}
     >
       <div

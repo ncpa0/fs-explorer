@@ -31,4 +31,10 @@
     & .dcontents {
         display: contents;
     }
+
+    & .btn.square {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 }

@@ -1,18 +1,21 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../../explorer";
 import { isLmb, isRmb } from "../../../utils/events";
+import { TabController } from "../../tab-controller";
 import { LoadingIndicator } from "../_common/loader";
 import { VirtualFileList } from "./virtual-file-list";
 
 export type DirViewProps = {
   explorer: Explorer;
+  tab: TabController;
 };
 
 export function DirView(props: DirViewProps) {
-  const { explorer } = props;
+  const { explorer, tab } = props;
   const menu = explorer.contextMenu;
-  const preview = explorer.previewPane;
-  const dir = explorer.directory;
+  const dir = tab.directory;
+
+  const dragEnterCount = sig(0);
 
   const handleClick = (event: MouseEvent) => {
     if (isRmb(event)) {
@@ -33,7 +36,6 @@ export function DirView(props: DirViewProps) {
           bottom: isBelowHalf ? `${bottom}px` : undefined,
         },
       });
-      event.stopPropagation();
       event.preventDefault();
       return;
     }
@@ -44,25 +46,46 @@ export function DirView(props: DirViewProps) {
     }
   };
 
-  const maxWidthSig = sig.literal`calc(100% - ${
-    // 26.8em is the width with margin of the preview pane
-    sig.when(preview.file, sig.as("26.8em"), sig.as("0em"))})`;
+  const handleDrop = (event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const { fileDropHandler } = explorer.options;
+    const dirstat = dir.stat.get();
+    if (event.dataTransfer && fileDropHandler && dirstat) {
+      fileDropHandler(event.dataTransfer, dirstat);
+    }
+
+    dragEnterCount.dispatch(0);
+  };
+
+  const handleDragEnter = () => {
+    dragEnterCount.dispatch(c => c + 1);
+  };
+
+  const handleDragLeave = () => {
+    dragEnterCount.dispatch(c => c - 1);
+  };
 
   return (
     <div
-      class="dir-view-container"
+      class={{
+        "dir-view-container": true,
+        "file-drag-over": sig.when(dragEnterCount, true, false),
+      }}
       onmousedown={handleClick}
       oncontextmenu={e => e.preventDefault()}
-      style={{
-        maxWidth: maxWidthSig,
-      }}
+      ondrop={handleDrop}
+      ondragover={e => e.preventDefault()}
+      ondragenter={handleDragEnter}
+      ondragleave={handleDragLeave}
     >
       <LoadingIndicator visible={dir.loading} />
       <VirtualFileList
-        explorer={props.explorer}
-        selectedFiles={dir.selection}
-        files={dir.filesView}
+        explorer={explorer}
+        tab={tab}
       />
+      <div class="dir-view-drop-overlay" />
     </div>
   );
 }

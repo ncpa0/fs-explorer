@@ -89,7 +89,7 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
 
   let singleFile = menu.getTargetFile();
 
-  const customActions = menu.customActions;
+  const customActions = menu.getCustomActions();
 
   let subBtnsList: HTMLElement | undefined;
   const toggleSubMenu = contextSubMenuToggleFn(
@@ -126,7 +126,7 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
         action={() => menu.actions.createDirectory()}
         title="New Directory"
       />
-      {customActions.derive(customActions => {
+      {(() => {
         if (customActions.length === 0) {
           subBtnsList = undefined;
           return <span />;
@@ -194,7 +194,7 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
           <span class={ADW.Separator.separator} />,
           subBtnsList,
         ];
-      })}
+      })()}
       <MenuButton
         hidden={!canPaste}
         disabled={!canPaste}
@@ -247,7 +247,7 @@ const DirMenuButtons = $component((props: {
 
   const showCustomActions = sig(false);
   const canPaste = menu.actions.isPossibleTo.paste();
-  const customActions = menu.customDirActions;
+  const customActions = menu.getCustomDirectoryActions();
 
   let subBtnsList: HTMLElement | undefined;
   const toggleSubMenu = contextSubMenuToggleFn(
@@ -278,7 +278,7 @@ const DirMenuButtons = $component((props: {
         action={() => menu.actions.createDirectory()}
         title="New Directory"
       />
-      {sig.derive(customActions, dirStat, (customActions, dirStat) => {
+      {dirStat.derive((dirStat) => {
         if (customActions.length === 0 || !dirStat) {
           subBtnsList = undefined;
           return <span />;

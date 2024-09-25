@@ -7,18 +7,20 @@ import { isLmb, isRmb } from "../../../utils/events";
 import { Fmt } from "../../../utils/formatters";
 import { getFileIcon } from "../../../utils/get-file-icon";
 import { Path } from "../../../utils/path";
+import { TabController } from "../../tab-controller";
 
 export function FileListEntry(
   props: {
     explorer: Explorer;
+    tab: TabController;
     file: FStat;
     selectedFiles: ReadonlySignal<readonly FStat[]>;
     activeEntry: ReadonlySignal<FStat | null>;
     setActiveEntry: (entry: FStat | null) => void;
   },
 ) {
-  const { explorer, file, selectedFiles } = props;
-  const dir = explorer.directory;
+  const { explorer, tab, file, selectedFiles } = props;
+  const dir = tab.directory;
   const menu = explorer.contextMenu;
 
   const isSelected = selectedFiles.derive(selected =>
@@ -30,6 +32,10 @@ export function FileListEntry(
   };
 
   const handleClick = (event: MouseEvent) => {
+    explorer.focusTab(
+      tab.id,
+    );
+
     if (isLmb(event, "ctrl")) {
       toggleSelect();
       return;
@@ -63,7 +69,7 @@ export function FileListEntry(
 
     if (file.directory) {
       const path = new Path(file.path);
-      explorer.open(path);
+      tab.open(path);
     } else {
       const actionCtx = new FileActionContext(
         explorer,
@@ -90,6 +96,10 @@ export function FileListEntry(
         "active-entry": props.activeEntry.derive(ae => ae === file),
         "file-entry": true,
         selected: isSelected,
+        "file-cut": explorer.clipboard.data.derive(data => {
+          if (data.files.length === 0 || data.mode === "copy") return false;
+          return data.files.some(f => f.path === file.path);
+        }),
       }}
       onmousedown={handleClick}
       oncontextmenu={e => e.preventDefault()}

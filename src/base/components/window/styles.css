@@ -25,6 +25,69 @@
                 display: flex;
                 flex-direction: row;
                 height: calc(100% - 3.5em);
+                background-color: var(--clr-bg-2);
+            }
+
+            & .explorer-tabs-container {
+                flex: 1;
+                display: flex;
+                flex-direction: row;
+                height: calc(100% - 3.5em);
+                justify-content: center;
+                padding-inline: .3em;
+
+                & .explorer-tab {
+                    flex: 1;
+                    height: calc(100% - 1em);
+                    max-width: 49%;
+                    display: flex;
+                    flex-direction: column;
+                    border-radius: 6px;
+                    background-color: var(--clr-bg-3);
+                    margin-inline: .3em;
+                    margin-top: .5em;
+                    overflow-y: hidden;
+
+                    &.active {
+                        -webkit-box-shadow: 0px 0px 4px 2px
+                        var(--clr-primary-100);
+                        -moz-box-shadow: 0px 0px 4px 2px var(--clr-primary-100);
+                        box-shadow: 0px 0px 4px 2px var(--clr-primary-100);
+                    }
+
+                    & .explorer-tab-header {
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-left: 1em;
+                        height: 2.5em;
+
+                        & span {
+                            height: fit-content;
+                            max-width: 90%;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        }
+
+                        .close-tab-button {
+                            width: 1.8em;
+                            height: 1.8em;
+                            margin-right: .35em;
+
+                            & svg {
+                                width: 100%;
+                                height: 100%;
+
+                                & path {
+                                    stroke: var(--clr-text);
+                                    opacity: .8;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

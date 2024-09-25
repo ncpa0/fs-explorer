@@ -122,6 +122,7 @@ export class DirViewController {
     );
 
     this.updateQueue.add(data, (res) => {
+      this.loading.dispatch(false);
       if (!res.ok) return;
 
       const [stat, files] = res.value;
@@ -129,7 +130,6 @@ export class DirViewController {
       this.selection.dispatch([]);
       this.stat.dispatch(stat);
       this.files.dispatch(files);
-      this.loading.dispatch(false);
       sig.commitBatch();
     });
   }

@@ -25,7 +25,7 @@ export class ExplorerLocation {
   }
 }
 
-export class ExplorerHistory {
+export class ExplorerTabHistory {
   private emitter = new EventTarget();
   private location = new ExplorerLocation();
 

@@ -4,9 +4,10 @@ import { ExplorerWindow } from "./base/components/window/window";
 import { ContextMenuController } from "./base/context-menu-controller";
 import { DirViewController } from "./base/dir-view-controller";
 import { FsController } from "./base/fs-controller";
-import { ExplorerHistory, ExplorerLocation } from "./base/history";
+import { ExplorerLocation, ExplorerTabHistory } from "./base/history";
 import { PreviewPaneController } from "./base/preview-pane-controller";
 import { PromptController } from "./base/prompt-controller";
+import { TabController } from "./base/tab-controller";
 import { Filesystem, FStat } from "./filesystem-interface";
 import { ActionError } from "./interfaces/action-error";
 import { Styles } from "./styles-component";
@@ -66,6 +67,7 @@ export interface ExplorerOptions {
    * Path to the directory that will be opened when the explorer is initieated. The Default is `/`.
    */
   readonly initDir?: string;
+  readonly fileDropHandler?: (data: DataTransfer, droppedInto: FStat) => void;
 }
 
 export interface PromptModal {
@@ -83,14 +85,17 @@ export class Explorer {
 
   public window: Element | null = null;
 
-  public readonly history = new ExplorerHistory();
-  public readonly location: ExplorerLocation = this.history["location"];
-  public readonly directory = new DirViewController(this);
-  public readonly contextMenu = new ContextMenuController(this);
   public readonly previewPane = new PreviewPaneController(this);
   public readonly clipboard = new ClipcoardController(this);
   public readonly prompt = new PromptController(this);
   public readonly fs;
+
+  public readonly tabs = sig<ReadonlyArray<TabController>>([
+    new TabController(this, this.cleanups),
+  ]);
+  public readonly activeTab = sig(this.tabs.get()[0]!.id);
+
+  public readonly contextMenu = new ContextMenuController(this);
 
   // location visible on the left pane
   public readonly places = sig<ReadonlyArray<Place>>([]);
@@ -98,6 +103,22 @@ export class Explorer {
 
   public readonly actionError = sig<ActionError | undefined>(undefined);
   public readonly hideLeftPane = sig<boolean>(false);
+
+  get currentTab(): TabController {
+    return this.tabs.get().find((tab) => tab.id === this.activeTab.get())!;
+  }
+
+  get history(): ExplorerTabHistory {
+    return this.currentTab.history;
+  }
+
+  get location(): ExplorerLocation {
+    return this.currentTab.location;
+  }
+
+  get directory(): DirViewController {
+    return this.currentTab.directory;
+  }
 
   constructor(
     public readonly filesystem: Filesystem,
@@ -118,15 +139,12 @@ export class Explorer {
     if (options.initDir) {
       this.history.replace(options.initDir);
     }
-    const { detach } = this.location.signal.add(
-      (path) => {
-        this.previewPane.close();
-        this.updateDirContents(path);
-      },
-    );
-    this.cleanups.push(detach);
 
-    const onChange = this.refresh.bind(this);
+    const onChange = (dirPath?: string) => {
+      for (const tab of this.tabs.get()) {
+        tab.refresh(dirPath);
+      }
+    };
     filesystem.onChange(onChange);
     this.cleanups.push(() => filesystem.offChange(onChange));
 
@@ -134,6 +152,10 @@ export class Explorer {
     this.cleanups.push(() => {
       window.removeEventListener("keydown", this.globalKeyDownHandler);
     });
+
+    for (const tab of this.tabs.get()) {
+      tab.initiate();
+    }
   }
 
   private globalKeyDownHandler = (e: KeyboardEvent) => {
@@ -215,10 +237,35 @@ export class Explorer {
     }
   };
 
-  private updateDirContents(path: Path | string) {
-    this.directory.changeDirectory(
-      path,
-    );
+  focusTab(id: symbol) {
+    const tabs = this.tabs.get();
+    if (tabs.some(tab => tab.id === id)) {
+      this.activeTab.dispatch(id);
+    }
+  }
+
+  newTab(initLocation?: Path | string) {
+    const tab = new TabController(this, this.cleanups);
+    if (initLocation) {
+      tab.history.replace(initLocation);
+    }
+    tab.initiate();
+    this.tabs.dispatch(current => current.concat(tab));
+    this.activeTab.dispatch(tab.id);
+  }
+
+  closeTab(id: symbol) {
+    sig.startBatch();
+    const currentTabs = this.tabs.get();
+    const newTabs = currentTabs.filter(tab => tab.id !== id);
+    this.tabs.dispatch(newTabs);
+    if (this.activeTab.get() === id) {
+      const newActiveTab = newTabs[0];
+      if (newActiveTab) {
+        this.activeTab.dispatch(newActiveTab.id);
+      }
+    }
+    sig.commitBatch();
   }
 
   onEscapePress(handler: (e: KeyboardEvent) => void) {
@@ -232,63 +279,31 @@ export class Explorer {
   }
 
   refresh(dir?: string) {
-    if (dir != null) {
-      if (this.location.path.equals(dir)) {
-        this.updateDirContents(this.location.pathname);
-      }
-    } else {
-      this.updateDirContents(this.location.pathname);
-    }
+    this.currentTab.refresh();
   }
 
   open(path: string | Path) {
-    path = Path.from(path);
-
-    if (this.location.path.equals(path)) {
-      return;
-    }
-
-    return this.filesystem.dirExists(path.toString()).then((exists) => {
-      if (exists) {
-        this.history.push(path);
-        return true;
-      }
-      return false;
-    });
+    this.currentTab.open(path);
   }
 
   replace(path: string | Path) {
-    path = Path.from(path);
-
-    if (this.location.path.equals(path)) {
-      return;
-    }
-
-    return this.filesystem.dirExists(path.toString()).then((exists) => {
-      if (exists) {
-        this.history.replace(path);
-        return true;
-      }
-      return false;
-    });
+    this.currentTab.replace(path);
   }
 
-  element(): Element {
-    if (!this.window) {
-      this.window = ExplorerWindow({ explorer: this });
-      this.window.prepend(Styles());
-    }
-    return this.window;
+  getActiveFile() {
+    return this.currentTab.getActiveFile();
   }
 
-  mountTo(element: HTMLElement) {
-    element.appendChild(this.element());
+  getCurrentDir() {
+    return this.currentTab.getCurrentDir();
   }
 
-  dispose() {
-    for (const cleanup of this.cleanups) {
-      cleanup();
-    }
+  getSelectedFiles() {
+    return this.currentTab.getSelectedFiles();
+  }
+
+  getClipboard() {
+    return this.clipboard.data.get();
   }
 
   addPlace(place: Place) {
@@ -315,22 +330,21 @@ export class Explorer {
     });
   }
 
-  getActiveFile() {
-    return this.directory.activeEntry.get();
+  mountTo(element: HTMLElement) {
+    element.appendChild(this.element());
   }
 
-  getCurrentDir() {
-    return {
-      stat: this.directory.stat.get(),
-      files: this.directory.files.get(),
-    };
+  element(): Element {
+    if (!this.window) {
+      this.window = ExplorerWindow({ explorer: this });
+      this.window.prepend(Styles());
+    }
+    return this.window;
   }
 
-  getSelectedFiles() {
-    return this.directory.selection.get();
-  }
-
-  getClipboard() {
-    return this.clipboard.files.get();
+  dispose() {
+    for (const cleanup of this.cleanups) {
+      cleanup();
+    }
   }
 }

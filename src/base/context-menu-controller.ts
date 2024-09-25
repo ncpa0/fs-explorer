@@ -49,7 +49,7 @@ class BtnAccessController {
 
   canPaste(to?: FStat) {
     const clipboard = this.explorer.clipboard;
-    return to && to.directory && to.write && clipboard.files.get().length;
+    return to && to.directory && to.write && clipboard.data.get().files.length;
   }
 
   canCopy(...files: FStat[]) {
@@ -71,13 +71,14 @@ class BtnAccessController {
 
 export class ContextMenuController {
   static ContextMenuActions = class ContextMenuActions {
-    currentDir;
-
     constructor(
       public menu: ContextMenuController,
       public btnAccessController: BtnAccessController,
     ) {
-      this.currentDir = this.menu.explorer.directory.stat;
+    }
+
+    get currentDir() {
+      return this.menu.explorer.directory.stat;
     }
 
     isPossibleTo = {
@@ -287,8 +288,6 @@ export class ContextMenuController {
 
   protected btnAccessController: BtnAccessController;
   public readonly actions;
-  public readonly customActions;
-  public readonly customDirActions;
 
   constructor(
     protected explorer: Explorer,
@@ -298,8 +297,6 @@ export class ContextMenuController {
       this,
       this.btnAccessController,
     );
-    this.customActions = this.deriveCustomActions();
-    this.customDirActions = this.deriveCustomDirectoryActions();
   }
 
   nameValidator(originalName?: string) {
@@ -326,43 +323,37 @@ export class ContextMenuController {
     };
   }
 
-  private deriveCustomActions() {
-    return sig.derive(
-      this.selectedFiles,
-      this.triggerFile,
-      (files, targetFile) => {
-        const actionDefs = this.explorer.options.actions;
-        if (!actionDefs) return [];
+  getCustomActions() {
+    const files = this.selectedFiles.get();
+    const targetFile = this.triggerFile.get();
 
-        if (files.length === 0 && targetFile) {
-          return actionDefs.filter(def =>
-            def.match([targetFile], { isCurrentDir: false })
-          );
-        }
+    const actionDefs = this.explorer.options.actions;
+    if (!actionDefs) return [];
 
-        if (files.length > 0) {
-          return actionDefs.filter(def =>
-            def.match(files, { isCurrentDir: false })
-          );
-        }
+    if (files.length === 0 && targetFile) {
+      return actionDefs.filter(def =>
+        def.match([targetFile], { isCurrentDir: false })
+      );
+    }
 
-        return [];
-      },
-    );
+    if (files.length > 0) {
+      return actionDefs.filter(def =>
+        def.match(files, { isCurrentDir: false })
+      );
+    }
+
+    return [];
   }
 
-  private deriveCustomDirectoryActions() {
-    return sig.derive(
-      this.explorer.directory.stat,
-      (dirStat) => {
-        const actionDefs = this.explorer.options.actions;
-        if (!actionDefs) return [];
+  getCustomDirectoryActions() {
+    const dirStat = this.explorer.directory.stat.get();
 
-        return dirStat
-          ? actionDefs.filter(a => a.match([dirStat], { isCurrentDir: true }))
-          : [];
-      },
-    );
+    const actionDefs = this.explorer.options.actions;
+    if (!actionDefs) return [];
+
+    return dirStat
+      ? actionDefs.filter(a => a.match([dirStat], { isCurrentDir: true }))
+      : [];
   }
 
   getTargetFile() {

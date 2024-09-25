@@ -10,6 +10,16 @@ export class FsController {
     protected filesystem: Filesystem,
   ) {}
 
+  private propagatesChangesIn(...dirPaths: Path[]) {
+    for (const tab of this.explorer.tabs.get()) {
+      if (
+        dirPaths.some(p => p.equals(tab.location.path))
+      ) {
+        tab.refresh();
+      }
+    }
+  }
+
   copy(from: FStat, to: string | Path) {
     to = Path.from(to);
 
@@ -19,7 +29,7 @@ export class FsController {
 
     return this.filesystem.copy(from.path, to.toString())
       .then(() => {
-        this.explorer.refresh();
+        this.propagatesChangesIn(to.base());
       })
       .catch(err => {
         this.explorer.actionError.dispatch(
@@ -29,31 +39,36 @@ export class FsController {
   }
 
   move(file: FStat, to: string | Path) {
+    const filePath = Path.from(file.path);
     to = Path.from(to);
 
-    if (to.equals(file.path)) {
+    if (to.equals(filePath)) {
       return Immediate.resolve();
     }
 
-    return this.filesystem.move(file.path, to.toString())
+    return this.filesystem.move(filePath.toString(), to.toString())
       .then(() => {
-        this.explorer.refresh();
+        const fromDir = filePath.base();
+        const toDir = to.base();
+        this.propagatesChangesIn(fromDir, toDir);
       })
       .catch(err => {
         this.explorer.actionError.dispatch(
-          ActionError.move(err, file.path, to.toString()),
+          ActionError.move(err, filePath.toString(), to.toString()),
         );
       });
   }
 
   remove(file: FStat) {
-    return this.filesystem.remove(file.path)
+    const path = Path.from(file.path);
+
+    return this.filesystem.remove(path.toString())
       .then(() => {
-        this.explorer.refresh();
+        this.propagatesChangesIn(path.base());
       })
       .catch(err => {
         this.explorer.actionError.dispatch(
-          ActionError.remove(err, file.path),
+          ActionError.remove(err, path.toString()),
         );
       });
   }
@@ -63,7 +78,7 @@ export class FsController {
 
     return this.filesystem.mkdir(path.toString())
       .then(() => {
-        this.explorer.refresh();
+        this.propagatesChangesIn(path.base());
       })
       .catch(err => {
         this.explorer.actionError.dispatch(
@@ -77,7 +92,7 @@ export class FsController {
 
     return this.filesystem.touch(path.toString())
       .then(() => {
-        this.explorer.refresh();
+        this.propagatesChangesIn(path.base());
       })
       .catch(err => {
         this.explorer.actionError.dispatch(
@@ -88,8 +103,7 @@ export class FsController {
 
   clipboardPaste(to: string | Path) {
     to = Path.from(to);
-    const files = this.explorer.clipboard.files.get();
-    const mode = this.explorer.clipboard.mode.get();
+    const { files, mode } = this.explorer.clipboard.data.get();
     if (files) {
       this.explorer.clipboard.clear();
       this.filesystem.readdir(to.toString()).then(async (existingFiles) => {

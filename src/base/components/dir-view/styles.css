@@ -1,25 +1,57 @@
 .explorer-window.explorer-window.explorer-window.explorer-window {
     .dir-view-container {
+        position: relative;
         flex: 1;
         height: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
+        background-color: inherit;
 
         &.spinner {
             font-size: 1.5em;
         }
+
+        & vjsx-component-node {
+            background-color: inherit;
+        }
+
+        & .dir-view-drop-overlay {
+            display: none;
+        }
+
+        &.file-drag-over .dir-view-drop-overlay {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background-color: color-mix(in srgb, var(--clr-primary-100) 65%,
+            #ffffff00);
+            border: 1px solid var(--clr-primary-500);
+            z-index: 100;
+        }
+    }
+
+    .explorer-tab .dir-view-container {
+        flex: unset;
+        height: calc(100% - 2.5em);
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 6px;
     }
 
     .dir-view {
         flex: 1;
         display: grid;
-        grid-template-columns: 4em minmax(50px, auto) 8em 12em;
+        grid-template-columns: 3.75em minmax(3em, auto) minmax(2em, min-content)
+        minmax(2em, min-content);
         overflow-y: auto;
         max-height: 100%;
         height: fit-content;
         min-height: 100%;
         align-content: baseline;
+        background-color: inherit;
         --icon-size: 2em;
 
         &.hidden {
@@ -39,7 +71,10 @@
         }
 
         & .dirview-header {
+            background-color: inherit;
+
             & > * {
+                background-color: inherit;
                 display: flex;
                 align-items: center;
                 padding-top: .5em;
@@ -47,7 +82,6 @@
                 position: sticky;
                 top: 0;
                 left: 0;
-                background-color: var(--clr-bg-2);
                 z-index: 2;
                 border-bottom: 1px solid var(--clr-dimmed);
             }
@@ -73,15 +107,19 @@
         & .file-entry {
             display: contents;
 
-            & .filename {
-                max-width: 100%;
-
+            & .filename,
+            & .file-size,
+            & .file-modified {
                 & span {
                     text-overflow: ellipsis;
                     white-space: nowrap;
                     overflow: hidden;
                     max-width: 100%;
                 }
+            }
+
+            & .filename {
+                max-width: 100%;
             }
 
             & .filename,
@@ -151,6 +189,15 @@
                     & > * {
                         background-color: var(--clr-primary-200);
                     }
+                }
+            }
+
+            &.file-cut {
+                & .filename,
+                & .file-size,
+                & .file-modified,
+                & .file-icon {
+                    opacity: .5;
                 }
             }
 

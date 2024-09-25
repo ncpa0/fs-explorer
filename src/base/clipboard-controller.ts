@@ -3,19 +3,26 @@ import { Explorer } from "../explorer";
 import { FStat } from "../filesystem-interface";
 
 export class ClipcoardController {
-  public readonly files = sig<readonly FStat[]>([]);
-  public readonly mode = sig<"copy" | "move">("copy");
+  public readonly data = sig({
+    files: [] as readonly FStat[],
+    mode: "copy" as "copy" | "move",
+  });
 
   constructor(
     protected explorer: Explorer,
   ) {}
 
   put(files: FStat | readonly FStat[], mode: "copy" | "move") {
-    this.files.dispatch(Array.isArray(files) ? files : [files]);
-    this.mode.dispatch(mode);
+    this.data.dispatch({
+      files: Array.isArray(files) ? files : [files],
+      mode,
+    });
   }
 
   clear() {
-    this.files.dispatch([]);
+    this.data.dispatch({
+      files: [],
+      mode: "copy",
+    });
   }
 }

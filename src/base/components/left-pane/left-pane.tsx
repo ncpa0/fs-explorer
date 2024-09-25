@@ -112,8 +112,30 @@ function OptionsMenu(props: { explorer: Explorer; show: Signal<boolean> }) {
     ev.stopPropagation();
   };
 
+  const handleNewTabClick = (ev: MouseEvent) => {
+    if (isLmb(ev)) {
+      props.show.dispatch(false);
+      explorer.newTab(
+        explorer.location.path,
+      );
+    }
+    ev.preventDefault();
+    ev.stopPropagation();
+  };
+
   return (
     <div class={{ ["options-menu"]: true, show: props.show }}>
+      <button
+        class={{
+          [ADW.Button.button]: true,
+          [ADW.Button.flat]: true,
+          [ADW.Button.adaptive]: true,
+          "hidden": explorer.tabs.derive(t => t.length > 1),
+        }}
+        onmousedown={handleNewTabClick}
+      >
+        Split View
+      </button>
       {explorer.options.explorerActions?.map(action => (
         <button
           class={{
