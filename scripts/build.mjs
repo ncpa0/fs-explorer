@@ -39,6 +39,11 @@ async function main() {
     entrypoint: p("src/index.js"),
     outDir: p("dist/bundle"),
     formats: ["esm"],
+    external: [
+      "@ncpa0cpl/vanilla-jsx",
+      "@ncpa0cpl/vanilla-jsx/signals",
+      "@ncpa0cpl/vanilla-jsx/jsx-runtime",
+    ],
   };
 
   await Promise.all([build(bldOptions), build(bundleOptions)]);
