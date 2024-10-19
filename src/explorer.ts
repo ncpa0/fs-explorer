@@ -235,6 +235,13 @@ export class Explorer {
         }
         break;
       }
+      case "F5": {
+        if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
+          e.preventDefault();
+          this.refresh();
+        }
+        break;
+      }
       case "Delete": {
         if (!hasFocus() && !e.ctrlKey && !e.shiftKey && !e.altKey) {
           const files = this.directory.getActionableFiles();
