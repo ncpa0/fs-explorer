@@ -138,10 +138,6 @@ export class Explorer {
       this.hideLeftPane.dispatch(!!options.hideLeftPane);
     }
 
-    if (options.initDir) {
-      this.history.replace(options.initDir);
-    }
-
     const onChange = (dirPath?: string) => {
       for (const tab of this.tabs.get()) {
         tab.refresh(dirPath);
@@ -157,6 +153,10 @@ export class Explorer {
 
     for (const tab of this.tabs.get()) {
       tab.initiate();
+    }
+
+    if (options.initDir) {
+      this.history.replace(options.initDir);
     }
   }
 
@@ -257,10 +257,10 @@ export class Explorer {
 
   newTab(initLocation?: Path | string) {
     const tab = new TabController(this, this.cleanups);
+    tab.initiate();
     if (initLocation) {
       tab.history.replace(initLocation);
     }
-    tab.initiate();
     this.tabs.dispatch(current => current.concat(tab));
     this.activeTab.dispatch(tab.id);
   }

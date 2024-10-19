@@ -34,18 +34,29 @@ export function LocationBar(props: LocationBarProps) {
       }
     };
 
+    const handleBack = () => {
+      tab.history.back();
+    };
+
+    const handleForward = () => {
+      tab.history.forward();
+    };
+
+    const handleUp = () => {
+      const p = tab.location.path;
+      const up = p.base();
+      if (!up.equals(p)) {
+        const prevScrollPos = tab.history.getEntry(-1)?.scrollPosition;
+        tab.history.push(up, prevScrollPos);
+      }
+    };
+
     return (
       <div class={["location-bar", ADW.Box.box, ADW.Box.bg2]}>
         <ControlButtons
-          onBack={() => tab.history.back()}
-          onForward={() => tab.history.forward()}
-          onUp={() => {
-            const p = tab.location.path;
-            const up = p.base();
-            if (!up.equals(p)) {
-              tab.history.push(up);
-            }
-          }}
+          onBack={handleBack}
+          onForward={handleForward}
+          onUp={handleUp}
           onReload={() => tab.refresh()}
           onGoHome={() => tab.open("/")}
         />

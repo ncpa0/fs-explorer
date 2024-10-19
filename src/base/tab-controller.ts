@@ -1,7 +1,11 @@
 import { Explorer } from "../explorer";
 import { Path } from "../utils/path";
 import { DirViewController } from "./dir-view-controller";
-import { ExplorerLocation, ExplorerTabHistory } from "./history";
+import {
+  ExplorerLocation,
+  ExplorerPopEvent,
+  ExplorerTabHistory,
+} from "./history";
 
 let i = 0;
 
@@ -20,30 +24,47 @@ export class TabController {
     this.directory = new DirViewController(explorer);
   }
 
-  private updateDirContents(path: Path | string) {
+  private updateDirContents(path: Path | string, scrollPosition = 0) {
     this.directory.changeDirectory(
       path,
+      scrollPosition,
     );
   }
 
   initiate() {
-    const { detach } = this.location.signal.add(
-      (path) => {
-        this.explorer.previewPane.close();
-        this.updateDirContents(path);
-      },
+    const popHandler = (event: Event) => {
+      ExplorerPopEvent.assertIs(event);
+      this.explorer.previewPane.close();
+      this.updateDirContents(event.path, event.historyEntry.scrollPosition);
+    };
+
+    this.history.addEventListener(
+      "pop",
+      popHandler,
     );
 
-    this.cleanups.push(detach);
+    this.cleanups.push(() => {
+      this.history.removeEventListener(
+        "pop",
+        popHandler,
+      );
+    });
   }
 
   refresh(dir?: string) {
+    const currentScrollPos = this.history.getEntry()?.scrollPosition;
     if (dir != null) {
       if (this.location.path.equals(dir)) {
-        this.updateDirContents(this.location.pathname);
+        this.updateDirContents(
+          this.location.pathname,
+          currentScrollPos,
+        );
       }
     } else {
-      this.updateDirContents(this.location.pathname);
+      this.updateDirContents(
+        this.location.pathname,
+        currentScrollPos,
+      );
     }
   }
 

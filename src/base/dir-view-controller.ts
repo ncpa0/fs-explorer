@@ -32,6 +32,8 @@ export class DirViewController {
   public readonly filesView = this.deriveFilesView();
   public readonly directoryInfo = this.deriveDirectoryInfo();
 
+  public onContentChange?: (scrollPosition: number) => void;
+
   constructor(
     protected explorer: Explorer,
   ) {
@@ -111,6 +113,7 @@ export class DirViewController {
 
   changeDirectory(
     dirpath: string | Path,
+    scrollPosition: number,
   ) {
     this.loading.dispatch(true);
 
@@ -131,6 +134,10 @@ export class DirViewController {
       this.stat.dispatch(stat);
       this.files.dispatch(files);
       sig.commitBatch();
+
+      if (this.onContentChange) {
+        this.onContentChange(scrollPosition);
+      }
     });
   }
 

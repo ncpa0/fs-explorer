@@ -34,7 +34,6 @@ export const VirtualFileList = $component(
 
     api.onChange(() => {
       pageInView.dispatch(0);
-      scrollview.scrollTo({ top: 0, left: 0, behavior: "instant" });
     }, [files]);
 
     const observerHandler = throttle(
@@ -63,7 +62,7 @@ export const VirtualFileList = $component(
           [ADW.ScrollView.scrollView]: true,
           "dir-view": true,
           empty: files.derive((files) => files.length === 0),
-          hidden: dir.loading,
+          hidden: dir.loading.derive(v => v),
         }}
       >
         {dir.filesView.derive(files => {
@@ -81,7 +80,15 @@ export const VirtualFileList = $component(
         })}
         <Gap />
       </div>
-    );
+    ) as HTMLDivElement;
+
+    scrollview.onscroll = e => {
+      const yPos = scrollview.scrollTop;
+      tab.history.setCurrentScrollPosition(yPos);
+    };
+    dir.onContentChange = scrollPos => {
+      scrollview.scrollTo({ top: scrollPos, behavior: "instant" });
+    };
 
     const visiblePagesObserver = new IntersectionObserver(
       observerHandler,
