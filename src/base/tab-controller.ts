@@ -14,6 +14,8 @@ export class TabController {
   public readonly history: ExplorerTabHistory;
   public readonly location: ExplorerLocation;
   public readonly directory: DirViewController;
+  private isRefreshQueued = false;
+  private refreshTimer?: Timer;
 
   constructor(
     protected explorer: Explorer,
@@ -21,10 +23,13 @@ export class TabController {
   ) {
     this.history = new ExplorerTabHistory();
     this.location = this.history["location"];
-    this.directory = new DirViewController(explorer);
+    this.directory = new DirViewController(explorer, this);
   }
 
-  private updateDirContents(path: Path | string, scrollPosition = 0) {
+  private updateDirContents(
+    path: Path | string,
+    scrollPosition: number | "RETAIN",
+  ) {
     this.directory.changeDirectory(
       path,
       scrollPosition,
@@ -51,24 +56,58 @@ export class TabController {
     });
   }
 
+  /*&
+  * Queue a refresh to happen after a short delay or
+  * do nothing if a refresh is already queued tyo happen.
+  *
+  * Normal refresh, open and replace operations will
+  * cancel the queued refresh.
+  */
+  queueRefresh(dir?: string) {
+    if (this.isRefreshQueued) {
+      return;
+    }
+    this.isRefreshQueued = true;
+
+    this.refreshTimer = setTimeout(() => {
+      this.isRefreshQueued = false;
+      this.refreshTimer = undefined;
+      this.refresh(dir);
+    }, 100);
+  }
+
+  /**
+   * If there is a refresh queued, prevent it from happening.
+   */
+  clearQueue() {
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.isRefreshQueued = false;
+      this.refreshTimer = undefined;
+    }
+  }
+
   refresh(dir?: string) {
-    const currentScrollPos = this.history.getEntry()?.scrollPosition;
+    this.clearQueue();
+
     if (dir != null) {
       if (this.location.path.equals(dir)) {
         this.updateDirContents(
           this.location.pathname,
-          currentScrollPos,
+          "RETAIN",
         );
       }
     } else {
       this.updateDirContents(
         this.location.pathname,
-        currentScrollPos,
+        "RETAIN",
       );
     }
   }
 
   open(path: string | Path) {
+    this.clearQueue();
+
     path = Path.from(path);
 
     if (this.location.path.equals(path)) {
@@ -87,6 +126,8 @@ export class TabController {
   }
 
   replace(path: string | Path) {
+    this.clearQueue();
+
     path = Path.from(path);
 
     if (this.location.path.equals(path)) {

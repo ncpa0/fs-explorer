@@ -15,7 +15,7 @@ export class FsController {
       if (
         dirPaths.some(p => p.equals(tab.location.path))
       ) {
-        tab.refresh();
+        tab.queueRefresh();
       }
     }
   }
