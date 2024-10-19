@@ -16,9 +16,9 @@ export class PromptController {
   public readonly message = sig("");
   public readonly confirmBtnLabel = sig("Confirm");
   public readonly cancelBtnLabel = sig("Cancel");
-  private readonly onConfirm = sig<(value: string) => void>(noop);
-  private readonly onUserCancel = sig(noop);
-  private readonly onCancel = sig<(reason?: any) => void>(noop);
+  private onConfirm: (value: string) => void = noop;
+  private onUserCancel = noop;
+  private onCancel: (reason?: any) => void = noop;
 
   // input type only
   public readonly initialValue = sig("");
@@ -31,10 +31,10 @@ export class PromptController {
 
   public internal = {
     confirm: (value: string) => {
-      this.onConfirm.get()(value);
+      this.onConfirm(value);
     },
     cancel: () => {
-      this.onUserCancel.get()();
+      this.onUserCancel();
     },
   };
 
@@ -46,12 +46,12 @@ export class PromptController {
     this.message.dispatch("");
     this.confirmBtnLabel.dispatch("Confirm");
     this.cancelBtnLabel.dispatch("Cancel");
-    this.onConfirm.dispatch(noop);
-    this.onUserCancel.dispatch(noop);
-    this.onCancel.dispatch(noop);
     this.initialValue.dispatch("");
     this.placeholder.dispatch("");
     this.validateFn.dispatch(undefined);
+    this.onConfirm = noop;
+    this.onUserCancel = noop;
+    this.onCancel = noop;
     sig.commitBatch();
   }
 
@@ -61,6 +61,12 @@ export class PromptController {
     confirmBtnLabel?: string;
     cancelBtnLabel?: string;
   }) {
+    if (this.isOpen.get()) {
+      throw new Error(
+        "Cannot open new prompt until the previous one is closed.",
+      );
+    }
+
     sig.startBatch();
     this.isOpen.dispatch(true);
     this.type.dispatch("question");
@@ -68,21 +74,21 @@ export class PromptController {
     this.message.dispatch(params.message);
     this.confirmBtnLabel.dispatch(params.confirmBtnLabel ?? "Confirm");
     this.cancelBtnLabel.dispatch(params.cancelBtnLabel ?? "Cancel");
+    sig.commitBatch();
 
     return new Promise<QuestionResult>((res, rej) => {
-      this.onConfirm.dispatch(() => () => {
+      this.onConfirm = () => {
         this.close();
         res({ answer: true });
-      });
-      this.onUserCancel.dispatch(() => () => {
+      };
+      this.onUserCancel = () => {
         this.close();
         res({ answer: false });
-      });
-      this.onCancel.dispatch(() => (reason: any) => {
+      };
+      this.onCancel = (reason: any) => {
         this.close();
         rej(new PromptAborted(reason));
-      });
-      sig.commitBatch();
+      };
     });
   }
 
@@ -97,6 +103,12 @@ export class PromptController {
       validate?: InputPromptValidator;
     },
   ) {
+    if (this.isOpen.get()) {
+      throw new Error(
+        "Cannot open new prompt until the previous one is closed.",
+      );
+    }
+
     sig.startBatch();
     this.isOpen.dispatch(true);
     this.type.dispatch("input");
@@ -107,29 +119,29 @@ export class PromptController {
     this.initialValue.dispatch(params.initialValue ?? "");
     this.placeholder.dispatch(params.placeholder ?? "");
     this.validateFn.dispatch(() => params.validate);
+    sig.commitBatch();
 
     return new Promise<string>((res, rej) => {
-      this.onConfirm.dispatch(() => (value: string) => {
+      this.onConfirm = (value: string) => {
         this.close();
         res(value);
-      });
-      this.onUserCancel.dispatch(() => () => {
+      };
+      this.onUserCancel = () => {
         this.close();
         res("");
-      });
-      this.onCancel.dispatch(() => (reason: any) => {
+      };
+      this.onCancel = (reason: any) => {
         this.close();
         rej(new PromptAborted(reason));
-      });
-      sig.commitBatch();
+      };
     });
   }
 
   public cancel(reason?: any) {
-    this.onCancel.get()(reason);
+    this.onCancel(reason);
   }
 }
 
 export class PromptAborted {
-  constructor(reason?: any) {}
+  constructor(public reason?: any) {}
 }

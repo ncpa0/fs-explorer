@@ -79,6 +79,8 @@ export interface PromptModal {
   confirmBtnLabel?: string;
 }
 
+const isHtmlElem = (v: any): v is HTMLElement => "closest" in v;
+
 export class Explorer {
   private cleanups: Array<() => void> = [];
   private escapeKeyHandlers: Array<(e: KeyboardEvent) => void> = [];
@@ -159,6 +161,15 @@ export class Explorer {
   }
 
   private globalKeyDownHandler = (e: KeyboardEvent) => {
+    const hasFocus = () => {
+      if (e.target && isHtmlElem(e.target)) {
+        return e.target.tagName === "INPUT" || e.target.tagName === "TEXT_AREA"
+          || e.target.tagName === "BUTTON"
+          || e.target.closest(".explorer-window");
+      }
+      return false;
+    };
+
     switch (e.key) {
       case "Escape": {
         if (this.prompt.isOpen.get()) {
@@ -177,7 +188,7 @@ export class Explorer {
         break;
       }
       case "c": {
-        if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
           const files = this.directory.getActionableFiles();
           if (files) {
             this.clipboard.put(files, "copy");
@@ -186,7 +197,7 @@ export class Explorer {
         break;
       }
       case "x": {
-        if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
           const files = this.directory.getActionableFiles();
           if (files) {
             this.clipboard.put(files, "move");
@@ -195,7 +206,7 @@ export class Explorer {
         break;
       }
       case "v": {
-        if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
           const dstat = this.directory.stat.get();
           if (dstat && dstat.write) {
             this.fs.clipboardPaste(dstat.path);
@@ -204,7 +215,7 @@ export class Explorer {
         break;
       }
       case "F2": {
-        if (!e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (!hasFocus() && !e.ctrlKey && !e.shiftKey && !e.altKey) {
           const selected = this.directory.getActionableFiles();
           if (selected && selected.length === 1) {
             const file = selected[0]!;
@@ -225,7 +236,7 @@ export class Explorer {
         break;
       }
       case "Delete": {
-        if (!e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (!hasFocus() && !e.ctrlKey && !e.shiftKey && !e.altKey) {
           const files = this.directory.getActionableFiles();
           if (files) {
             Immediate.all(...files.map(f => this.fs.remove(f))).then(() => {

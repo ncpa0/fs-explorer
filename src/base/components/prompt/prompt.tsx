@@ -41,14 +41,16 @@ export const Prompt = $component(function Prompt(props: PropmptProps, api) {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
       handleConfirm();
+      e.preventDefault();
+      e.stopPropagation();
     }
   };
 
   api.onChange(() => {
     const open = prompt.isOpen.get();
-    const initialValue = prompt.initialValue.get();
 
-    if (open) {
+    if (open && prompt.type.get() === "input") {
+      const initialValue = prompt.initialValue.get();
       if (initialValue != null) {
         inputValue.dispatch(initialValue);
       }
@@ -58,7 +60,10 @@ export const Prompt = $component(function Prompt(props: PropmptProps, api) {
 
   const inputElem = (
     <input
-      class={ADW.Input.input}
+      class={{
+        [ADW.Input.input]: true,
+        hidden: sig.eq(prompt.type, "question"),
+      }}
       value={inputValue}
       oninput={handleInput}
       onkeydown={handleKeyDown}
@@ -103,22 +108,19 @@ export const Prompt = $component(function Prompt(props: PropmptProps, api) {
           <span class={[ADW.Typography.text, "prompt-message"]}>
             {prompt.message}
           </span>
+          {inputElem}
           {sig.derive(
             prompt.type,
             validationResult,
             (type, vres) => {
-              if (type === "input") {
-                if (vres === "ok") {
-                  return [inputElem];
-                }
-                return [
-                  inputElem,
+              if (type === "input" && vres !== "ok") {
+                return (
                   <div class="error-msg">
                     <span class={ADW.Message.className({ type: "error" })}>
                       {vres.msg}
                     </span>
-                  </div>,
-                ];
+                  </div>
+                );
               }
             },
           )}
