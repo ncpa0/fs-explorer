@@ -5,6 +5,7 @@ import { ContextMenuController } from "./base/context-menu-controller";
 import { DirViewController } from "./base/dir-view-controller";
 import { FsController } from "./base/fs-controller";
 import { ExplorerLocation, ExplorerTabHistory } from "./base/history";
+import { OverlayController } from "./base/overlay-controller";
 import { PreviewPaneController } from "./base/preview-pane-controller";
 import { PromptController } from "./base/prompt-controller";
 import { TabController } from "./base/tab-controller";
@@ -98,6 +99,7 @@ export class Explorer {
   public readonly activeTab = sig(this.tabs.get()[0]!.id);
 
   public readonly contextMenu = new ContextMenuController(this);
+  public readonly overlay = new OverlayController();
 
   // location visible on the left pane
   public readonly places = sig<ReadonlyArray<Place>>([]);

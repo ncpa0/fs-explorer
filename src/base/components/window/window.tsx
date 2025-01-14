@@ -8,6 +8,7 @@ import { ContextMenu } from "../context-menu/context-menu";
 import { DirView } from "../dir-view/dir-view";
 import { LeftPane } from "../left-pane/left-pane";
 import { LocationBar } from "../location-bar/location-bar";
+import { Overlay } from "../overlay/overlay";
 import { PreviewPane } from "../preview-pane/preview-pane";
 import { Prompt } from "../prompt/prompt";
 import { Statusbar } from "../statusbar/statusbar";
@@ -93,6 +94,7 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
       {Statusbar({ explorer })}
       <ContextMenu explorer={explorer} />
       <Prompt explorer={explorer} />
+      <Overlay explorer={explorer} />
     </div>
   );
 }

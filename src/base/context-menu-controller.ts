@@ -4,7 +4,7 @@ import { FStat } from "../filesystem-interface";
 import { FileActionContext } from "../interfaces/file-action";
 import { Path } from "../utils/path";
 
-export interface ContextMenuPosition {
+export interface ElementPosition {
   top?: string;
   right?: string;
   bottom?: string;
@@ -12,7 +12,7 @@ export interface ContextMenuPosition {
 }
 
 export interface OpenMenuParams {
-  position: ContextMenuPosition;
+  position: ElementPosition;
   relatedFiles: readonly FStat[];
   triggerFile?: FStat;
 }
@@ -284,7 +284,7 @@ export class ContextMenuController {
   public readonly isOpen = sig(false);
   public readonly selectedFiles = sig<readonly FStat[]>([]);
   public readonly triggerFile = sig<undefined | FStat>(undefined);
-  public readonly position = sig<ContextMenuPosition>({});
+  public readonly position = sig<ElementPosition>({});
 
   protected btnAccessController: BtnAccessController;
   public readonly actions;

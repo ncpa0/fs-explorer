@@ -36,38 +36,6 @@
                     }
                 }
             }
-
-            & .options-menu {
-                position: absolute;
-                top: 3em;
-                display: none;
-                flex-direction: column;
-                z-index: 1000;
-                background-color: var(--clr-bg-5);
-                border-radius: var(--border-radius);
-                padding: .3em;
-                max-height: unset;
-
-                &.show {
-                    display: flex;
-                }
-
-                & button {
-                    min-width: 12em;
-                    padding-inline: 0.5em;
-                    display: flex;
-                    justify-content: flex-start;
-                }
-
-                & .show-hidden-btn {
-                    display: flex;
-                    justify-content: space-between;
-
-                    & input {
-                        margin: 0;
-                    }
-                }
-            }
         }
 
         & .left-pane-places {
@@ -130,6 +98,31 @@
                         background-color: var(--clr-btn-adaptive-hover);
                     }
                 }
+            }
+        }
+    }
+
+    & .options-menu {
+        display: flex;
+        flex-direction: column;
+        background-color: var(--clr-bg-5);
+        border-radius: var(--border-radius);
+        padding: .3em;
+        max-height: unset;
+
+        & button {
+            min-width: 12em;
+            padding-inline: 0.5em;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        & .show-hidden-btn {
+            display: flex;
+            justify-content: space-between;
+
+            & input {
+                margin: 0;
             }
         }
     }

@@ -1,9 +1,10 @@
-import { sig, Signal } from "@ncpa0cpl/vanilla-jsx/signals";
+import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import DirectoryIcon from "../../../assets/main-theme/icons/directory.svg";
 import MoreIcon from "../../../assets/main-theme/icons/more.svg";
 import { Explorer, Place } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 import { isLmb } from "../../../utils/events";
+import { getRelativePosition } from "../../../utils/get-relative-position";
 
 export type LeftPaneProps = {
   explorer: Explorer;
@@ -11,12 +12,45 @@ export type LeftPaneProps = {
 
 export function LeftPane(props: LeftPaneProps) {
   const { explorer } = props;
-  const { places, staticPlaces } = explorer;
-  const showOptions = sig(false);
+  const { places, staticPlaces, overlay } = explorer;
+
+  const handleOpenOptions = (ev: MouseEvent) => {
+    const window = explorer.window!;
+
+    const btnRelPos = getRelativePosition(optionsBtn, window);
+    const btnSize = optionsBtn.getBoundingClientRect();
+
+    overlay.display(
+      {
+        dimBackground: false,
+        position: {
+          top: String(btnRelPos.top + btnSize.height + 6),
+          left: String(btnRelPos.left),
+        },
+      },
+      <OptionsMenu explorer={explorer} close={() => overlay.close()} />,
+    );
+  };
 
   const handlePlaceClick = (place: Place) => {
     explorer.open(place.path);
   };
+
+  const optionsBtn = (
+    <button
+      class={{
+        "options-btn": true,
+        [ADW.Button.button]: true,
+        [ADW.Button.flat]: true,
+        [ADW.Button.square]: true,
+        [ADW.Button.adaptive]: true,
+        // "active": showOptions,
+      }}
+      onmousedown={handleOpenOptions}
+    >
+      <MoreIcon />
+    </button>
+  );
 
   return (
     <div
@@ -29,20 +63,7 @@ export function LeftPane(props: LeftPaneProps) {
     >
       <div class={"pane-header"}>
         <span class={[ADW.Typography.text, "header-title"]}>Places</span>
-        <button
-          class={{
-            "options-btn": true,
-            [ADW.Button.button]: true,
-            [ADW.Button.flat]: true,
-            [ADW.Button.square]: true,
-            [ADW.Button.adaptive]: true,
-            "active": showOptions,
-          }}
-          onmousedown={() => showOptions.dispatch(v => !v)}
-        >
-          <MoreIcon />
-          <OptionsMenu explorer={explorer} show={showOptions} />
-        </button>
+        {optionsBtn}
       </div>
       <div class={["left-pane-places"]}>
         {places.derive(places => {
@@ -100,13 +121,13 @@ export function LeftPane(props: LeftPaneProps) {
   );
 }
 
-function OptionsMenu(props: { explorer: Explorer; show: Signal<boolean> }) {
+function OptionsMenu(props: { explorer: Explorer; close: () => void }) {
   const { explorer } = props;
 
   const hanldeShowHiddenClick = (ev: MouseEvent) => {
     if (isLmb(ev)) {
       props.explorer.directory.showHiddenFilesToggle();
-      props.show.dispatch(false);
+      props.close();
     }
     ev.preventDefault();
     ev.stopPropagation();
@@ -114,7 +135,7 @@ function OptionsMenu(props: { explorer: Explorer; show: Signal<boolean> }) {
 
   const handleNewTabClick = (ev: MouseEvent) => {
     if (isLmb(ev)) {
-      props.show.dispatch(false);
+      props.close();
       explorer.newTab(
         explorer.location.path,
       );
@@ -124,7 +145,7 @@ function OptionsMenu(props: { explorer: Explorer; show: Signal<boolean> }) {
   };
 
   return (
-    <div class={{ ["options-menu"]: true, show: props.show }}>
+    <div class={{ ["options-menu"]: true }}>
       <button
         class={{
           [ADW.Button.button]: true,
@@ -145,7 +166,7 @@ function OptionsMenu(props: { explorer: Explorer; show: Signal<boolean> }) {
           }}
           onmousedown={(ev) => {
             if (isLmb(ev)) {
-              props.show.dispatch(false);
+              props.close();
               action.run(explorer);
             }
             ev.preventDefault();

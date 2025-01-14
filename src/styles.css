@@ -1,5 +1,7 @@
 @import "./base/components/context-menu/styles.css";
 
+@import "./base/components/overlay/styles.css";
+
 @import "./base/components/dir-view/styles.css";
 
 @import "./base/components/left-pane/styles.css";
