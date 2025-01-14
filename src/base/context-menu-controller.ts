@@ -1,5 +1,5 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
-import { Explorer } from "../explorer";
+import { Explorer, Place } from "../explorer";
 import { FStat } from "../filesystem-interface";
 import { FileActionContext } from "../interfaces/file-action";
 import { Path } from "../utils/path";
@@ -125,6 +125,16 @@ export class ContextMenuController {
         return this.btnAccessController.canRename(
           ...(target ? [target] : this.menu.selectedFiles.get()),
         );
+      },
+      createShortcut: () => {
+        const target = this.menu.getTargetFile();
+        return !!target && target.directory
+          && !this.menu.explorer.places.findByPath(target.path);
+      },
+      removeShortcut: () => {
+        const target = this.menu.getTargetFile();
+        return !!target
+          && this.menu.explorer.places.findByPath(target.path);
       },
     };
 
@@ -277,6 +287,28 @@ export class ContextMenuController {
         explorer.previewPane.open(file);
       }
 
+      this.menu.close();
+    }
+
+    createShortcut() {
+      const file = this.menu.getTargetFile();
+      if (!file || this.menu.explorer.places.findByPath(file.path)) return;
+      const place: Place = {
+        id: crypto.randomUUID(),
+        label: file.name,
+        path: file.path,
+      };
+      this.menu.explorer.addPlace(place);
+      this.menu.close();
+    }
+
+    removeShortcut() {
+      const file = this.menu.getTargetFile();
+      if (!file) return;
+      const place = this.menu.explorer.places.findByPath(file.path);
+      if (place) {
+        this.menu.explorer.removePlace(place.id);
+      }
       this.menu.close();
     }
   };

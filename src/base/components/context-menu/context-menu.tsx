@@ -228,6 +228,16 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
         title="Rename"
       />
       <MenuButton
+        hidden={!menu.actions.isPossibleTo.createShortcut()}
+        action={() => menu.actions.createShortcut()}
+        title={"Add shortcurt"}
+      />
+      <MenuButton
+        hidden={!menu.actions.isPossibleTo.removeShortcut()}
+        action={() => menu.actions.removeShortcut()}
+        title={"Remove shortcurt"}
+      />
+      <MenuButton
         hidden={false}
         action={() => menu.actions.showPreview()}
         title="Properties"

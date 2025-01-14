@@ -12,7 +12,8 @@ export type LeftPaneProps = {
 
 export function LeftPane(props: LeftPaneProps) {
   const { explorer } = props;
-  const { places, staticPlaces, overlay } = explorer;
+  const { staticPlaces, overlay } = explorer;
+  const places = explorer.places.list();
 
   const handleOpenOptions = (ev: MouseEvent) => {
     const window = explorer.window!;

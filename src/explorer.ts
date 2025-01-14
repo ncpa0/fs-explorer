@@ -6,6 +6,7 @@ import { DirViewController } from "./base/dir-view-controller";
 import { FsController } from "./base/fs-controller";
 import { ExplorerLocation, ExplorerTabHistory } from "./base/history";
 import { OverlayController } from "./base/overlay-controller";
+import { PlacesStorage } from "./base/places-storage";
 import { PreviewPaneController } from "./base/preview-pane-controller";
 import { PromptController } from "./base/prompt-controller";
 import { TabController } from "./base/tab-controller";
@@ -102,7 +103,7 @@ export class Explorer {
   public readonly overlay = new OverlayController();
 
   // location visible on the left pane
-  public readonly places = sig<ReadonlyArray<Place>>([]);
+  public readonly places: PlacesStorage;
   public readonly staticPlaces = sig<ReadonlyArray<Place>>([]);
 
   public readonly actionError = sig<ActionError | undefined>(undefined);
@@ -129,10 +130,8 @@ export class Explorer {
     public readonly options: ExplorerOptions = {},
   ) {
     this.fs = new FsController(this, filesystem);
+    this.places = new PlacesStorage(options.places);
 
-    if (options.places) {
-      this.places.dispatch(options.places.slice());
-    }
     if (options.staticPlaces) {
       this.staticPlaces.dispatch(options.staticPlaces.slice());
     }
@@ -327,15 +326,11 @@ export class Explorer {
   }
 
   addPlace(place: Place) {
-    this.places.dispatch((places) => {
-      return [...places, place];
-    });
+    this.places.addPlace(place);
   }
 
   removePlace(id: string) {
-    this.places.dispatch((places) => {
-      return places.filter((place) => place.id !== id);
-    });
+    this.places.removePlace(id);
   }
 
   addStaticPlace(place: Place) {
