@@ -17,29 +17,29 @@ export function DirView(props: DirViewProps) {
 
   const dragEnterCount = sig(0);
 
+  const handleContextMenu = (event: MouseEvent) => {
+    const windowRect = props.explorer.window!.getBoundingClientRect();
+    const left = event.clientX - windowRect.left;
+    const top = event.clientY - windowRect.top;
+    const bottom = windowRect.height - top;
+
+    const halfPoint = windowRect.height / 2;
+    const isBelowHalf = top > halfPoint;
+
+    const selected = dir.selection.get();
+    menu.open({
+      relatedFiles: selected,
+      position: {
+        left: `min(${left}px, calc(${windowRect.width}px - 13em))`,
+        top: isBelowHalf ? undefined : `${top}px`,
+        bottom: isBelowHalf ? `${bottom}px` : undefined,
+      },
+    });
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
   const handleClick = (event: MouseEvent) => {
-    if (isRmb(event)) {
-      const windowRect = props.explorer.window!.getBoundingClientRect();
-      const left = event.clientX - windowRect.left;
-      const top = event.clientY - windowRect.top;
-      const bottom = windowRect.height - top;
-
-      const halfPoint = windowRect.height / 2;
-      const isBelowHalf = top > halfPoint;
-
-      const selected = dir.selection.get();
-      menu.open({
-        relatedFiles: selected,
-        position: {
-          left: `min(${left}px, calc(${windowRect.width}px - 13em))`,
-          top: isBelowHalf ? undefined : `${top}px`,
-          bottom: isBelowHalf ? `${bottom}px` : undefined,
-        },
-      });
-      event.preventDefault();
-      return;
-    }
-
     if (isLmb(event)) {
       dir.activeEntry.dispatch(null);
       return;
@@ -74,7 +74,7 @@ export function DirView(props: DirViewProps) {
         "file-drag-over": sig.when(dragEnterCount, true, false),
       }}
       onmousedown={handleClick}
-      oncontextmenu={e => e.preventDefault()}
+      oncontextmenu={handleContextMenu}
       ondrop={handleDrop}
       ondragover={e => e.preventDefault()}
       ondragenter={handleDragEnter}

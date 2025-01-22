@@ -25,8 +25,8 @@ export function LeftPane(props: LeftPaneProps) {
       {
         dimBackground: false,
         position: {
-          top: String(btnRelPos.top + btnSize.height + 6),
-          left: String(btnRelPos.left),
+          top: btnRelPos.top + btnSize.height + 6,
+          left: btnRelPos.left,
         },
       },
       <OptionsMenu explorer={explorer} close={() => overlay.close()} />,

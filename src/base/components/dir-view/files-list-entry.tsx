@@ -31,6 +31,29 @@ export function FileListEntry(
     dir.toggleSelectFile(file);
   };
 
+  const handleContextMenu = (event: MouseEvent) => {
+    const windowRect = explorer.window!.getBoundingClientRect();
+    const left = event.clientX - windowRect.left;
+    const top = event.clientY - windowRect.top;
+    const bottom = windowRect.height - top;
+
+    const halfPoint = windowRect.height / 2;
+    const isBelowHalf = top > halfPoint;
+
+    const selected = selectedFiles.get();
+    menu.open({
+      triggerFile: file,
+      relatedFiles: selected,
+      position: {
+        left: `min(${left}px, calc(${windowRect.width}px - 13em))`,
+        top: isBelowHalf ? undefined : `${top}px`,
+        bottom: isBelowHalf ? `${bottom}px` : undefined,
+      },
+    });
+    event.stopPropagation();
+    event.preventDefault();
+  };
+
   const handleClick = (event: MouseEvent) => {
     explorer.focusTab(
       tab.id,
@@ -38,30 +61,6 @@ export function FileListEntry(
 
     if (isLmb(event, "ctrl")) {
       toggleSelect();
-      return;
-    }
-
-    if (isRmb(event)) {
-      const windowRect = explorer.window!.getBoundingClientRect();
-      const left = event.clientX - windowRect.left;
-      const top = event.clientY - windowRect.top;
-      const bottom = windowRect.height - top;
-
-      const halfPoint = windowRect.height / 2;
-      const isBelowHalf = top > halfPoint;
-
-      const selected = selectedFiles.get();
-      menu.open({
-        triggerFile: file,
-        relatedFiles: selected,
-        position: {
-          left: `min(${left}px, calc(${windowRect.width}px - 13em))`,
-          top: isBelowHalf ? undefined : `${top}px`,
-          bottom: isBelowHalf ? `${bottom}px` : undefined,
-        },
-      });
-      event.stopPropagation();
-      event.preventDefault();
       return;
     }
 
@@ -102,7 +101,7 @@ export function FileListEntry(
         }),
       }}
       onmousedown={handleClick}
-      oncontextmenu={e => e.preventDefault()}
+      oncontextmenu={handleContextMenu}
     >
       <div class={{ "file-icon": true, directory: file.directory }}>
         <Icon />

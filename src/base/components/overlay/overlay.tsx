@@ -1,5 +1,5 @@
 import { Explorer } from "../../../explorer";
-import { asPx } from "../../../utils/as-px";
+import { asCssValue } from "../../../utils/as-px";
 
 export function Overlay(props: { explorer: Explorer }) {
   const { overlay } = props.explorer;
@@ -37,10 +37,10 @@ export function Overlay(props: { explorer: Explorer }) {
           if (pos) {
             return {
               position: "absolute",
-              top: asPx(pos.top),
-              left: asPx(pos.left),
-              right: asPx(pos.right),
-              bottom: asPx(pos.bottom),
+              top: asCssValue(pos.top),
+              left: asCssValue(pos.left),
+              right: asCssValue(pos.right),
+              bottom: asCssValue(pos.bottom),
             };
           }
           return {};

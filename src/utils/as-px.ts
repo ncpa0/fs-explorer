@@ -1,3 +1,9 @@
-export function asPx(value?: number | string): string | undefined {
-  return value != null ? `${value}px` : undefined;
+export function asCssValue(value?: number | string): string | undefined {
+  switch (typeof value) {
+    case "number":
+      return value != null ? `${value}px` : undefined;
+    case "string":
+      return value;
+  }
+  return undefined;
 }

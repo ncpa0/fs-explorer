@@ -12,15 +12,6 @@ export type ContextMenuProps = {
 
 export function ContextMenu(props: ContextMenuProps) {
   const menu = props.explorer.contextMenu;
-  const isClosed = menu.isOpen.derive(v => !v);
-  const top = menu.position.derive(d => d.top);
-  const right = menu.position.derive(d => d.right);
-  const bottom = menu.position.derive(d => d.bottom);
-  const left = menu.position.derive(d => d.left);
-
-  const handleBackdropClick = () => {
-    menu.close();
-  };
 
   const handleMenuClick = (e: MouseEvent) => {
     e.preventDefault();
@@ -29,50 +20,39 @@ export function ContextMenu(props: ContextMenuProps) {
 
   return (
     <div
-      class={{ ["context-backdrop"]: true, hidden: isClosed }}
+      class="context-menu"
       oncontextmenu={e => e.preventDefault()}
-      onmousedown={handleBackdropClick}
+      onmousedown={handleMenuClick}
     >
-      <div
-        class="context-menu"
-        style={{ left, top, bottom, right }}
-        onmousedown={handleMenuClick}
-      >
-        {sig.derive(
-          menu.isOpen,
-          menu.selectedFiles,
-          menu.triggerFile,
-          (open, files, target) => {
-            if (!open) {
-              return <span />;
-            }
-
-            if (files.length > 0) {
-              return (
-                <FileMenuButtons
-                  explorer={props.explorer}
-                  files={files}
-                />
-              );
-            }
-
-            if (target) {
-              return (
-                <FileMenuButtons
-                  explorer={props.explorer}
-                  files={[target]}
-                />
-              );
-            }
-
+      {sig.derive(
+        menu.selectedFiles,
+        menu.triggerFile,
+        (files, target) => {
+          if (files.length > 0) {
             return (
-              <DirMenuButtons
+              <FileMenuButtons
                 explorer={props.explorer}
+                files={files}
               />
             );
-          },
-        )}
-      </div>
+          }
+
+          if (target) {
+            return (
+              <FileMenuButtons
+                explorer={props.explorer}
+                files={[target]}
+              />
+            );
+          }
+
+          return (
+            <DirMenuButtons
+              explorer={props.explorer}
+            />
+          );
+        },
+      )}
     </div>
   );
 }

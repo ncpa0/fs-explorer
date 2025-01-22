@@ -2,13 +2,15 @@ import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer, Place } from "../explorer";
 import { FStat } from "../filesystem-interface";
 import { FileActionContext } from "../interfaces/file-action";
+import { asCssValue } from "../utils/as-px";
 import { Path } from "../utils/path";
+import { ContextMenu } from "./components/context-menu/context-menu";
 
 export interface ElementPosition {
-  top?: string;
-  right?: string;
-  bottom?: string;
-  left?: string;
+  top?: string | number;
+  right?: string | number;
+  bottom?: string | number;
+  left?: string | number;
 }
 
 export interface OpenMenuParams {
@@ -316,7 +318,6 @@ export class ContextMenuController {
   public readonly isOpen = sig(false);
   public readonly selectedFiles = sig<readonly FStat[]>([]);
   public readonly triggerFile = sig<undefined | FStat>(undefined);
-  public readonly position = sig<ElementPosition>({});
 
   protected btnAccessController: BtnAccessController;
   public readonly actions;
@@ -399,9 +400,9 @@ export class ContextMenuController {
   close() {
     sig.startBatch();
     this.isOpen.dispatch(false);
-    this.position.dispatch({});
     this.selectedFiles.dispatch([]);
     this.triggerFile.dispatch(undefined);
+    this.explorer.overlay.close();
     sig.commitBatch();
   }
 
@@ -435,11 +436,26 @@ export class ContextMenuController {
 
     sig.startBatch();
     this.isOpen.dispatch(true);
-    this.position.dispatch(params.position);
     this.selectedFiles.dispatch(params.relatedFiles);
     if (params.triggerFile) {
       this.triggerFile.dispatch(params.triggerFile);
     }
     sig.commitBatch();
+
+    this.explorer.overlay.display(
+      {
+        dimBackground: false,
+        closeOnBackgroundClick: true,
+        position: {
+          top: params.position.top,
+          left: params.position.left,
+          bottom: params.position.bottom,
+          right: params.position.right,
+        },
+      },
+      <ContextMenu
+        explorer={this.explorer}
+      />,
+    );
   }
 }

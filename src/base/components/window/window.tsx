@@ -91,7 +91,6 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
         </div>
       </div>
       {Statusbar({ explorer })}
-      <ContextMenu explorer={explorer} />
       <Overlay explorer={explorer} />
     </div>
   );
