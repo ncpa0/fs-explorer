@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "./dist/legacy/index.js",
   "exports": {
+    "types": "./dist/types/index.d.ts",
     "import": "./dist/esm/index.mjs",
-    "require": "./dist/cjs/index.cjs",
-    "types": "./dist/types/index.d.ts"
+    "require": "./dist/cjs/index.cjs"
   },
   "keywords": [],
   "repository": {
@@ -35,21 +35,22 @@
     "@types/lodash.throttle": "^4.1.9",
     "@types/luxon": "^3.4.2",
     "dedent": "^1.5.3",
-    "dprint": "^0.47.1",
-    "esbuild": "^0.23.0",
+    "dprint": "^0.48.0",
+    "esbuild": "^0.24.2",
     "husky": "~8",
-    "lightningcss": "^1.25.1",
+    "lightningcss": "^1.29.1",
     "git-hook-tasks": "git@github.com:ncpa0cpl/git-hook-tasks#4215793",
-    "oxlint": "^0.5.3"
+    "oxlint": "^0.15.6"
   },
   "peerDependencies": {
-    "typescript": "^5.5.3"
+    "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@ncpa0cpl/vanilla-jsx": "^0.0.1-alpha.27",
-    "adwavecss": "^0.1.0",
+    "@ncpa0cpl/vanilla-jsx": "^0.0.1-alpha.34",
+    "adwavecss": "^0.1.1",
+    "async-await-queue": "^2.1.4",
     "lodash.throttle": "^4.1.1",
-    "luxon": "^3.4.4"
+    "luxon": "^3.5.0"
   },
   "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }

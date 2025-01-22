@@ -1,4 +1,4 @@
-import { ReadonlySignal } from "@ncpa0cpl/vanilla-jsx/signals";
+import { ReadonlySignal, sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 
@@ -14,17 +14,21 @@ export interface StatusbarProps {
 
 export function Statusbar(props: StatusbarProps) {
   const { explorer } = props;
-  const dir = explorer.directory;
 
-  return (
-    <div class="statusbar">
-      <DirStat stat={dir.directoryInfo} />
-      <DirStat
-        prefix="Selection:"
-        stat={dir.directoryInfo.derive(info => info.selection)}
-      />
-    </div>
-  );
+  return sig.derive(explorer.activeTab, explorer.tabs, (tabID, allTabs) => {
+    const tab = allTabs.find(t => t.id === tabID) ?? allTabs[0]!;
+    const dir = tab.directory;
+
+    return (
+      <div class="statusbar">
+        <DirStat stat={dir.directoryInfo} />
+        <DirStat
+          prefix="Selection:"
+          stat={dir.directoryInfo.derive(info => info.selection)}
+        />
+      </div>
+    );
+  });
 }
 
 function DirStat(props: {

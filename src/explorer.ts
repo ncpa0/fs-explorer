@@ -1,12 +1,17 @@
-import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
+import { sig, SignalListenerReference } from "@ncpa0cpl/vanilla-jsx/signals";
 import { ClipcoardController } from "./base/clipboard-controller";
 import { ExplorerWindow } from "./base/components/window/window";
 import { ContextMenuController } from "./base/context-menu-controller";
 import { DirViewController } from "./base/dir-view-controller";
+import { DragController } from "./base/drag-controller";
 import { FsController } from "./base/fs-controller";
-import { ExplorerHistory, ExplorerLocation } from "./base/history";
+import { ExplorerLocation, ExplorerTabHistory } from "./base/history";
+import { JobsController } from "./base/jobs-controller";
+import { OverlayController } from "./base/overlay-controller";
+import { PlacesStorage } from "./base/places-storage";
 import { PreviewPaneController } from "./base/preview-pane-controller";
 import { PromptController } from "./base/prompt-controller";
+import { TabController } from "./base/tab-controller";
 import { Filesystem, FStat } from "./filesystem-interface";
 import { ActionError } from "./interfaces/action-error";
 import { Styles } from "./styles-component";
@@ -66,6 +71,7 @@ export interface ExplorerOptions {
    * Path to the directory that will be opened when the explorer is initieated. The Default is `/`.
    */
   readonly initDir?: string;
+  readonly fileDropHandler?: (data: DataTransfer, droppedInto: FStat) => void;
 }
 
 export interface PromptModal {
@@ -77,37 +83,81 @@ export interface PromptModal {
   confirmBtnLabel?: string;
 }
 
+const isHtmlElem = (v: any): v is HTMLElement => "closest" in v;
+
 export class Explorer {
   private cleanups: Array<() => void> = [];
   private escapeKeyHandlers: Array<(e: KeyboardEvent) => void> = [];
 
   public window: Element | null = null;
 
-  public readonly history = new ExplorerHistory();
-  public readonly location: ExplorerLocation = this.history["location"];
-  public readonly directory = new DirViewController(this);
-  public readonly contextMenu = new ContextMenuController(this);
   public readonly previewPane = new PreviewPaneController(this);
   public readonly clipboard = new ClipcoardController(this);
   public readonly prompt = new PromptController(this);
   public readonly fs;
 
+  public readonly tabs = sig<ReadonlyArray<TabController>>([
+    new TabController(this, this.cleanups),
+  ]);
+  public readonly activeTab = sig(this.tabs.get()[0]!.id);
+
+  public readonly contextMenu = new ContextMenuController(this);
+  public readonly overlay = new OverlayController();
+  public readonly drag = new DragController();
+  public readonly jobs = new JobsController();
+
   // location visible on the left pane
-  public readonly places = sig<ReadonlyArray<Place>>([]);
+  public readonly places: PlacesStorage;
   public readonly staticPlaces = sig<ReadonlyArray<Place>>([]);
 
   public readonly actionError = sig<ActionError | undefined>(undefined);
   public readonly hideLeftPane = sig<boolean>(false);
+
+  get currentTab(): TabController {
+    return this.tabs.get().find((tab) => tab.id === this.activeTab.get())!;
+  }
+
+  get history(): ExplorerTabHistory {
+    return this.currentTab.history;
+  }
+
+  get location(): ExplorerLocation {
+    return this.currentTab.location;
+  }
+
+  get directory(): DirViewController {
+    return this.currentTab.directory;
+  }
+
+  get currentPath() {
+    const s = sig(this.location.path);
+    let currentObserver: SignalListenerReference<Path> | undefined;
+    const derived = sig.derive(this.activeTab, this.tabs, (id, tabs) => {
+      const activeTab = tabs.find((tab) => tab.id === id);
+      if (activeTab) {
+        currentObserver?.detach();
+        currentObserver = activeTab.location.signal.add(loc => {
+          s.dispatch(loc);
+        });
+      }
+    });
+    // assign intermediary signal to the source signal to avoid garbage collection on it
+    Object.defineProperty(s, "_intermediary_signal", { value: derived });
+    // derived signal needs a listener or it will opt into optimization
+    // and will not call the derive function
+    Object.defineProperty(s, "_intermediary_observer", {
+      value: derived.add(() => {}),
+    });
+    return s;
+  }
 
   constructor(
     public readonly filesystem: Filesystem,
     public readonly options: ExplorerOptions = {},
   ) {
     this.fs = new FsController(this, filesystem);
+    this.places = new PlacesStorage(options.places);
 
-    if (options.places) {
-      this.places.dispatch(options.places.slice());
-    }
     if (options.staticPlaces) {
       this.staticPlaces.dispatch(options.staticPlaces.slice());
     }
@@ -115,18 +165,11 @@ export class Explorer {
       this.hideLeftPane.dispatch(!!options.hideLeftPane);
     }
 
-    if (options.initDir) {
-      this.history.replace(options.initDir);
-    }
-    const { detach } = this.location.signal.add(
-      (path) => {
-        this.previewPane.close();
-        this.updateDirContents(path);
-      },
-    );
-    this.cleanups.push(detach);
-
-    const onChange = this.refresh.bind(this);
+    const onChange = (dirPath?: string) => {
+      for (const tab of this.tabs.get()) {
+        tab.refresh(dirPath);
+      }
+    };
     filesystem.onChange(onChange);
     this.cleanups.push(() => filesystem.offChange(onChange));
 
@@ -134,13 +177,30 @@ export class Explorer {
     this.cleanups.push(() => {
       window.removeEventListener("keydown", this.globalKeyDownHandler);
     });
+
+    for (const tab of this.tabs.get()) {
+      tab.initiate();
+    }
+
+    if (options.initDir) {
+      this.history.replace(options.initDir);
+    }
   }
 
   private globalKeyDownHandler = (e: KeyboardEvent) => {
+    const hasFocus = () => {
+      if (e.target && isHtmlElem(e.target)) {
+        return e.target.tagName === "INPUT" || e.target.tagName === "TEXT_AREA"
+          || e.target.tagName === "BUTTON"
+          || e.target.closest(".explorer-window");
+      }
+      return false;
+    };
+
     switch (e.key) {
       case "Escape": {
-        if (this.prompt.isOpen.get()) {
-          this.prompt.internal.cancel();
+        if (this.prompt.isOpen()) {
+          this.prompt.cancel();
           return;
         }
 
@@ -155,7 +215,7 @@ export class Explorer {
         break;
       }
       case "c": {
-        if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
           const files = this.directory.getActionableFiles();
           if (files) {
             this.clipboard.put(files, "copy");
@@ -164,7 +224,7 @@ export class Explorer {
         break;
       }
       case "x": {
-        if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
           const files = this.directory.getActionableFiles();
           if (files) {
             this.clipboard.put(files, "move");
@@ -173,7 +233,7 @@ export class Explorer {
         break;
       }
       case "v": {
-        if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
           const dstat = this.directory.stat.get();
           if (dstat && dstat.write) {
             this.fs.clipboardPaste(dstat.path);
@@ -182,7 +242,7 @@ export class Explorer {
         break;
       }
       case "F2": {
-        if (!e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (!hasFocus() && !e.ctrlKey && !e.shiftKey && !e.altKey) {
           const selected = this.directory.getActionableFiles();
           if (selected && selected.length === 1) {
             const file = selected[0]!;
@@ -196,14 +256,21 @@ export class Explorer {
               const newPath = Path.from(file.path).base().joinSegment(
                 name,
               );
-              this.fs.move(file, newPath);
+              this.fs.move([file], newPath);
             });
           }
         }
         break;
       }
+      case "F5": {
+        if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
+          e.preventDefault();
+          this.refresh();
+        }
+        break;
+      }
       case "Delete": {
-        if (!e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (!hasFocus() && !e.ctrlKey && !e.shiftKey && !e.altKey) {
           const files = this.directory.getActionableFiles();
           if (files) {
             Immediate.all(...files.map(f => this.fs.remove(f))).then(() => {
@@ -215,10 +282,35 @@ export class Explorer {
     }
   };
 
-  private updateDirContents(path: Path | string) {
-    this.directory.changeDirectory(
-      path,
-    );
+  focusTab(id: symbol) {
+    const tabs = this.tabs.get();
+    if (tabs.some(tab => tab.id === id)) {
+      this.activeTab.dispatch(id);
+    }
+  }
+
+  newTab(initLocation?: Path | string) {
+    const tab = new TabController(this, this.cleanups);
+    tab.initiate();
+    if (initLocation) {
+      tab.history.replace(initLocation);
+    }
+    this.tabs.dispatch(current => current.concat(tab));
+    this.activeTab.dispatch(tab.id);
+  }
+
+  closeTab(id: symbol) {
+    sig.startBatch();
+    const currentTabs = this.tabs.get();
+    const newTabs = currentTabs.filter(tab => tab.id !== id);
+    this.tabs.dispatch(newTabs);
+    if (this.activeTab.get() === id) {
+      const newActiveTab = newTabs[0];
+      if (newActiveTab) {
+        this.activeTab.dispatch(newActiveTab.id);
+      }
+    }
+    sig.commitBatch();
   }
 
   onEscapePress(handler: (e: KeyboardEvent) => void) {
@@ -232,75 +324,39 @@ export class Explorer {
   }
 
   refresh(dir?: string) {
-    if (dir != null) {
-      if (this.location.path.equals(dir)) {
-        this.updateDirContents(this.location.pathname);
-      }
-    } else {
-      this.updateDirContents(this.location.pathname);
-    }
+    this.currentTab.refresh();
   }
 
   open(path: string | Path) {
-    path = Path.from(path);
-
-    if (this.location.path.equals(path)) {
-      return;
-    }
-
-    return this.filesystem.dirExists(path.toString()).then((exists) => {
-      if (exists) {
-        this.history.push(path);
-        return true;
-      }
-      return false;
-    });
+    this.currentTab.open(path);
   }
 
   replace(path: string | Path) {
-    path = Path.from(path);
-
-    if (this.location.path.equals(path)) {
-      return;
-    }
-
-    return this.filesystem.dirExists(path.toString()).then((exists) => {
-      if (exists) {
-        this.history.replace(path);
-        return true;
-      }
-      return false;
-    });
+    this.currentTab.replace(path);
   }
 
-  element(): Element {
-    if (!this.window) {
-      this.window = ExplorerWindow({ explorer: this });
-      this.window.prepend(Styles());
-    }
-    return this.window;
+  getActiveFile() {
+    return this.currentTab.getActiveFile();
   }
 
-  mountTo(element: HTMLElement) {
-    element.appendChild(this.element());
+  getCurrentDir() {
+    return this.currentTab.getCurrentDir();
   }
 
-  dispose() {
-    for (const cleanup of this.cleanups) {
-      cleanup();
-    }
+  getSelectedFiles() {
+    return this.currentTab.getSelectedFiles();
+  }
+
+  getClipboard() {
+    return this.clipboard.data.get();
   }
 
   addPlace(place: Place) {
-    this.places.dispatch((places) => {
-      return [...places, place];
-    });
+    this.places.addPlace(place);
   }
 
   removePlace(id: string) {
-    this.places.dispatch((places) => {
-      return places.filter((place) => place.id !== id);
-    });
+    this.places.removePlace(id);
   }
 
   addStaticPlace(place: Place) {
@@ -315,22 +371,21 @@ export class Explorer {
     });
   }
 
-  getActiveFile() {
-    return this.directory.activeEntry.get();
+  mountTo(element: HTMLElement) {
+    element.appendChild(this.element());
   }
 
-  getCurrentDir() {
-    return {
-      stat: this.directory.stat.get(),
-      files: this.directory.files.get(),
-    };
+  element(): Element {
+    if (!this.window) {
+      this.window = ExplorerWindow({ explorer: this });
+      this.window.prepend(Styles());
+    }
+    return this.window;
   }
 
-  getSelectedFiles() {
-    return this.directory.selection.get();
-  }
-
-  getClipboard() {
-    return this.clipboard.files.get();
+  dispose() {
+    for (const cleanup of this.cleanups) {
+      cleanup();
+    }
   }
 }

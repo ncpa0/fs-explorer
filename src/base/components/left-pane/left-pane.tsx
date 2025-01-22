@@ -1,9 +1,11 @@
-import { sig, Signal } from "@ncpa0cpl/vanilla-jsx/signals";
+import { Separator } from "adwavecss";
 import DirectoryIcon from "../../../assets/main-theme/icons/directory.svg";
 import MoreIcon from "../../../assets/main-theme/icons/more.svg";
 import { Explorer, Place } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 import { isLmb } from "../../../utils/events";
+import { getRelativePosition } from "../../../utils/get-relative-position";
+import { JobsView } from "../jobs/jobs-view";
 
 export type LeftPaneProps = {
   explorer: Explorer;
@@ -11,12 +13,46 @@ export type LeftPaneProps = {
 
 export function LeftPane(props: LeftPaneProps) {
   const { explorer } = props;
-  const { places, staticPlaces } = explorer;
-  const showOptions = sig(false);
+  const { staticPlaces, overlay } = explorer;
+  const places = explorer.places.list();
+
+  const handleOpenOptions = (ev: MouseEvent) => {
+    const window = explorer.window!;
+
+    const btnRelPos = getRelativePosition(optionsBtn, window);
+    const btnSize = optionsBtn.getBoundingClientRect();
+
+    overlay.display(
+      {
+        dimBackground: false,
+        position: {
+          top: btnRelPos.top + btnSize.height + 6,
+          left: btnRelPos.left,
+        },
+      },
+      <OptionsMenu explorer={explorer} close={() => overlay.close()} />,
+    );
+  };
 
   const handlePlaceClick = (place: Place) => {
     explorer.open(place.path);
   };
+
+  const optionsBtn = (
+    <button
+      class={{
+        "options-btn": true,
+        [ADW.Button.button]: true,
+        [ADW.Button.flat]: true,
+        [ADW.Button.square]: true,
+        [ADW.Button.adaptive]: true,
+        // "active": showOptions,
+      }}
+      onmousedown={handleOpenOptions}
+    >
+      <MoreIcon />
+    </button>
+  );
 
   return (
     <div
@@ -27,93 +63,106 @@ export function LeftPane(props: LeftPaneProps) {
         hidden: explorer.hideLeftPane,
       }}
     >
-      <div class={"pane-header"}>
-        <span class={[ADW.Typography.text, "header-title"]}>Places</span>
-        <button
-          class={{
-            "options-btn": true,
-            [ADW.Button.button]: true,
-            [ADW.Button.flat]: true,
-            [ADW.Button.square]: true,
-            [ADW.Button.adaptive]: true,
-            "active": showOptions,
-          }}
-          onmousedown={() => showOptions.dispatch(v => !v)}
-        >
-          <MoreIcon />
-          <OptionsMenu explorer={explorer} show={showOptions} />
-        </button>
-      </div>
-      <div class={["left-pane-places"]}>
-        {places.derive(places => {
-          return places.flatMap(place => (
-            <div
-              id={`place-${place.id}`}
-              class="dcontents place-link"
-              onmousedown={() => handlePlaceClick(place)}
-            >
-              <div class="icon">
-                <DirectoryIcon />
-              </div>
-              <div class="label">
-                <span class={ADW.Typography.text}>
-                  {place.label}
-                </span>
-              </div>
-            </div>
-          ));
-        })}
-        <div
-          class={{
-            ["dcontents seps"]: true,
-            hidden: sig.derive(
-              places,
-              staticPlaces,
-              (places, staticPlaces) =>
-                places.length === 0 || staticPlaces.length === 0,
-            ),
-          }}
-        >
-          <div class="separator" />
-          <div class="separator" />
+      <div class="places">
+        <div class={"pane-header"}>
+          <span class={[ADW.Typography.text, "header-title"]}>Places</span>
+          {optionsBtn}
         </div>
-        {staticPlaces.derive(places => {
-          return places.flatMap(place => (
-            <div
-              id={`static-place-${place.id}`}
-              class="dcontents place-link "
-              onmousedown={() => handlePlaceClick(place)}
-            >
-              <div class="icon">
-                <DirectoryIcon />
-              </div>
-              <div class="label">
-                <span class={ADW.Typography.text}>
-                  {place.label}
-                </span>
-              </div>
-            </div>
-          ));
-        })}
+        <div class={["left-pane-places"]}>
+          {places.derive(places => {
+            return places.flatMap(place => (
+              <button
+                id={`place-${place.id}`}
+                class={{
+                  "place-link": true,
+                  [ADW.Button.button]: true,
+                  [ADW.Button.flat]: true,
+                  [ADW.Button.toggled]: explorer.currentPath.derive(p => {
+                    return p.equals(place.path);
+                  }),
+                }}
+                onclick={() => handlePlaceClick(place)}
+              >
+                <div class="icon">
+                  <DirectoryIcon />
+                </div>
+                <div class="label">
+                  <span class={ADW.Typography.text}>
+                    {place.label}
+                  </span>
+                </div>
+              </button>
+            ));
+          })}
+          <div class={Separator.separator} />
+          {staticPlaces.derive(places => {
+            return places.flatMap(place => (
+              <button
+                id={`static-place-${place.id}`}
+                class={{
+                  "place-link": true,
+                  [ADW.Button.button]: true,
+                  [ADW.Button.flat]: true,
+                  [ADW.Button.toggled]: explorer.currentPath.derive(p => {
+                    return p.equals(place.path);
+                  }),
+                }}
+                onclick={() => handlePlaceClick(place)}
+              >
+                <div class="icon">
+                  <DirectoryIcon />
+                </div>
+                <div class="label">
+                  <span class={ADW.Typography.text}>
+                    {place.label}
+                  </span>
+                </div>
+              </button>
+            ));
+          })}
+        </div>
       </div>
+      <JobsView explorer={explorer} />
     </div>
   );
 }
 
-function OptionsMenu(props: { explorer: Explorer; show: Signal<boolean> }) {
+function OptionsMenu(props: { explorer: Explorer; close: () => void }) {
   const { explorer } = props;
 
   const hanldeShowHiddenClick = (ev: MouseEvent) => {
     if (isLmb(ev)) {
       props.explorer.directory.showHiddenFilesToggle();
-      props.show.dispatch(false);
+      props.close();
+    }
+    ev.preventDefault();
+    ev.stopPropagation();
+  };
+
+  const handleNewTabClick = (ev: MouseEvent) => {
+    if (isLmb(ev)) {
+      props.close();
+      explorer.newTab(
+        explorer.location.path,
+      );
     }
     ev.preventDefault();
     ev.stopPropagation();
   };
 
   return (
-    <div class={{ ["options-menu"]: true, show: props.show }}>
+    <div class={{ ["options-menu"]: true }}>
+      <button
+        class={{
+          [ADW.Button.button]: true,
+          [ADW.Button.flat]: true,
+          [ADW.Button.adaptive]: true,
+          "hidden": explorer.tabs.derive(t => t.length > 1),
+        }}
+        onmousedown={handleNewTabClick}
+      >
+        Split View
+      </button>
       {explorer.options.explorerActions?.map(action => (
         <button
           class={{
@@ -123,7 +172,7 @@ function OptionsMenu(props: { explorer: Explorer; show: Signal<boolean> }) {
           }}
           onmousedown={(ev) => {
             if (isLmb(ev)) {
-              props.show.dispatch(false);
+              props.close();
               action.run(explorer);
             }
             ev.preventDefault();

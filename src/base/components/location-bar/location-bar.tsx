@@ -18,56 +18,70 @@ enum BarMode {
 
 export function LocationBar(props: LocationBarProps) {
   const { explorer } = props;
-  const location = explorer.location.signal;
-  const mode = sig(BarMode.Preview);
+  return sig.derive(explorer.activeTab, explorer.tabs, (tabID, allTabs) => {
+    const tab = allTabs.find(t => t.id === tabID) ?? allTabs[0]!;
+    const location = tab.location.signal;
+    const mode = sig(BarMode.Preview);
 
-  const handleSegmentClick = (segmentPath: Path) => {
-    explorer.open(segmentPath);
-  };
+    const handleSegmentClick = (segmentPath: Path) => {
+      tab.open(segmentPath);
+    };
 
-  const handleEditorSubmit = (path: Path) => {
-    explorer.open(path);
-    if (!path.equals(explorer.location.pathname)) {
-      mode.dispatch(BarMode.Preview);
-    }
-  };
+    const handleEditorSubmit = (path: Path) => {
+      tab.open(path);
+      if (!path.equals(tab.location.pathname)) {
+        mode.dispatch(BarMode.Preview);
+      }
+    };
 
-  return (
-    <div class={["location-bar", ADW.Box.box, ADW.Box.bg2]}>
-      <ControlButtons
-        onBack={() => explorer.history.back()}
-        onForward={() => explorer.history.forward()}
-        onUp={() => {
-          const p = explorer.location.path;
-          const up = p.base();
-          if (!up.equals(p)) {
-            explorer.history.push(up);
+    const handleBack = () => {
+      tab.history.back();
+    };
+
+    const handleForward = () => {
+      tab.history.forward();
+    };
+
+    const handleUp = () => {
+      const p = tab.location.path;
+      const up = p.base();
+      if (!up.equals(p)) {
+        const prevScrollPos = tab.history.getEntry(-1)?.scrollPosition;
+        tab.history.push(up, prevScrollPos);
+      }
+    };
+
+    return (
+      <div class={["location-bar", ADW.Box.box, ADW.Box.bg2]}>
+        <ControlButtons
+          onBack={handleBack}
+          onForward={handleForward}
+          onUp={handleUp}
+          onReload={() => tab.refresh()}
+          onGoHome={() => tab.open("/")}
+        />
+        {mode.derive(m => {
+          if (m === BarMode.Preview) {
+            return (
+              <LocationPreview
+                location={location}
+                changeMode={() => mode.dispatch(BarMode.Edit)}
+                onSegmentClick={handleSegmentClick}
+              />
+            );
+          } else {
+            return (
+              <LocationEditor
+                location={location}
+                changeMode={() => mode.dispatch(BarMode.Preview)}
+                onSubmit={handleEditorSubmit}
+              />
+            );
           }
-        }}
-        onReload={() => explorer.refresh()}
-        onGoHome={() => explorer.open("/")}
-      />
-      {mode.derive(m => {
-        if (m === BarMode.Preview) {
-          return (
-            <LocationPreview
-              location={location}
-              changeMode={() => mode.dispatch(BarMode.Edit)}
-              onSegmentClick={handleSegmentClick}
-            />
-          );
-        } else {
-          return (
-            <LocationEditor
-              location={location}
-              changeMode={() => mode.dispatch(BarMode.Preview)}
-              onSubmit={handleEditorSubmit}
-            />
-          );
-        }
-      })}
-    </div>
-  );
+        })}
+      </div>
+    );
+  });
 }
 
 function ControlButtons(props: {

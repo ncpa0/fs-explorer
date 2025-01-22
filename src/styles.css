@@ -1,5 +1,7 @@
 @import "./base/components/context-menu/styles.css";
 
+@import "./base/components/overlay/styles.css";
+
 @import "./base/components/dir-view/styles.css";
 
 @import "./base/components/left-pane/styles.css";
@@ -16,6 +18,8 @@
 
 @import "./base/components/_common/loader-styles.css";
 
+@import "./base/components/jobs/styles.css";
+
 .explorer-window.explorer-window.explorer-window.explorer-window {
     box-sizing: border-box;
 
@@ -30,5 +34,11 @@
 
     & .dcontents {
         display: contents;
+    }
+
+    & .btn.square {
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 }

@@ -1,5 +1,6 @@
 import { ReadonlySignal } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Typography } from "adwavecss";
+import { isLmb } from "../../../utils/events";
 import { DirViewController } from "../../dir-view-controller";
 import { SortMode } from "./sort-files";
 
@@ -7,16 +8,22 @@ export function FileViewHeader(props: {
   sorting: ReadonlySignal<{ mode: SortMode; reverse: boolean }>;
   dir: DirViewController;
 }) {
-  const handleNameClick = () => {
-    props.dir.toggleSorting("name");
+  const handleNameClick = (event: MouseEvent) => {
+    if (isLmb(event)) {
+      props.dir.toggleSorting("name");
+    }
   };
 
-  const handleSizeClick = () => {
-    props.dir.toggleSorting("size");
+  const handleSizeClick = (event: MouseEvent) => {
+    if (isLmb(event)) {
+      props.dir.toggleSorting("size");
+    }
   };
 
-  const handleDateClick = () => {
-    props.dir.toggleSorting("date");
+  const handleDateClick = (event: MouseEvent) => {
+    if (isLmb(event)) {
+      props.dir.toggleSorting("date");
+    }
   };
 
   return (

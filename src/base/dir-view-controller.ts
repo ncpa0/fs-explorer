@@ -1,11 +1,12 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
+import { Queue } from "async-await-queue";
 import { Explorer } from "../explorer";
 import { FStat } from "../filesystem-interface";
 import { Fmt } from "../utils/formatters";
 import { Immediate } from "../utils/immediate";
 import { Path } from "../utils/path";
 import { sortFiles, SortMode } from "./components/dir-view/sort-files";
-import { RaceQueue } from "./race-queue";
+import { TabController } from "./tab-controller";
 
 export interface DirectoryInfo {
   filecount: string;
@@ -19,8 +20,7 @@ export interface DirectoryInfo {
 }
 
 export class DirViewController {
-  private readonly updateQueue = new RaceQueue();
-
+  private readonly cdQueue = new Queue(1);
   public readonly activeEntry = sig<FStat | null>(null);
   public readonly stat = sig<FStat | undefined>(undefined);
   public readonly files = sig<ReadonlyArray<FStat>>([]);
@@ -32,8 +32,11 @@ export class DirViewController {
   public readonly filesView = this.deriveFilesView();
   public readonly directoryInfo = this.deriveDirectoryInfo();
 
+  public onContentChange?: (scrollPosition: number) => void;
+
   constructor(
     protected explorer: Explorer,
+    protected tab: TabController,
   ) {
     const onEscape = () => {
       this.activeEntry.dispatch(null);
@@ -111,26 +114,33 @@ export class DirViewController {
 
   changeDirectory(
     dirpath: string | Path,
+    scrollPosition?: number | "RETAIN",
   ) {
-    this.loading.dispatch(true);
+    this.cdQueue.run(async () => {
+      this.loading.dispatch(true);
 
-    const locationPath = Path.from(dirpath).toString();
+      const locationPath = Path.from(dirpath).toString();
 
-    const data = Immediate.all(
-      this.explorer.filesystem.stat(locationPath),
-      this.explorer.filesystem.readdirStat(locationPath),
-    );
+      const data = Immediate.all(
+        this.explorer.filesystem.stat(locationPath),
+        this.explorer.filesystem.readdirStat(locationPath),
+      );
 
-    this.updateQueue.add(data, (res) => {
-      if (!res.ok) return;
+      await data.then(([dirStat, files]) => {
+        sig.startBatch();
+        this.loading.dispatch(false);
+        this.selection.dispatch([]);
+        this.stat.dispatch(dirStat);
+        this.files.dispatch(files);
+        sig.commitBatch();
 
-      const [stat, files] = res.value;
-      sig.startBatch();
-      this.selection.dispatch([]);
-      this.stat.dispatch(stat);
-      this.files.dispatch(files);
-      this.loading.dispatch(false);
-      sig.commitBatch();
+        if (this.onContentChange && scrollPosition != null) {
+          if (scrollPosition === "RETAIN") {
+            scrollPosition = this.tab.history.getEntry()?.scrollPosition;
+          }
+          this.onContentChange(scrollPosition!);
+        }
+      });
     });
   }
 

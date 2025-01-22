@@ -1,18 +1,19 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
-import { Explorer } from "../explorer";
+import { Explorer, Place } from "../explorer";
 import { FStat } from "../filesystem-interface";
 import { FileActionContext } from "../interfaces/file-action";
 import { Path } from "../utils/path";
+import { ContextMenu } from "./components/context-menu/context-menu";
 
-export interface ContextMenuPosition {
-  top?: string;
-  right?: string;
-  bottom?: string;
-  left?: string;
+export interface ElementPosition {
+  top?: string | number;
+  right?: string | number;
+  bottom?: string | number;
+  left?: string | number;
 }
 
 export interface OpenMenuParams {
-  position: ContextMenuPosition;
+  position: ElementPosition;
   relatedFiles: readonly FStat[];
   triggerFile?: FStat;
 }
@@ -49,7 +50,7 @@ class BtnAccessController {
 
   canPaste(to?: FStat) {
     const clipboard = this.explorer.clipboard;
-    return to && to.directory && to.write && clipboard.files.get().length;
+    return to && to.directory && to.write && clipboard.data.get().files.length;
   }
 
   canCopy(...files: FStat[]) {
@@ -71,13 +72,14 @@ class BtnAccessController {
 
 export class ContextMenuController {
   static ContextMenuActions = class ContextMenuActions {
-    currentDir;
-
     constructor(
       public menu: ContextMenuController,
       public btnAccessController: BtnAccessController,
     ) {
-      this.currentDir = this.menu.explorer.directory.stat;
+    }
+
+    get currentDir() {
+      return this.menu.explorer.directory.stat;
     }
 
     isPossibleTo = {
@@ -125,11 +127,22 @@ export class ContextMenuController {
           ...(target ? [target] : this.menu.selectedFiles.get()),
         );
       },
+      createShortcut: () => {
+        const target = this.menu.getTargetFile();
+        return !!target && target.directory
+          && !this.menu.explorer.places.findByPath(target.path);
+      },
+      removeShortcut: () => {
+        const target = this.menu.getTargetFile();
+        return !!target
+          && this.menu.explorer.places.findByPath(target.path);
+      },
     };
 
     open() {
       const explorer = this.menu.explorer;
       const file = this.menu.triggerFile.get();
+      this.menu.close();
 
       if (file) {
         if (file.directory) {
@@ -145,11 +158,11 @@ export class ContextMenuController {
           }
         }
       }
-
-      this.menu.close();
     }
 
     createFile() {
+      this.menu.close();
+
       const explorer = this.menu.explorer;
 
       explorer.prompt.input({
@@ -162,11 +175,11 @@ export class ContextMenuController {
         const filepath = explorer.location.path.joinSegment(name);
         explorer.fs.touch(filepath);
       });
-
-      this.menu.close();
     }
 
     createDirectory() {
+      this.menu.close();
+
       const explorer = this.menu.explorer;
 
       explorer.prompt.input({
@@ -179,11 +192,11 @@ export class ContextMenuController {
         const filepath = explorer.location.path.joinSegment(name);
         explorer.fs.mkdir(filepath);
       });
-
-      this.menu.close();
     }
 
     paste() {
+      this.menu.close();
+
       const explorer = this.menu.explorer;
       const dir = explorer.directory;
 
@@ -191,67 +204,63 @@ export class ContextMenuController {
       if (to.write) {
         explorer.fs.clipboardPaste(to.path);
       }
-
-      this.menu.close();
     }
 
     pasteTo() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
+      this.menu.close();
 
       if (file && file.directory && file.write) {
         explorer.fs.clipboardPaste(file.path);
       }
-
-      this.menu.close();
     }
 
     copy() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
+      const selectedFiles = this.menu.selectedFiles.get();
+      this.menu.close();
 
       explorer.clipboard.put(
-        file ? file : this.menu.selectedFiles.get(),
+        file ? file : selectedFiles,
         "copy",
       );
-
-      this.menu.close();
     }
 
     cut() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
+      const selectedFiles = this.menu.selectedFiles.get();
+      this.menu.close();
 
       explorer.clipboard.put(
-        file ? file : this.menu.selectedFiles.get(),
+        file ? file : selectedFiles,
         "move",
       );
-
-      this.menu.close();
     }
 
     delete() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
+      const selectedFiles = this.menu.selectedFiles.get();
+      this.menu.close();
 
       if (file) {
         explorer.fs.remove(file);
       } else {
-        for (const file of this.menu.selectedFiles.get()) {
+        for (const file of selectedFiles) {
           explorer.fs.remove(file);
         }
       }
-
-      this.menu.close();
     }
 
     rename() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
+      this.menu.close();
 
-      if (!file) {
-        this.menu.close();
-      } else {
+      if (file) {
         explorer.prompt.input({
           title: "Rename",
           message: "Enter new name:",
@@ -262,33 +271,52 @@ export class ContextMenuController {
           const newPath = Path.from(file.path).base().joinSegment(
             name,
           );
-          explorer.fs.move(file, newPath);
+          explorer.fs.move([file], newPath);
         });
       }
-
-      this.menu.close();
     }
 
     showPreview() {
-      const explorer = this.menu.explorer;
       const file = this.menu.triggerFile.get();
+      this.menu.close();
+
+      const explorer = this.menu.explorer;
       if (file) {
         explorer.previewPane.open(file);
       }
+    }
 
+    createShortcut() {
+      const file = this.menu.getTargetFile();
       this.menu.close();
+
+      if (!file || this.menu.explorer.places.findByPath(file.path)) return;
+      const place: Place = {
+        id: crypto.randomUUID(),
+        label: file.name,
+        path: file.path,
+      };
+      this.menu.explorer.addPlace(place);
+    }
+
+    removeShortcut() {
+      const file = this.menu.getTargetFile();
+      this.menu.close();
+
+      if (!file) return;
+      const place = this.menu.explorer.places.findByPath(file.path);
+      if (place) {
+        this.menu.explorer.removePlace(place.id);
+      }
     }
   };
 
   public readonly isOpen = sig(false);
   public readonly selectedFiles = sig<readonly FStat[]>([]);
   public readonly triggerFile = sig<undefined | FStat>(undefined);
-  public readonly position = sig<ContextMenuPosition>({});
 
   protected btnAccessController: BtnAccessController;
   public readonly actions;
-  public readonly customActions;
-  public readonly customDirActions;
 
   constructor(
     protected explorer: Explorer,
@@ -298,8 +326,6 @@ export class ContextMenuController {
       this,
       this.btnAccessController,
     );
-    this.customActions = this.deriveCustomActions();
-    this.customDirActions = this.deriveCustomDirectoryActions();
   }
 
   nameValidator(originalName?: string) {
@@ -326,43 +352,37 @@ export class ContextMenuController {
     };
   }
 
-  private deriveCustomActions() {
-    return sig.derive(
-      this.selectedFiles,
-      this.triggerFile,
-      (files, targetFile) => {
-        const actionDefs = this.explorer.options.actions;
-        if (!actionDefs) return [];
+  getCustomActions() {
+    const files = this.selectedFiles.get();
+    const targetFile = this.triggerFile.get();
 
-        if (files.length === 0 && targetFile) {
-          return actionDefs.filter(def =>
-            def.match([targetFile], { isCurrentDir: false })
-          );
-        }
+    const actionDefs = this.explorer.options.actions;
+    if (!actionDefs) return [];
 
-        if (files.length > 0) {
-          return actionDefs.filter(def =>
-            def.match(files, { isCurrentDir: false })
-          );
-        }
+    if (files.length === 0 && targetFile) {
+      return actionDefs.filter(def =>
+        def.match([targetFile], { isCurrentDir: false })
+      );
+    }
 
-        return [];
-      },
-    );
+    if (files.length > 0) {
+      return actionDefs.filter(def =>
+        def.match(files, { isCurrentDir: false })
+      );
+    }
+
+    return [];
   }
 
-  private deriveCustomDirectoryActions() {
-    return sig.derive(
-      this.explorer.directory.stat,
-      (dirStat) => {
-        const actionDefs = this.explorer.options.actions;
-        if (!actionDefs) return [];
+  getCustomDirectoryActions() {
+    const dirStat = this.explorer.directory.stat.get();
 
-        return dirStat
-          ? actionDefs.filter(a => a.match([dirStat], { isCurrentDir: true }))
-          : [];
-      },
-    );
+    const actionDefs = this.explorer.options.actions;
+    if (!actionDefs) return [];
+
+    return dirStat
+      ? actionDefs.filter(a => a.match([dirStat], { isCurrentDir: true }))
+      : [];
   }
 
   getTargetFile() {
@@ -373,13 +393,17 @@ export class ContextMenuController {
     }
   }
 
-  close() {
+  private afterClose() {
     sig.startBatch();
     this.isOpen.dispatch(false);
-    this.position.dispatch({});
     this.selectedFiles.dispatch([]);
     this.triggerFile.dispatch(undefined);
     sig.commitBatch();
+  }
+
+  close() {
+    this.explorer.overlay.close();
+    this.afterClose();
   }
 
   open(params: OpenMenuParams) {
@@ -412,11 +436,27 @@ export class ContextMenuController {
 
     sig.startBatch();
     this.isOpen.dispatch(true);
-    this.position.dispatch(params.position);
     this.selectedFiles.dispatch(params.relatedFiles);
     if (params.triggerFile) {
       this.triggerFile.dispatch(params.triggerFile);
     }
     sig.commitBatch();
+
+    this.explorer.overlay.display(
+      {
+        onClose: () => this.afterClose(),
+        dimBackground: false,
+        closeOnBackgroundClick: true,
+        position: {
+          top: params.position.top,
+          left: params.position.left,
+          bottom: params.position.bottom,
+          right: params.position.right,
+        },
+      },
+      <ContextMenu
+        explorer={this.explorer}
+      />,
+    );
   }
 }

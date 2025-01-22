@@ -1,0 +1,43 @@
+.explorer-window.explorer-window.explorer-window.explorer-window {
+    & .jobs-view {
+        place-self: stretch;
+        margin-inline: .5em;
+
+        &.hide {
+            display: none;
+        }
+
+        & .view-card {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: .5em;
+            padding: .6em .6em .3em .6em;
+
+            &:hover {
+                background: var(--clr-bg-6);
+            }
+
+            & .job-title {
+                display: flex;
+                flex-direction: column;
+
+                & span {
+                    max-lines: 1;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+            }
+
+            & .job-progress {
+                margin-top: 1em;
+                width: 0%;
+                height: 3px;
+                max-height: unset;
+                border-radius: 12px;
+                background-color: var(--clr-primary-500);
+                transition: width 0.4s ease-out;
+            }
+        }
+    }
+}
