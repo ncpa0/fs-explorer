@@ -1,4 +1,4 @@
-export type ModKey = "ctrl" | "shift" | "alt";
+export type ModKey = "ctrl" | "shift" | "alt" | "any";
 
 export const isLmb = (event: MouseEvent, ...mods: ModKey[]) => {
   if (event.button !== 0) {
@@ -6,6 +6,10 @@ export const isLmb = (event: MouseEvent, ...mods: ModKey[]) => {
   }
   if (mods.length === 0) {
     return !event.ctrlKey && !event.shiftKey && !event.altKey;
+  }
+
+  if (mods.some(m => m === "any")) {
+    return true;
   }
 
   let expCtrl = false;

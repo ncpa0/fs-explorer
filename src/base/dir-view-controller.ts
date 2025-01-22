@@ -134,12 +134,14 @@ export class DirViewController {
         this.files.dispatch(files);
         sig.commitBatch();
 
-        if (this.onContentChange && scrollPosition != null) {
-          if (scrollPosition === "RETAIN") {
-            scrollPosition = this.tab.history.getEntry()?.scrollPosition;
+        setTimeout(() => {
+          if (this.onContentChange && scrollPosition != null) {
+            if (scrollPosition === "RETAIN") {
+              scrollPosition = this.tab.history.getEntry()?.scrollPosition;
+            }
+            this.onContentChange(scrollPosition!);
           }
-          this.onContentChange(scrollPosition!);
-        }
+        });
       });
     });
   }

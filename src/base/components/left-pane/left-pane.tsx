@@ -63,12 +63,12 @@ export function LeftPane(props: LeftPaneProps) {
         hidden: explorer.hideLeftPane,
       }}
     >
-      <div class="places">
+      <div class="places scrollview">
         <div class={"pane-header"}>
           <span class={[ADW.Typography.text, "header-title"]}>Places</span>
           {optionsBtn}
         </div>
-        <div class={["left-pane-places"]}>
+        <div class={["left-pane-places", "scrollview"]}>
           {places.derive(places => {
             return places.flatMap(place => (
               <button
