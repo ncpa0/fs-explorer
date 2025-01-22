@@ -173,8 +173,8 @@ export class Explorer {
 
     switch (e.key) {
       case "Escape": {
-        if (this.prompt.isOpen.get()) {
-          this.prompt.internal.cancel();
+        if (this.prompt.isOpen()) {
+          this.prompt.cancel();
           return;
         }
 

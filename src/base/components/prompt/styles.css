@@ -1,19 +1,6 @@
 .explorer-window.explorer-window.explorer-window.explorer-window {
-    .prompt-backdrop {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #2f2f2f82;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 5;
-
-        &.hidden {
-            display: none;
-        }
+    .prompt-dialog {
+        min-width: min(24em, 75vw);
 
         & .prompt-body {
             display: flex;

@@ -1,21 +1,37 @@
 import { $component } from "@ncpa0cpl/vanilla-jsx";
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
-import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 
 export interface PropmptProps {
-  explorer: Explorer;
+  type: "question" | "input";
+  placeholder?: string;
+  cancelBtnLabel: string;
+  confirmBtnLabel: string;
+  title: string;
+  message?: string;
+  initialValue?: string;
+  validate?: (value: string) => "ok" | { msg: string };
+  onConfirm: (value: string) => void;
+  onCancel: () => void;
 }
 
-export const Prompt = $component(function Prompt(props: PropmptProps, api) {
-  const { explorer } = props;
-  const { prompt } = explorer;
-  const hide = prompt.isOpen.derive(open => !open);
-  const inputValue = sig("");
-  const validationResult = sig.derive(
-    inputValue,
-    prompt.validateFn,
-    (value, validate) => {
+export const Prompt = function Prompt(props: PropmptProps) {
+  const {
+    cancelBtnLabel,
+    confirmBtnLabel,
+    title,
+    type,
+    message,
+    placeholder,
+    initialValue,
+    validate,
+    onConfirm,
+    onCancel,
+  } = props;
+
+  const inputValue = sig(initialValue ?? "");
+  const validationResult = inputValue.derive(
+    (value) => {
       return validate ? validate(value) : "ok";
     },
   );
@@ -30,12 +46,12 @@ export const Prompt = $component(function Prompt(props: PropmptProps, api) {
     if (validationResult.get() === "ok") {
       const value = inputValue.get();
       inputValue.dispatch("");
-      prompt.internal.confirm(value);
+      onConfirm(value);
     }
   };
 
-  const hanldeCancel = () => {
-    prompt.internal.cancel();
+  const handleCancel = () => {
+    onCancel();
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -46,86 +62,64 @@ export const Prompt = $component(function Prompt(props: PropmptProps, api) {
     }
   };
 
-  api.onChange(() => {
-    const open = prompt.isOpen.get();
-
-    if (open && prompt.type.get() === "input") {
-      const initialValue = prompt.initialValue.get();
-      if (initialValue != null) {
-        inputValue.dispatch(initialValue);
-      }
-      inputElem.focus();
-    }
-  }, [prompt.isOpen]);
-
   const inputElem = (
     <input
       class={{
         [ADW.Input.input]: true,
-        hidden: sig.eq(prompt.type, "question"),
       }}
       value={inputValue}
       oninput={handleInput}
       onkeydown={handleKeyDown}
-      placeholder={prompt.placeholder}
+      placeholder={placeholder}
     />
   ) as HTMLInputElement;
 
   return (
-    <div
-      class={{
-        "prompt-backdrop": true,
-        hidden: hide,
-      }}
-    >
-      <div class={ADW.Dialog.dialog}>
-        <div class={ADW.Dialog.header}>
-          <button
-            class={{
-              [ADW.Button.button]: true,
-              [ADW.Button.flat]: true,
-            }}
-            onmousedown={hanldeCancel}
-          >
-            {prompt.cancelBtnLabel}
-          </button>
-          <span class={["dialog-title"]}>
-            {prompt.title}
-          </span>
-          <button
-            class={{
-              [ADW.Button.button]: true,
-              [ADW.Button.primary]: true,
-              [ADW.Button.disabled]: disabledSubmit,
-            }}
-            disabled={disabledSubmit}
-            onmousedown={handleConfirm}
-          >
-            {prompt.confirmBtnLabel}
-          </button>
-        </div>
-        <div class={[ADW.Dialog.body, "prompt-body"]}>
-          <span class={[ADW.Typography.text, "prompt-message"]}>
-            {prompt.message}
-          </span>
-          {inputElem}
-          {sig.derive(
-            prompt.type,
-            validationResult,
-            (type, vres) => {
-              if (type === "input" && vres !== "ok") {
-                return (
-                  <div class="error-msg">
-                    <span class={ADW.Message.className({ type: "error" })}>
-                      {vres.msg}
-                    </span>
-                  </div>
-                );
-              }
-            },
-          )}
-        </div>
+    <div class={[ADW.Dialog.dialog, "prompt-dialog"]}>
+      <div class={ADW.Dialog.header}>
+        <button
+          class={{
+            [ADW.Button.button]: true,
+            [ADW.Button.flat]: true,
+          }}
+          onmousedown={handleCancel}
+        >
+          {cancelBtnLabel}
+        </button>
+        <span class={["dialog-title"]}>
+          {title}
+        </span>
+        <button
+          class={{
+            [ADW.Button.button]: true,
+            [ADW.Button.primary]: true,
+            [ADW.Button.disabled]: disabledSubmit,
+          }}
+          disabled={disabledSubmit}
+          onmousedown={handleConfirm}
+        >
+          {confirmBtnLabel}
+        </button>
+      </div>
+      <div class={[ADW.Dialog.body, "prompt-body"]}>
+        <span class={[ADW.Typography.text, "prompt-message"]}>
+          {message}
+        </span>
+        {type === "input" && inputElem}
+        {validationResult.derive(
+          (vres) => {
+            if (type === "input" && vres !== "ok") {
+              return (
+                <div class="error-msg">
+                  <span class={ADW.Message.className({ type: "error" })}>
+                    {vres.msg}
+                  </span>
+                </div>
+              );
+            }
+          },
+        )}
       </div>
     </div>
   );
-});
+};

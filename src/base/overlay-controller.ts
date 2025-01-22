@@ -4,12 +4,14 @@ import { ElementPosition } from "./context-menu-controller";
 export type OverlayOptions = {
   position?: ElementPosition;
   dimBackground?: boolean;
+  closeOnBackgroundClick?: boolean;
 };
 
 export class OverlayController {
   private content = sig<JSX.Element>();
   private position = sig<ElementPosition | undefined>();
   private dimBackground = sig<boolean>(true);
+  private closeOnBackgroundClick = true;
 
   display(pos: OverlayOptions, content: JSX.Element): void;
   display(content: JSX.Element): void;
@@ -28,6 +30,9 @@ export class OverlayController {
       if (args[0].dimBackground != null) {
         this.dimBackground.dispatch(args[0].dimBackground);
       }
+      if (args[0].closeOnBackgroundClick != null) {
+        this.closeOnBackgroundClick = args[0].closeOnBackgroundClick;
+      }
     }
   }
 
@@ -35,6 +40,7 @@ export class OverlayController {
     this.content.dispatch(undefined);
     this.position.dispatch(undefined);
     this.dimBackground.dispatch(true);
+    this.closeOnBackgroundClick = true;
   }
 
   hasContent(): ReadonlySignal<boolean> {
@@ -43,6 +49,10 @@ export class OverlayController {
 
   dimBg(): ReadonlySignal<boolean> {
     return this.dimBackground.readonly();
+  }
+
+  shouldCloseOnBgClick(): boolean {
+    return this.closeOnBackgroundClick;
   }
 
   Output = () => {

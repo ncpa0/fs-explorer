@@ -7,6 +7,10 @@ export function Overlay(props: { explorer: Explorer }) {
   const dimBg = overlay.dimBg();
 
   const handleOverlayClick = (ev: MouseEvent) => {
+    if (!overlay.shouldCloseOnBgClick()) {
+      return;
+    }
+
     // check if the click was inside the .overlay-contents
     if (
       ev.target && ev.target instanceof Element
