@@ -3,6 +3,7 @@ import { ClipcoardController } from "./base/clipboard-controller";
 import { ExplorerWindow } from "./base/components/window/window";
 import { ContextMenuController } from "./base/context-menu-controller";
 import { DirViewController } from "./base/dir-view-controller";
+import { DragController } from "./base/drag-controller";
 import { FsController } from "./base/fs-controller";
 import { ExplorerLocation, ExplorerTabHistory } from "./base/history";
 import { OverlayController } from "./base/overlay-controller";
@@ -101,6 +102,7 @@ export class Explorer {
 
   public readonly contextMenu = new ContextMenuController(this);
   public readonly overlay = new OverlayController();
+  public readonly drag = new DragController();
 
   // location visible on the left pane
   public readonly places: PlacesStorage;
@@ -230,7 +232,7 @@ export class Explorer {
               const newPath = Path.from(file.path).base().joinSegment(
                 name,
               );
-              this.fs.move(file, newPath);
+              this.fs.move([file], newPath);
             });
           }
         }

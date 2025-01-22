@@ -87,18 +87,18 @@
             }
 
             & .header-name {
-                cursor: pointer;
+                cursor: var(--current-cursor, pointer);
                 padding-left: .5em;
             }
 
             & .header-size {
-                cursor: pointer;
+                cursor: var(--current-cursor, pointer);
                 justify-content: center;
                 border-left: 1px solid var(--clr-dimmed);
             }
 
             & .header-date {
-                cursor: pointer;
+                cursor: var(--current-cursor, pointer);
                 justify-content: center;
                 border-left: 1px solid var(--clr-dimmed);
             }
@@ -202,7 +202,7 @@
             }
 
             &:hover {
-                cursor: pointer;
+                cursor: var(--current-cursor, pointer);
 
                 & > * {
                     background-color: #86868646;

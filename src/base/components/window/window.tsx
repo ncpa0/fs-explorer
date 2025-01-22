@@ -11,6 +11,7 @@ import { LocationBar } from "../location-bar/location-bar";
 import { Overlay } from "../overlay/overlay";
 import { PreviewPane } from "../preview-pane/preview-pane";
 import { Statusbar } from "../statusbar/statusbar";
+import { Tab } from "./tab";
 
 export type ExplorerWindowProps = {
   explorer: Explorer;
@@ -29,10 +30,13 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
 
   return (
     <div
-      class={[
-        ADW.Box.box,
-        "explorer-window",
-      ]}
+      class={{
+        [ADW.Box.box]: true,
+        "explorer-window": true,
+        "drag-pointer": explorer.drag.isDragging(),
+      }}
+      onmouseleave={() => explorer.drag.endDrag()}
+      onmouseup={() => explorer.drag.endDrag()}
     >
       <div class={[ADW.Box.className({ bg: 2 }), "explorer-content"]}>
         <LeftPane explorer={explorer} />
@@ -53,35 +57,7 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
                     data={explorer.tabs}
                     into={<div class="dcontents" />}
                   >
-                    {tab => (
-                      <div
-                        class={{
-                          "explorer-tab": true,
-                          active: explorer.activeTab.derive(tabID =>
-                            tabID === tab.id
-                          ),
-                        }}
-                        onmousedown={() => {
-                          explorer.focusTab(tab.id);
-                        }}
-                      >
-                        <div class="explorer-tab-header">
-                          <span class={Typography.subtitle}>
-                            {tab.location.signal.derive(l => l.toString())}
-                          </span>
-                          <button
-                            onclick={(e) => {
-                              explorer.closeTab(tab.id);
-                              e.stopPropagation();
-                            }}
-                            class="close-tab-button btn square flat"
-                          >
-                            <CloseIcon />
-                          </button>
-                        </div>
-                        <DirView tab={tab} explorer={explorer} />
-                      </div>
-                    )}
+                    {tab => <Tab explorer={explorer} tab={tab} />}
                   </Range>
                   <PreviewPane explorer={explorer} />
                 </div>

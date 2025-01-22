@@ -89,7 +89,7 @@
                 }
 
                 & > * {
-                    cursor: pointer;
+                    cursor: var(--current-cursor, pointer);
                     padding-block: .6em;
                 }
 

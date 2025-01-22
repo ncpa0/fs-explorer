@@ -2,7 +2,6 @@ import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer, Place } from "../explorer";
 import { FStat } from "../filesystem-interface";
 import { FileActionContext } from "../interfaces/file-action";
-import { asCssValue } from "../utils/as-px";
 import { Path } from "../utils/path";
 import { ContextMenu } from "./components/context-menu/context-menu";
 
@@ -275,7 +274,7 @@ export class ContextMenuController {
           const newPath = Path.from(file.path).base().joinSegment(
             name,
           );
-          explorer.fs.move(file, newPath);
+          explorer.fs.move([file], newPath);
         });
       }
 

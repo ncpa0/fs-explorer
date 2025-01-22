@@ -1,6 +1,7 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../../explorer";
-import { isLmb, isRmb } from "../../../utils/events";
+import { isLmb } from "../../../utils/events";
+import { Path } from "../../../utils/path";
 import { TabController } from "../../tab-controller";
 import { LoadingIndicator } from "../_common/loader";
 import { VirtualFileList } from "./virtual-file-list";
@@ -67,6 +68,28 @@ export function DirView(props: DirViewProps) {
     dragEnterCount.dispatch(c => c - 1);
   };
 
+  const handleMouseUp = (event: MouseEvent) => {
+    if (!explorer.drag.isDragging()) {
+      return;
+    }
+
+    const files = explorer.drag.getDraggedFiles();
+    explorer.drag.endDrag();
+
+    if (!files || !files.length) {
+      return;
+    }
+
+    const moveTo = tab.directory.stat.get();
+    if (moveTo) {
+      const currentFileLocation = Path.from(files.at(0)!.path).base();
+      if (currentFileLocation.equals(moveTo.path)) {
+        return;
+      }
+      explorer.fs.move(files, moveTo.path);
+    }
+  };
+
   return (
     <div
       class={{
@@ -79,6 +102,7 @@ export function DirView(props: DirViewProps) {
       ondragover={e => e.preventDefault()}
       ondragenter={handleDragEnter}
       ondragleave={handleDragLeave}
+      onmouseup={handleMouseUp}
     >
       <LoadingIndicator visible={dir.loading} />
       <VirtualFileList

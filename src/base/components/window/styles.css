@@ -8,6 +8,11 @@
     max-height: 100vh;
     min-height: 16em;
 
+    &.drag-pointer {
+        --current-cursor: copy;
+        cursor: var(--current-cursor);
+    }
+
     & .explorer-content {
         flex: 1;
         display: flex;

@@ -22,6 +22,7 @@ export function FileListEntry(
   const { explorer, tab, file, selectedFiles } = props;
   const dir = tab.directory;
   const menu = explorer.contextMenu;
+  let isPressed = false;
 
   const isSelected = selectedFiles.derive(selected =>
     selected.some(f => f.path === file.path)
@@ -29,6 +30,16 @@ export function FileListEntry(
 
   const toggleSelect = () => {
     dir.toggleSelectFile(file);
+  };
+
+  const handleInternalDrop = () => {
+    if (!file.directory) return;
+
+    const files = explorer.drag.getDraggedFiles();
+    explorer.drag.endDrag();
+
+    if (!files || !files.length) return;
+    explorer.fs.move(files, file.path);
   };
 
   const handleContextMenu = (event: MouseEvent) => {
@@ -54,10 +65,17 @@ export function FileListEntry(
     event.preventDefault();
   };
 
-  const handleClick = (event: MouseEvent) => {
+  const handleMouseUp = (event: MouseEvent) => {
     explorer.focusTab(
       tab.id,
     );
+    if (!isPressed) {
+      if (explorer.drag.isDragging()) {
+        handleInternalDrop();
+      }
+      return;
+    }
+    isPressed = false;
 
     if (isLmb(event, "ctrl")) {
       toggleSelect();
@@ -87,6 +105,18 @@ export function FileListEntry(
     event.stopPropagation();
   };
 
+  const handleMouseDown = (event: MouseEvent) => {
+    isPressed = true;
+  };
+
+  const handleMouseLeave = () => {
+    if (isPressed) {
+      const selected = selectedFiles.get();
+      explorer.drag.startDrag(selected.length != 0 ? selected : [file]);
+    }
+    isPressed = false;
+  };
+
   const Icon = getFileIcon(file);
 
   const element = (
@@ -100,7 +130,9 @@ export function FileListEntry(
           return data.files.some(f => f.path === file.path);
         }),
       }}
-      onmousedown={handleClick}
+      onmouseup={handleMouseUp}
+      onmousedown={handleMouseDown}
+      onmouseleave={handleMouseLeave}
       oncontextmenu={handleContextMenu}
     >
       <div class={{ "file-icon": true, directory: file.directory }}>
