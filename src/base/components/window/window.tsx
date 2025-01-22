@@ -1,10 +1,7 @@
 import { Range } from "@ncpa0cpl/vanilla-jsx";
-import { Typography } from "adwavecss";
-import CloseIcon from "../../../assets/main-theme/icons/close.svg";
 import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 import { TabController } from "../../tab-controller";
-import { ContextMenu } from "../context-menu/context-menu";
 import { DirView } from "../dir-view/dir-view";
 import { LeftPane } from "../left-pane/left-pane";
 import { LocationBar } from "../location-bar/location-bar";

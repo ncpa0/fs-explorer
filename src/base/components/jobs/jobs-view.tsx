@@ -1,8 +1,5 @@
-import { Box, Card, Typography } from "adwavecss";
+import { Box, Typography } from "adwavecss";
 import { Explorer } from "../../../explorer";
-
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(Math.max(value, min), max);
 
 export function JobsView({ explorer }: { explorer: Explorer }) {
   const { jobs } = explorer;

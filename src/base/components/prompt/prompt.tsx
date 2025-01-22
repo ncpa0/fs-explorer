@@ -1,4 +1,3 @@
-import { $component } from "@ncpa0cpl/vanilla-jsx";
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { ADW } from "../../../utils/css";
 

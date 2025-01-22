@@ -1,7 +1,6 @@
 import { Explorer } from "../explorer";
 import { Filesystem, FStat } from "../filesystem-interface";
 import { ActionError } from "../interfaces/action-error";
-import { Immediate } from "../utils/immediate";
 import { Path } from "../utils/path";
 import { QueuedJob } from "./jobs-controller";
 

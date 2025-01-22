@@ -1,4 +1,3 @@
-import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Separator } from "adwavecss";
 import DirectoryIcon from "../../../assets/main-theme/icons/directory.svg";
 import MoreIcon from "../../../assets/main-theme/icons/more.svg";

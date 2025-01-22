@@ -3,7 +3,7 @@ import { Typography } from "adwavecss";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { FileActionContext } from "../../../interfaces/file-action";
-import { isLmb, isRmb } from "../../../utils/events";
+import { isLmb } from "../../../utils/events";
 import { Fmt } from "../../../utils/formatters";
 import { getFileIcon } from "../../../utils/get-file-icon";
 import { Path } from "../../../utils/path";
