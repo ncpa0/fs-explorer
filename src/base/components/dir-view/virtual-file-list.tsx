@@ -62,7 +62,6 @@ export const VirtualFileList = $component(
           [ADW.ScrollView.scrollView]: true,
           "dir-view": true,
           empty: files.derive((files) => files.length === 0),
-          hidden: dir.loading.derive(v => v),
         }}
       >
         {dir.filesView.derive(files => {

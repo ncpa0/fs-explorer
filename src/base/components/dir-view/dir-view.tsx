@@ -104,11 +104,18 @@ export function DirView(props: DirViewProps) {
       ondragleave={handleDragLeave}
       onmouseup={handleMouseUp}
     >
-      <LoadingIndicator visible={dir.loading} />
-      <VirtualFileList
-        explorer={explorer}
-        tab={tab}
-      />
+      {dir.loading.derive(loading => {
+        if (loading) {
+          return <LoadingIndicator />;
+        } else {
+          return (
+            <VirtualFileList
+              explorer={explorer}
+              tab={tab}
+            />
+          );
+        }
+      })}
       <div class="dir-view-drop-overlay" />
     </div>
   );
