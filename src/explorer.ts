@@ -1,4 +1,4 @@
-import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
+import { sig, SignalListenerReference } from "@ncpa0cpl/vanilla-jsx/signals";
 import { ClipcoardController } from "./base/clipboard-controller";
 import { ExplorerWindow } from "./base/components/window/window";
 import { ContextMenuController } from "./base/context-menu-controller";
@@ -6,6 +6,7 @@ import { DirViewController } from "./base/dir-view-controller";
 import { DragController } from "./base/drag-controller";
 import { FsController } from "./base/fs-controller";
 import { ExplorerLocation, ExplorerTabHistory } from "./base/history";
+import { JobsController } from "./base/jobs-controller";
 import { OverlayController } from "./base/overlay-controller";
 import { PlacesStorage } from "./base/places-storage";
 import { PreviewPaneController } from "./base/preview-pane-controller";
@@ -103,6 +104,7 @@ export class Explorer {
   public readonly contextMenu = new ContextMenuController(this);
   public readonly overlay = new OverlayController();
   public readonly drag = new DragController();
+  public readonly jobs = new JobsController();
 
   // location visible on the left pane
   public readonly places: PlacesStorage;
@@ -125,6 +127,28 @@ export class Explorer {
 
   get directory(): DirViewController {
     return this.currentTab.directory;
+  }
+
+  get currentPath() {
+    const s = sig(this.location.path);
+    let currentObserver: SignalListenerReference<Path> | undefined;
+    const derived = sig.derive(this.activeTab, this.tabs, (id, tabs) => {
+      const activeTab = tabs.find((tab) => tab.id === id);
+      if (activeTab) {
+        currentObserver?.detach();
+        currentObserver = activeTab.location.signal.add(loc => {
+          s.dispatch(loc);
+        });
+      }
+    });
+    // assign intermediary signal to the source signal to avoid garbage collection on it
+    Object.defineProperty(s, "_intermediary_signal", { value: derived });
+    // derived signal needs a listener or it will opt into optimization
+    // and will not call the derive function
+    Object.defineProperty(s, "_intermediary_observer", {
+      value: derived.add(() => {}),
+    });
+    return s;
   }
 
   constructor(

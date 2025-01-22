@@ -142,6 +142,7 @@ export class ContextMenuController {
     open() {
       const explorer = this.menu.explorer;
       const file = this.menu.triggerFile.get();
+      this.menu.close();
 
       if (file) {
         if (file.directory) {
@@ -157,11 +158,11 @@ export class ContextMenuController {
           }
         }
       }
-
-      this.menu.close();
     }
 
     createFile() {
+      this.menu.close();
+
       const explorer = this.menu.explorer;
 
       explorer.prompt.input({
@@ -174,11 +175,11 @@ export class ContextMenuController {
         const filepath = explorer.location.path.joinSegment(name);
         explorer.fs.touch(filepath);
       });
-
-      this.menu.close();
     }
 
     createDirectory() {
+      this.menu.close();
+
       const explorer = this.menu.explorer;
 
       explorer.prompt.input({
@@ -191,11 +192,11 @@ export class ContextMenuController {
         const filepath = explorer.location.path.joinSegment(name);
         explorer.fs.mkdir(filepath);
       });
-
-      this.menu.close();
     }
 
     paste() {
+      this.menu.close();
+
       const explorer = this.menu.explorer;
       const dir = explorer.directory;
 
@@ -203,67 +204,63 @@ export class ContextMenuController {
       if (to.write) {
         explorer.fs.clipboardPaste(to.path);
       }
-
-      this.menu.close();
     }
 
     pasteTo() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
+      this.menu.close();
 
       if (file && file.directory && file.write) {
         explorer.fs.clipboardPaste(file.path);
       }
-
-      this.menu.close();
     }
 
     copy() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
+      const selectedFiles = this.menu.selectedFiles.get();
+      this.menu.close();
 
       explorer.clipboard.put(
-        file ? file : this.menu.selectedFiles.get(),
+        file ? file : selectedFiles,
         "copy",
       );
-
-      this.menu.close();
     }
 
     cut() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
+      const selectedFiles = this.menu.selectedFiles.get();
+      this.menu.close();
 
       explorer.clipboard.put(
-        file ? file : this.menu.selectedFiles.get(),
+        file ? file : selectedFiles,
         "move",
       );
-
-      this.menu.close();
     }
 
     delete() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
+      const selectedFiles = this.menu.selectedFiles.get();
+      this.menu.close();
 
       if (file) {
         explorer.fs.remove(file);
       } else {
-        for (const file of this.menu.selectedFiles.get()) {
+        for (const file of selectedFiles) {
           explorer.fs.remove(file);
         }
       }
-
-      this.menu.close();
     }
 
     rename() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
+      this.menu.close();
 
-      if (!file) {
-        this.menu.close();
-      } else {
+      if (file) {
         explorer.prompt.input({
           title: "Rename",
           message: "Enter new name:",
@@ -277,22 +274,22 @@ export class ContextMenuController {
           explorer.fs.move([file], newPath);
         });
       }
-
-      this.menu.close();
     }
 
     showPreview() {
-      const explorer = this.menu.explorer;
       const file = this.menu.triggerFile.get();
+      this.menu.close();
+
+      const explorer = this.menu.explorer;
       if (file) {
         explorer.previewPane.open(file);
       }
-
-      this.menu.close();
     }
 
     createShortcut() {
       const file = this.menu.getTargetFile();
+      this.menu.close();
+
       if (!file || this.menu.explorer.places.findByPath(file.path)) return;
       const place: Place = {
         id: crypto.randomUUID(),
@@ -300,17 +297,17 @@ export class ContextMenuController {
         path: file.path,
       };
       this.menu.explorer.addPlace(place);
-      this.menu.close();
     }
 
     removeShortcut() {
       const file = this.menu.getTargetFile();
+      this.menu.close();
+
       if (!file) return;
       const place = this.menu.explorer.places.findByPath(file.path);
       if (place) {
         this.menu.explorer.removePlace(place.id);
       }
-      this.menu.close();
     }
   };
 
@@ -396,13 +393,17 @@ export class ContextMenuController {
     }
   }
 
-  close() {
+  private afterClose() {
     sig.startBatch();
     this.isOpen.dispatch(false);
     this.selectedFiles.dispatch([]);
     this.triggerFile.dispatch(undefined);
-    this.explorer.overlay.close();
     sig.commitBatch();
+  }
+
+  close() {
+    this.explorer.overlay.close();
+    this.afterClose();
   }
 
   open(params: OpenMenuParams) {
@@ -443,6 +444,7 @@ export class ContextMenuController {
 
     this.explorer.overlay.display(
       {
+        onClose: () => this.afterClose(),
         dimBackground: false,
         closeOnBackgroundClick: true,
         position: {

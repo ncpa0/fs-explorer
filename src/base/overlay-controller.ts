@@ -5,6 +5,7 @@ export type OverlayOptions = {
   position?: ElementPosition;
   dimBackground?: boolean;
   closeOnBackgroundClick?: boolean;
+  onClose?: () => void;
 };
 
 export class OverlayController {
@@ -12,6 +13,7 @@ export class OverlayController {
   private position = sig<ElementPosition | undefined>();
   private dimBackground = sig<boolean>(true);
   private closeOnBackgroundClick = true;
+  private onClose?: () => void;
 
   display(pos: OverlayOptions, content: JSX.Element): void;
   display(content: JSX.Element): void;
@@ -33,14 +35,22 @@ export class OverlayController {
       if (args[0].closeOnBackgroundClick != null) {
         this.closeOnBackgroundClick = args[0].closeOnBackgroundClick;
       }
+      if (args[0].onClose) {
+        this.onClose = args[0].onClose;
+      }
     }
   }
 
   close(): void {
+    if (this.onClose) {
+      this.onClose();
+    }
+
     this.content.dispatch(undefined);
     this.position.dispatch(undefined);
     this.dimBackground.dispatch(true);
     this.closeOnBackgroundClick = true;
+    this.onClose = undefined;
   }
 
   hasContent(): ReadonlySignal<boolean> {

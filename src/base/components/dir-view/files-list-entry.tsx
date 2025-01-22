@@ -106,7 +106,9 @@ export function FileListEntry(
   };
 
   const handleMouseDown = (event: MouseEvent) => {
-    isPressed = true;
+    if (isLmb(event)) {
+      isPressed = true;
+    }
   };
 
   const handleMouseLeave = () => {

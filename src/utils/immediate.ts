@@ -1,6 +1,7 @@
 export type Resolvable<T> = {
   then<U = void>(cb: (val: T) => U): Resolvable<U>;
   catch<U = void>(cb?: (err: any) => U): Resolvable<T | U>;
+  finally<U = void>(cb: () => U): Resolvable<T>;
 };
 
 type ImmediateType<T> = T extends Resolvable<infer U> ? U : T;
@@ -103,6 +104,15 @@ export class Immediate<T = void> implements Resolvable<T> {
       return new Immediate<U>(() => {
         return cb(this.error!);
       });
+    }
+    return this;
+  }
+
+  public finally<U>(cb: () => U): Immediate<T> {
+    try {
+      cb();
+    } catch (e) {
+      return Immediate.reject(e);
     }
     return this;
   }

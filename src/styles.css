@@ -18,6 +18,8 @@
 
 @import "./base/components/_common/loader-styles.css";
 
+@import "./base/components/jobs/styles.css";
+
 .explorer-window.explorer-window.explorer-window.explorer-window {
     box-sizing: border-box;
 
