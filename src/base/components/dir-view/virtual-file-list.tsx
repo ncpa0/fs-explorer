@@ -37,23 +37,15 @@ export const VirtualFileList = $component(
     }, [files]);
 
     const observerHandler = throttle(
-      (entries: IntersectionObserverEntry[]) => {
-        for (let i = 0; i < entries.length; i++) {
-          const entry = entries[i]!;
-          if (entry.isIntersecting) {
-            const element = entry.target as HTMLElement;
-            if (element.dataset.page) {
-              const pageIdx = Number(element.dataset.page);
-              if (!Number.isNaN(pageIdx)) {
-                pageInView.dispatch(pageIdx);
-                return;
-              }
-            }
-          }
+      (page: string) => {
+        const pageIdx = Number(page);
+        if (!Number.isNaN(pageIdx)) {
+          pageInView.dispatch(pageIdx);
+          return;
         }
       },
       25,
-      { trailing: true },
+      { leading: true, trailing: true },
     );
 
     const scrollview = (
@@ -89,18 +81,9 @@ export const VirtualFileList = $component(
       scrollview.scrollTo({ top: scrollPos, behavior: "instant" });
     };
 
-    const visiblePagesObserver = new IntersectionObserver(
-      observerHandler,
-      { threshold: 0.51, root: scrollview },
-    );
-    const hiddenPagesObserver = new IntersectionObserver(
-      observerHandler,
-      { threshold: 0.01, root: scrollview },
-    );
-
     const pagesElements = (
       <div class="dcontents">
-        {sig.derive(pages, pageInView, (pages, pageInView) => {
+        {pages.derive((pages) => {
           return pages.map((page, idx) => {
             const renderPage = () => {
               const halfPoint = Math.floor(page.length / 2);
@@ -121,10 +104,20 @@ export const VirtualFileList = $component(
                       />
                     );
                   })}
-                  <Observable
-                    observer={visiblePagesObserver}
-                    data={String(idx)}
-                  />
+                  <Memo
+                    cacheKey={"page-observable-" + String(idx)}
+                    dependencies={[observerHandler]}
+                  >
+                    {() => (
+                      <Observable
+                        root={scrollview}
+                        threshold={0.51}
+                        onIntersect={observerHandler}
+                        fill={false}
+                        data={String(idx)}
+                      />
+                    )}
+                  </Memo>
                   {secondHalf.map((file) => {
                     return (
                       <FileListEntry
@@ -145,17 +138,25 @@ export const VirtualFileList = $component(
 
             return (
               <div class="dcontents">
-                {Math.abs(pageInView - idx) > 2
-                  ? (
-                    <Memo cacheKey={"empty-observable-" + String(idx)}>
-                      <Observable
-                        observer={hiddenPagesObserver}
-                        fill={true}
-                        data={String(idx)}
-                      />
-                    </Memo>
-                  )
-                  : (renderPage())}
+                {pageInView.derive(pageInView => {
+                  if (Math.abs(pageInView - idx) > 2) {
+                    return Memo({
+                      cacheKey: "empty-observable-" + String(idx),
+                      dependencies: [observerHandler],
+                      children: () => (
+                        <Observable
+                          root={scrollview}
+                          threshold={0.1}
+                          onIntersect={observerHandler}
+                          fill={true}
+                          data={String(idx)}
+                        />
+                      ),
+                    });
+                  }
+
+                  return renderPage();
+                })}
               </div>
             );
           });
@@ -171,17 +172,33 @@ export const VirtualFileList = $component(
 );
 
 const Observable = $component(function Observable(
-  props: { observer: IntersectionObserver; data: string; fill?: boolean },
+  props: {
+    data: string;
+    fill?: boolean;
+    threshold?: number;
+    root?: HTMLElement;
+    onIntersect: (data: string) => void;
+  },
   api,
 ) {
+  const observer = new IntersectionObserver((e) => {
+    const elem = e[0]!;
+    if (elem.isIntersecting) {
+      props.onIntersect(props.data);
+    }
+  }, {
+    root: props.root,
+    threshold: props.threshold ?? 0.5,
+  });
+
   const className = props.fill ? "page-filler" : "";
 
   const element = <span class={className} data-page={props.data}></span>;
 
   api.onMount(() => {
-    props.observer.observe(element);
+    observer.observe(element);
     return () => {
-      props.observer.unobserve(element);
+      observer.unobserve(element);
     };
   });
 
