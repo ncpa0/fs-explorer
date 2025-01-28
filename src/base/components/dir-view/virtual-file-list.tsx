@@ -23,7 +23,9 @@ export const VirtualFileList = $component(
     const files = dir.filesView.readonly();
     const selectedFiles = dir.selection.readonly();
 
-    const pageInView = sig(0);
+    const viewState = sig({
+      visiblePages: new Set([0]),
+    });
     const pages = files.derive((files) => {
       return chunks(files, 30);
     });
@@ -32,21 +34,26 @@ export const VirtualFileList = $component(
       dir.activeEntry.dispatch(entry);
     };
 
-    api.onChange(() => {
-      pageInView.dispatch(0);
-    }, [files]);
+    const observerHandler = (page: string) => {
+      const pageIdx = Number(page);
+      if (!Number.isNaN(pageIdx)) {
+        const newVisible = new Set(viewState.get().visiblePages);
+        newVisible.add(pageIdx - 3);
+        newVisible.add(pageIdx - 2);
+        newVisible.add(pageIdx - 1);
+        newVisible.add(pageIdx);
+        newVisible.add(pageIdx + 1);
+        newVisible.add(pageIdx + 2);
+        newVisible.add(pageIdx + 3);
 
-    const observerHandler = throttle(
-      (page: string) => {
-        const pageIdx = Number(page);
-        if (!Number.isNaN(pageIdx)) {
-          pageInView.dispatch(pageIdx);
-          return;
+        if (newVisible.size !== viewState.get().visiblePages.size) {
+          viewState.dispatch(current => {
+            return { visiblePages: newVisible };
+          });
         }
-      },
-      25,
-      { leading: true, trailing: true },
-    );
+        return;
+      }
+    };
 
     const scrollview = (
       <div
@@ -138,8 +145,16 @@ export const VirtualFileList = $component(
 
             return (
               <div class="dcontents">
-                {pageInView.derive(pageInView => {
-                  if (Math.abs(pageInView - idx) > 2) {
+                {viewState
+                  .derive(({ visiblePages: viewed }) => {
+                    const shouldRender = viewed.has(idx);
+                    return shouldRender;
+                  })
+                  .derive(shouldRender => {
+                    if (shouldRender) {
+                      return renderPage();
+                    }
+
                     return Memo({
                       cacheKey: "empty-observable-" + String(idx),
                       dependencies: [observerHandler],
@@ -153,10 +168,7 @@ export const VirtualFileList = $component(
                         />
                       ),
                     });
-                  }
-
-                  return renderPage();
-                })}
+                  })}
               </div>
             );
           });
