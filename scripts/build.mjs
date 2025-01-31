@@ -43,6 +43,7 @@ async function main() {
       "@ncpa0cpl/vanilla-jsx",
       "@ncpa0cpl/vanilla-jsx/signals",
       "@ncpa0cpl/vanilla-jsx/jsx-runtime",
+      "adwaveui",
     ],
   };
 

@@ -2,7 +2,6 @@
     & .bulk-rename-modal {
         display: flex;
         flex-direction: column;
-        font-size: 1.1em;
         height: 40em;
         max-height: 65vh;
         width: 42em;
