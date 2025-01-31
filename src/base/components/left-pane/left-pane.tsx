@@ -15,6 +15,7 @@ export function LeftPane(props: LeftPaneProps) {
   const { explorer } = props;
   const { staticPlaces, overlay } = explorer;
   const places = explorer.places.list();
+  const tabPath = explorer.location.derive(l => l.signal);
 
   const handleOpenOptions = (ev: MouseEvent) => {
     const window = explorer.window!;
@@ -46,7 +47,6 @@ export function LeftPane(props: LeftPaneProps) {
         [ADW.Button.flat]: true,
         [ADW.Button.square]: true,
         [ADW.Button.adaptive]: true,
-        // "active": showOptions,
       }}
       onmousedown={handleOpenOptions}
     >
@@ -77,9 +77,9 @@ export function LeftPane(props: LeftPaneProps) {
                   "place-link": true,
                   [ADW.Button.button]: true,
                   [ADW.Button.flat]: true,
-                  [ADW.Button.toggled]: explorer.currentPath.derive(p => {
-                    return p.equals(place.path);
-                  }),
+                  [ADW.Button.toggled]: tabPath.derive((path) =>
+                    path.equals(place.path)
+                  ),
                 }}
                 onclick={() => handlePlaceClick(place)}
               >
@@ -103,9 +103,9 @@ export function LeftPane(props: LeftPaneProps) {
                   "place-link": true,
                   [ADW.Button.button]: true,
                   [ADW.Button.flat]: true,
-                  [ADW.Button.toggled]: explorer.currentPath.derive(p => {
-                    return p.equals(place.path);
-                  }),
+                  [ADW.Button.toggled]: tabPath.derive((path) =>
+                    path.equals(place.path)
+                  ),
                 }}
                 onclick={() => handlePlaceClick(place)}
               >
@@ -132,7 +132,7 @@ function OptionsMenu(props: { explorer: Explorer; close: () => void }) {
 
   const hanldeShowHiddenClick = (ev: MouseEvent) => {
     if (isLmb(ev)) {
-      props.explorer.directory.showHiddenFilesToggle();
+      props.explorer.directory.get().showHiddenFilesToggle();
       props.close();
     }
     ev.preventDefault();
@@ -143,7 +143,7 @@ function OptionsMenu(props: { explorer: Explorer; close: () => void }) {
     if (isLmb(ev)) {
       props.close();
       explorer.newTab(
-        explorer.location.path,
+        explorer.location.get().path,
       );
     }
     ev.preventDefault();
@@ -196,7 +196,7 @@ function OptionsMenu(props: { explorer: Explorer; close: () => void }) {
         </span>
         <input
           type="radio"
-          checked={props.explorer.directory.showHidden}
+          checked={props.explorer.directory.derive(d => d.showHidden)}
         />
       </button>
     </div>

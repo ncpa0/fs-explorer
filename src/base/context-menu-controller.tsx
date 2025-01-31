@@ -79,7 +79,7 @@ export class ContextMenuController {
     }
 
     get currentDir() {
-      return this.menu.explorer.directory.stat;
+      return this.menu.explorer.directory.get().stat;
     }
 
     isPossibleTo = {
@@ -172,7 +172,7 @@ export class ContextMenuController {
         placeholder: "File name",
         validate: this.menu.nameValidator(),
       }).then(name => {
-        const filepath = explorer.location.path.joinSegment(name);
+        const filepath = explorer.location.get().path.joinSegment(name);
         explorer.fs.touch(filepath);
       });
     }
@@ -189,7 +189,7 @@ export class ContextMenuController {
         placeholder: "Directory name",
         validate: this.menu.nameValidator(),
       }).then(name => {
-        const filepath = explorer.location.path.joinSegment(name);
+        const filepath = explorer.location.get().path.joinSegment(name);
         explorer.fs.mkdir(filepath);
       });
     }
@@ -200,7 +200,7 @@ export class ContextMenuController {
       const explorer = this.menu.explorer;
       const dir = explorer.directory;
 
-      const to = dir.stat.get()!;
+      const to = dir.get().stat.get()!;
       if (to.write) {
         explorer.fs.clipboardPaste(to.path);
       }
@@ -331,7 +331,7 @@ export class ContextMenuController {
   nameValidator(originalName?: string) {
     return (name: string) => {
       const dir = this.explorer.directory;
-      const existingFiles = dir.files.get()!.map(f => f.name);
+      const existingFiles = dir.get().files.get()!.map(f => f.name);
 
       if (name.includes("/")) {
         return { msg: "Name cannot contain the '/' character." };
@@ -375,7 +375,7 @@ export class ContextMenuController {
   }
 
   getCustomDirectoryActions() {
-    const dirStat = this.explorer.directory.stat.get();
+    const dirStat = this.explorer.directory.get().stat.get();
 
     const actionDefs = this.explorer.options.actions;
     if (!actionDefs) return [];
@@ -411,7 +411,7 @@ export class ContextMenuController {
     // any buttons will appear in the context menu, if not
     // do not open the context menu as it will be empty anyway
     if (!params.triggerFile && params.relatedFiles.length === 0) {
-      const currentDir = this.explorer.directory.stat.get();
+      const currentDir = this.explorer.directory.get().stat.get();
 
       if (!currentDir) {
         return;

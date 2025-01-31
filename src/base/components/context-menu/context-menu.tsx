@@ -232,7 +232,7 @@ const DirMenuButtons = $component((props: {
   explorer: Explorer;
 }, api) => {
   const { explorer } = props;
-  const dirStat = explorer.directory.stat;
+  const dirStat = explorer.directory.get().stat;
   const menu = explorer.contextMenu;
 
   const showCustomActions = sig(false);

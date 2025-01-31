@@ -1,7 +1,6 @@
 import { $component } from "@ncpa0cpl/vanilla-jsx";
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Typography } from "adwavecss";
-import throttle from "lodash.throttle";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { chunks } from "../../../utils/chunks";

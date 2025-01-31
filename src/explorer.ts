@@ -1,11 +1,9 @@
-import { sig, SignalListenerReference } from "@ncpa0cpl/vanilla-jsx/signals";
+import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { ClipcoardController } from "./base/clipboard-controller";
 import { ExplorerWindow } from "./base/components/window/window";
 import { ContextMenuController } from "./base/context-menu-controller";
-import { DirViewController } from "./base/dir-view-controller";
 import { DragController } from "./base/drag-controller";
 import { FsController } from "./base/fs-controller";
-import { ExplorerLocation, ExplorerTabHistory } from "./base/history";
 import { JobsController } from "./base/jobs-controller";
 import { OverlayController } from "./base/overlay-controller";
 import { PlacesStorage } from "./base/places-storage";
@@ -113,43 +111,13 @@ export class Explorer {
   public readonly actionError = sig<ActionError | undefined>(undefined);
   public readonly hideLeftPane = sig<boolean>(false);
 
-  get currentTab(): TabController {
-    return this.tabs.get().find((tab) => tab.id === this.activeTab.get())!;
-  }
-
-  get history(): ExplorerTabHistory {
-    return this.currentTab.history;
-  }
-
-  get location(): ExplorerLocation {
-    return this.currentTab.location;
-  }
-
-  get directory(): DirViewController {
-    return this.currentTab.directory;
-  }
-
-  get currentPath() {
-    const s = sig(this.location.path);
-    let currentObserver: SignalListenerReference<Path> | undefined;
-    const derived = sig.derive(this.activeTab, this.tabs, (id, tabs) => {
-      const activeTab = tabs.find((tab) => tab.id === id);
-      if (activeTab) {
-        currentObserver?.detach();
-        currentObserver = activeTab.location.signal.add(loc => {
-          s.dispatch(loc);
-        });
-      }
-    });
-    // assign intermediary signal to the source signal to avoid garbage collection on it
-    Object.defineProperty(s, "_intermediary_signal", { value: derived });
-    // derived signal needs a listener or it will opt into optimization
-    // and will not call the derive function
-    Object.defineProperty(s, "_intermediary_observer", {
-      value: derived.add(() => {}),
-    });
-    return s;
-  }
+  currentTab = sig.derive(this.activeTab, this.tabs, (id, tabs) => {
+    const activeTab = tabs.find((tab) => tab.id === id) ?? tabs[0]!;
+    return activeTab;
+  });
+  history = this.currentTab.derive(t => t.history);
+  location = this.currentTab.derive(t => t.location);
+  directory = this.currentTab.derive(t => t.directory);
 
   constructor(
     public readonly filesystem: Filesystem,
@@ -183,7 +151,7 @@ export class Explorer {
     }
 
     if (options.initDir) {
-      this.history.replace(options.initDir);
+      this.history.get().replace(options.initDir);
     }
   }
 
@@ -216,7 +184,7 @@ export class Explorer {
       }
       case "c": {
         if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
-          const files = this.directory.getActionableFiles();
+          const files = this.directory.get().getActionableFiles();
           if (files) {
             this.clipboard.put(files, "copy");
           }
@@ -225,7 +193,7 @@ export class Explorer {
       }
       case "x": {
         if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
-          const files = this.directory.getActionableFiles();
+          const files = this.directory.get().getActionableFiles();
           if (files) {
             this.clipboard.put(files, "move");
           }
@@ -234,7 +202,7 @@ export class Explorer {
       }
       case "v": {
         if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
-          const dstat = this.directory.stat.get();
+          const dstat = this.directory.get().stat.get();
           if (dstat && dstat.write) {
             this.fs.clipboardPaste(dstat.path);
           }
@@ -243,7 +211,7 @@ export class Explorer {
       }
       case "F2": {
         if (!hasFocus() && !e.ctrlKey && !e.shiftKey && !e.altKey) {
-          const selected = this.directory.getActionableFiles();
+          const selected = this.directory.get().getActionableFiles();
           if (selected && selected.length === 1) {
             const file = selected[0]!;
             this.prompt.input({
@@ -271,7 +239,7 @@ export class Explorer {
       }
       case "Delete": {
         if (!hasFocus() && !e.ctrlKey && !e.shiftKey && !e.altKey) {
-          const files = this.directory.getActionableFiles();
+          const files = this.directory.get().getActionableFiles();
           if (files) {
             Immediate.all(...files.map(f => this.fs.remove(f))).then(() => {
               this.refresh();
@@ -324,27 +292,27 @@ export class Explorer {
   }
 
   refresh(dir?: string) {
-    this.currentTab.refresh();
+    this.currentTab.get().refresh();
   }
 
   open(path: string | Path) {
-    this.currentTab.open(path);
+    this.currentTab.get().open(path);
   }
 
   replace(path: string | Path) {
-    this.currentTab.replace(path);
+    this.currentTab.get().replace(path);
   }
 
   getActiveFile() {
-    return this.currentTab.getActiveFile();
+    return this.currentTab.get().getActiveFile();
   }
 
   getCurrentDir() {
-    return this.currentTab.getCurrentDir();
+    return this.currentTab.get().getCurrentDir();
   }
 
   getSelectedFiles() {
-    return this.currentTab.getSelectedFiles();
+    return this.currentTab.get().getSelectedFiles();
   }
 
   getClipboard() {
