@@ -70,6 +70,7 @@ export const Prompt = function Prompt(props: PropmptProps) {
       oninput={handleInput}
       onkeydown={handleKeyDown}
       placeholder={placeholder}
+      autofocus
     />
   ) as HTMLInputElement;
 

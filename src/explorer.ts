@@ -15,6 +15,8 @@ import { ActionError } from "./interfaces/action-error";
 import { Styles } from "./styles-component";
 import { Immediate } from "./utils/immediate";
 import { Path } from "./utils/path";
+import "adwaveui";
+import { BulkRename } from "./base/components/bulk-rename/bulk-rename";
 
 export interface Place {
   readonly id: string;
@@ -209,6 +211,13 @@ export class Explorer {
         }
         break;
       }
+      case "a": {
+        if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
+          const dir = this.directory.get();
+          dir.selectAll();
+        }
+        break;
+      }
       case "F2": {
         if (!hasFocus() && !e.ctrlKey && !e.shiftKey && !e.altKey) {
           const selected = this.directory.get().getActionableFiles();
@@ -221,11 +230,16 @@ export class Explorer {
               placeholder: "Filename",
               validate: this.contextMenu.nameValidator(file.name),
             }).then((name) => {
+              if (!name) return;
               const newPath = Path.from(file.path).base().joinSegment(
                 name,
               );
-              this.fs.move([file], newPath);
+              this.fs.move(file, newPath);
             });
+          } else if (selected) {
+            this.overlay.display(
+              BulkRename({ files: selected, explorer: this }),
+            );
           }
         }
         break;

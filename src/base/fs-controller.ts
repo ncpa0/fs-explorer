@@ -1,6 +1,7 @@
 import { Explorer } from "../explorer";
 import { Filesystem, FStat } from "../filesystem-interface";
 import { ActionError } from "../interfaces/action-error";
+import { Resolvable } from "../utils/immediate";
 import { Path } from "../utils/path";
 import { QueuedJob } from "./jobs-controller";
 
@@ -57,7 +58,7 @@ export class FsController {
       return;
     }
 
-    const job = this.explorer.jobs.createJob("copy", file, () => {
+    const job = this.explorer.jobs.createJob("move", file, () => {
       return this.filesystem.move(filePath.toString(), to.toString())
         .then(() => {
           const fromDir = filePath.base();
@@ -103,33 +104,77 @@ export class FsController {
     );
   }
 
-  move(files: readonly FStat[], to: string | Path) {
+  move(file: FStat, to: string | Path): Resolvable<any>;
+  move(files: readonly FStat[], to: string | Path): Resolvable<any>;
+  move(files: FStat | readonly FStat[], to: string | Path): Resolvable<any> {
     to = Path.from(to);
-    return this.filesystem.readdir(to.toString()).then(
-      async (existingFiles) => {
-        const copyJobs = await Promise.all(
-          files.map(async (f): Promise<QueuedJob<any>[]> => {
-            if (existingFiles.some((efname) => efname === f.name)) {
+
+    if (Array.isArray(files)) {
+      return this.filesystem.readdir(to.toString()).then(
+        async (existingFiles) => {
+          const copyJobs = await Promise.all(
+            files.map(async (f): Promise<QueuedJob<any>[]> => {
+              if (existingFiles.some((efname) => efname === f.name)) {
+                const res = await this.explorer.prompt.ask(
+                  overwritePrompt(f.name),
+                );
+
+                if (res.answer === false) {
+                  return [];
+                }
+              }
+
+              const dest = to.joinSegment(f.name);
+              const job = this._move(f, dest);
+              return job ? [job] : [];
+            }),
+          ).then((jobs) => jobs.flat());
+
+          for (const job of copyJobs) {
+            await job.start();
+          }
+        },
+      );
+    } else {
+      const file = files as FStat;
+      return this.filesystem.exists(to.toString()).then(async exists => {
+        let targetDir: Path;
+        let filename: string;
+        if (exists) {
+          const isDir = await this.filesystem.stat(to.toString()).then(s =>
+            s.directory
+          );
+          if (!isDir) {
+            filename = to.basename();
+            targetDir = to.base();
+          } else {
+            targetDir = to;
+            filename = file.name;
+          }
+        } else {
+          targetDir = to.base();
+          filename = to.basename();
+        }
+
+        return this.filesystem.readdir(targetDir.toString()).then(
+          async existingFiles => {
+            if (existingFiles.some((efname) => efname === filename)) {
               const res = await this.explorer.prompt.ask(
-                overwritePrompt(f.name),
+                overwritePrompt(filename),
               );
 
               if (res.answer === false) {
-                return [];
+                return;
               }
             }
 
-            const dest = to.joinSegment(f.name);
-            const job = this._move(f, dest);
-            return job ? [job] : [];
-          }),
-        ).then((jobs) => jobs.flat());
-
-        for (const job of copyJobs) {
-          await job.start();
-        }
-      },
-    );
+            const dest = targetDir.joinSegment(filename);
+            const job = this._move(file, dest);
+            return job?.start();
+          },
+        );
+      });
+    }
   }
 
   remove(file: FStat) {

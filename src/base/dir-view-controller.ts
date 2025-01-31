@@ -199,4 +199,8 @@ export class DirViewController {
     }
     return null;
   }
+
+  selectAll() {
+    this.selection.dispatch(this.files.get());
+  }
 }

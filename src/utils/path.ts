@@ -56,6 +56,9 @@ export class Path {
     return result;
   }
 
+  /**
+   * Joins two paths together and returns a new Path object with the result.
+   */
   join(path: Path): Path {
     const result = Object.create(Path.prototype) as Path;
     result._segments = this._segments.concat(path._segments);
@@ -64,6 +67,9 @@ export class Path {
     return result;
   }
 
+  /**
+   * Joins a segment to the end of the path and returns a new Path object with the result.
+   */
   joinSegment(segment: string): Path {
     if (segment.includes("/")) {
       throw new Error("Invalid segment");
@@ -76,6 +82,9 @@ export class Path {
     return result;
   }
 
+  /**
+   * Removes the last segment from the path and returns a new Path object with the result.
+   */
   @memo
   base(): Path {
     const result = Object.create(Path.prototype) as Path;
@@ -85,6 +94,9 @@ export class Path {
     return result;
   }
 
+  /**
+   * Normalizes the path by removing "." and ".." segments.
+   */
   @memo
   normalize(): Path {
     const result = Object.create(Path.prototype) as Path;
@@ -136,5 +148,33 @@ export class Path {
     }
 
     return true;
+  }
+
+  /**
+   * Returns the extension of the file or undefined if there is none.
+   */
+  @memo
+  ext(): string | undefined {
+    const lastSegment = this._segments[this._segments.length - 1]!;
+    const idx = lastSegment.lastIndexOf(".");
+    if (idx === -1) {
+      return;
+    }
+    return lastSegment.slice(idx + 1);
+  }
+
+  /**
+   * Returns the basename of the file. Can be passed a `false` argument to exclude the extension.
+   */
+  @memo
+  basename(ext = true): string {
+    const lastSegment = this._segments[this._segments.length - 1]!;
+    if (!ext) {
+      const idx = lastSegment.lastIndexOf(".");
+      if (idx !== -1) {
+        return lastSegment.slice(0, idx);
+      }
+    }
+    return lastSegment;
   }
 }

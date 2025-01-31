@@ -69,14 +69,14 @@ export class PromptController {
       validate?: InputPromptValidator;
     },
   ) {
-    return new Promise<string>((res, rej) => {
+    return new Promise<string | undefined>((res, rej) => {
       const onConfirm = (value: string) => {
         this.close();
         res(value);
       };
       const onUserCancel = () => {
         this.close();
-        res("");
+        res(undefined);
       };
       this._cancel = (reason: any) => {
         this.close();

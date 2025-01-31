@@ -20,6 +20,8 @@
 
 @import "./base/components/jobs/styles.css";
 
+@import "./base/components/bulk-rename/styles.css";
+
 .explorer-window.explorer-window.explorer-window.explorer-window {
     box-sizing: border-box;
 

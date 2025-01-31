@@ -3,6 +3,7 @@ import { Explorer, Place } from "../explorer";
 import { FStat } from "../filesystem-interface";
 import { FileActionContext } from "../interfaces/file-action";
 import { Path } from "../utils/path";
+import { BulkRename } from "./components/bulk-rename/bulk-rename";
 import { ContextMenu } from "./components/context-menu/context-menu";
 
 export interface ElementPosition {
@@ -172,6 +173,7 @@ export class ContextMenuController {
         placeholder: "File name",
         validate: this.menu.nameValidator(),
       }).then(name => {
+        if (!name) return;
         const filepath = explorer.location.get().path.joinSegment(name);
         explorer.fs.touch(filepath);
       });
@@ -189,6 +191,7 @@ export class ContextMenuController {
         placeholder: "Directory name",
         validate: this.menu.nameValidator(),
       }).then(name => {
+        if (!name) return;
         const filepath = explorer.location.get().path.joinSegment(name);
         explorer.fs.mkdir(filepath);
       });
@@ -258,6 +261,7 @@ export class ContextMenuController {
     rename() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
+      const selectedFiles = this.menu.selectedFiles.get();
       this.menu.close();
 
       if (file) {
@@ -268,11 +272,16 @@ export class ContextMenuController {
           placeholder: "Filename",
           validate: this.menu.nameValidator(file.name),
         }).then((name) => {
+          if (!name) return;
           const newPath = Path.from(file.path).base().joinSegment(
             name,
           );
-          explorer.fs.move([file], newPath);
+          explorer.fs.move(file, newPath);
         });
+      } else {
+        explorer.overlay.display(
+          <BulkRename explorer={explorer} files={selectedFiles} />,
+        );
       }
     }
 

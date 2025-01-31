@@ -1,0 +1,105 @@
+.explorer-window.explorer-window.explorer-window.explorer-window {
+    & .bulk-rename-modal {
+        display: flex;
+        flex-direction: column;
+        font-size: 1.1em;
+        height: 40em;
+        max-height: 65vh;
+        width: 42em;
+        max-width: 75vw;
+
+        & .rename-preview {
+            flex: 1;
+
+            & .preview-list-header {
+                margin-top: 1em;
+                display: flex;
+                flex-direction: row;
+                overflow: hidden;
+                border-top-left-radius: var(--border-radius);
+                border-top-right-radius: var(--border-radius);
+            }
+
+            & .preview-list-footer {
+                height: 5px;
+                width: 100%;
+                background-color: var(--clr-bg-5);
+                border-bottom-left-radius: var(--border-radius);
+                border-bottom-right-radius: var(--border-radius);
+            }
+
+            & .col-label {
+                display: block;
+                width: 50%;
+                padding: .2em .5em;
+                background-color: var(--clr-bg-6);
+            }
+
+            & ul.preview-list {
+                list-style-type: none;
+                padding: 0;
+                overflow-y: auto;
+                margin: 0;
+                max-height: min(18em, calc(65vh - 22em));
+
+                & li {
+                    display: flex;
+                    flex-direction: row;
+                }
+
+                & .old-name,
+                & .new-name {
+                    display: block;
+                    width: 50%;
+                    padding: .2em .5em;
+                    background-color: var(--clr-bg-5);
+                }
+
+                & .old-name {
+                    border-right: 1px;
+                    border-color: rgba(255, 255, 255, 0.12);
+                    border-right-style: solid;
+                }
+            }
+        }
+
+        & .rename-form-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        & .buttons {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+            margin-top: .4em;
+
+            & .btn {
+                margin-left: .4em;
+            }
+        }
+
+        & .rename-form {
+            margin-block: 1em;
+            margin-inline: .6em;
+        }
+
+        & .numbering-rename-form {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            align-items: flex-start;
+            row-gap: .4em;
+        }
+
+        & .replace-rename-form {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            align-items: flex-start;
+            row-gap: .4em;
+        }
+    }
+
+    adw-selector * {
+        max-height: unset !important;
+    }
+}

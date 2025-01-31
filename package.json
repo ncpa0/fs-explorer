@@ -48,6 +48,7 @@
   "dependencies": {
     "@ncpa0cpl/vanilla-jsx": "^0.0.1-alpha.35",
     "adwavecss": "^0.1.1",
+    "adwaveui": "^0.0.11",
     "async-await-queue": "^2.1.4",
     "lodash.throttle": "^4.1.1",
     "luxon": "^3.5.0"
