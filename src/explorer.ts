@@ -216,6 +216,7 @@ export class Explorer {
           const dir = this.directory.get();
           dir.selectAll();
         }
+        e.preventDefault();
         break;
       }
       case "F2": {
