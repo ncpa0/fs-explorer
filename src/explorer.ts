@@ -215,8 +215,8 @@ export class Explorer {
         if (!hasFocus() && e.ctrlKey && !e.shiftKey && !e.altKey) {
           const dir = this.directory.get();
           dir.selectAll();
+          e.preventDefault();
         }
-        e.preventDefault();
         break;
       }
       case "F2": {
