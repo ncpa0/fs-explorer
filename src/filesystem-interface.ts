@@ -38,4 +38,6 @@ export interface Filesystem {
   dirExists(path: string): Resolvable<boolean>;
   onChange(callback: (dirPath?: string) => void): void;
   offChange(callback: (dirPath?: string) => void): void;
+  /** Returns the size of all files within the directory in bytes */
+  dirSize?(path: string): Resolvable<number>;
 }

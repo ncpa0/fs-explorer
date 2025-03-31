@@ -1,3 +1,4 @@
+import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { ADW } from "../../../utils/css";
@@ -34,17 +35,27 @@ export function PreviewPane(props: PreviewPaneProps) {
         </button>
       </div>
       {preview.file.derive(file => {
-        if (file) return <FileInfo file={file} />;
+        if (file) return <FileInfo file={file} explorer={explorer} />;
         return <div />;
       })}
     </div>
   );
 }
 
-function FileInfo(props: { file: FStat }) {
+function FileInfo(props: { file: FStat; explorer: Explorer }) {
+  const { file, explorer } = props;
+
+  const size = sig(file.directory ? "N/A" : Fmt.size(file.size));
   let type = props.file.mimetype && mimeName(props.file.mimetype);
   if (props.file.directory) {
     type = "Directory";
+  }
+
+  if (file.directory && explorer.filesystem.dirSize) {
+    size.dispatch("...");
+    explorer.filesystem.dirSize(file.path).then(dsize => {
+      size.dispatch(Fmt.size(dsize));
+    });
   }
 
   return (
@@ -59,7 +70,7 @@ function FileInfo(props: { file: FStat }) {
       </div>
       <div class={["dcontents", "info-entry", ADW.Typography.text]}>
         <span class="info-label">Size:</span>
-        <span class="info-value">{Fmt.size(props.file.size)}</span>
+        <span class="info-value">{size}</span>
       </div>
       {type
         && (

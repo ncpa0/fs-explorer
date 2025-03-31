@@ -144,7 +144,9 @@ export function FileListEntry(
         <span class={Typography.text}>{file.name}</span>
       </div>
       <div class="file-size">
-        <span class={Typography.text}>{Fmt.size(file.size)}</span>
+        <span class={Typography.text}>
+          {file.directory ? "" : Fmt.size(file.size)}
+        </span>
       </div>
       <div class="file-modified">
         <span class={Typography.text}>{Fmt.date(file.mtime)}</span>
