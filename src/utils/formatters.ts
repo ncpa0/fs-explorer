@@ -1,9 +1,9 @@
 import { DateTime } from "luxon";
 
 const KILOBYTE = 1024;
-const MEGABYTE = KILOBYTE * 1024;
-const GIGABYTE = MEGABYTE * 1024;
-const TERABYTE = GIGABYTE * 1024;
+const MEGABYTE = KILOBYTE * 1024; // 1048576
+const GIGABYTE = MEGABYTE * 1024; // 1073741824
+const TERABYTE = GIGABYTE * 1024; // 1099511628000
 
 export class Fmt {
   static size(size: number): string {
