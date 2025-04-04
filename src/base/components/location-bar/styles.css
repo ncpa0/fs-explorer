@@ -41,6 +41,12 @@
 
         & .location-preview {
             flex: 1;
+            overflow: auto;
+            scrollbar-width: none;
+
+            & .breadcrumb-item {
+                white-space: nowrap;
+            }
         }
     }
 }

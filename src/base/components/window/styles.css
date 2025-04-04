@@ -68,12 +68,31 @@
                         margin-left: 1em;
                         height: 2.5em;
 
+                        & .invs_placeholder {
+                            opacity: 0;
+                        }
+
                         & span {
                             height: fit-content;
                             max-width: 90%;
                             overflow: hidden;
                             text-overflow: ellipsis;
                             white-space: nowrap;
+
+                            & .tab-location-segment {
+                                color: color-mix(in srgb, var(--clr-text) 60%,
+                                #fff0);
+
+                                &:not(:last-child):hover {
+                                    color: var(--clr-text);
+                                }
+                            }
+
+                            & .path-separator {
+                                color: color-mix(in srgb, var(--clr-text) 60%,
+                                #fff0);
+                                margin-inline: .1em;
+                            }
                         }
 
                         .close-tab-button {

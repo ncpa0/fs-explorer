@@ -1,3 +1,4 @@
+import { bindSignal } from "@ncpa0cpl/vanilla-jsx";
 import { ReadonlySignal, sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import ArrowBackwardIcon from "../../../assets/main-theme/icons/arrow-back.svg";
 import ArrowForwardIcon from "../../../assets/main-theme/icons/arrow-forward.svg";
@@ -168,7 +169,7 @@ function LocationPreview(
     }
   };
 
-  return (
+  const preview = (
     <div
       class={["breadcrumbs", "location-preview"]}
       onmousedown={handleOutsideClick}
@@ -210,6 +211,18 @@ function LocationPreview(
       })}
     </div>
   );
+
+  bindSignal(props.location, preview, (elem) => {
+    setTimeout(() => {
+      // scroll all the way to the right
+      elem.scrollTo({
+        behavior: "smooth",
+        left: elem.scrollWidth,
+      });
+    });
+  });
+
+  return preview;
 }
 
 function LocationEditor(

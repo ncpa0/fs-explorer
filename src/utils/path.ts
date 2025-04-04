@@ -82,6 +82,14 @@ export class Path {
     return result;
   }
 
+  slice(endIdx: number): Path {
+    const result = Object.create(Path.prototype) as Path;
+    result._segments = this._segments.slice(0, endIdx);
+    result._type = this._type;
+    Object.freeze(result._segments);
+    return result;
+  }
+
   /**
    * Removes the last segment from the path and returns a new Path object with the result.
    */

@@ -28,6 +28,12 @@ export function Tab({ explorer, tab }: TabProps) {
     }
   };
 
+  const handleSegmentClick = (path: Path, segmentIdx: number) => () => {
+    const newPath = path.slice(segmentIdx + 1);
+    if (newPath.equals(path)) return;
+    tab.history.push(newPath);
+  };
+
   return (
     <div
       class={{
@@ -39,8 +45,22 @@ export function Tab({ explorer, tab }: TabProps) {
       }}
     >
       <div class="explorer-tab-header" onmouseup={handleHeaderMouseUp}>
-        <span class={Typography.subtitle}>
-          {tab.location.signal.derive(l => l.toString())}
+        <span class={Typography.subtitle} dir="rtl">
+          <span class="invs_placeholder">i</span>
+          {tab.location.signal.derive(l => {
+            const segments = l.segments();
+            return segments.flatMap((segment, idx) => {
+              return [
+                <span class="path-separator">{"/"}</span>,
+                <span
+                  class="tab-location-segment"
+                  onclick={handleSegmentClick(l, idx)}
+                >
+                  {segment}
+                </span>,
+              ];
+            });
+          })}
         </span>
         <button
           onclick={(e) => {
