@@ -1,5 +1,5 @@
 .explorer-window.explorer-window.explorer-window.explorer-window {
-    .dir-view-container {
+    & .dir-view-container {
         position: relative;
         flex: 1;
         height: 100%;
@@ -34,14 +34,14 @@
         }
     }
 
-    .explorer-tab .dir-view-container {
+    & .explorer-tab .dir-view-container {
         flex: unset;
         height: calc(100% - 2.5em);
         border-bottom-left-radius: 6px;
         border-bottom-right-radius: 6px;
     }
 
-    .dir-view {
+    & .dir-view {
         flex: 1;
         display: grid;
         grid-template-columns: 3.75em minmax(3em, auto) minmax(2em, min-content)
@@ -250,6 +250,17 @@
 
         & .gaper {
             height: 1em;
+        }
+    }
+
+    & .error-dir-msg {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+
+        & span {
+            font-size: 1.6em;
         }
     }
 }

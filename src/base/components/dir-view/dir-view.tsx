@@ -1,4 +1,5 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
+import { Typography } from "adwavecss";
 import { Explorer } from "../../../explorer";
 import { isLmb } from "../../../utils/events";
 import { Path } from "../../../utils/path";
@@ -104,9 +105,11 @@ export function DirView(props: DirViewProps) {
       ondragleave={handleDragLeave}
       onmouseup={handleMouseUp}
     >
-      {dir.loading.derive(loading => {
+      {sig.derive(dir.loading, dir.error, (loading, err) => {
         if (loading) {
           return <LoadingIndicator />;
+        } else if (err) {
+          return <OpenDirErrorMessage />;
         } else {
           return (
             <VirtualFileList
@@ -117,6 +120,16 @@ export function DirView(props: DirViewProps) {
         }
       })}
       <div class="dir-view-drop-overlay" />
+    </div>
+  );
+}
+
+function OpenDirErrorMessage() {
+  return (
+    <div class="error-dir-msg">
+      <span class={[Typography.subtitle]}>
+        Unable to open this directory.
+      </span>
     </div>
   );
 }

@@ -114,15 +114,7 @@ export class TabController {
       return;
     }
 
-    return this.explorer.filesystem.dirExists(path.toString()).then(
-      (exists) => {
-        if (exists) {
-          this.history.push(path);
-          return true;
-        }
-        return false;
-      },
-    );
+    this.history.push(path);
   }
 
   replace(path: string | Path) {
@@ -134,15 +126,7 @@ export class TabController {
       return;
     }
 
-    return this.explorer.filesystem.dirExists(path.toString()).then(
-      (exists) => {
-        if (exists) {
-          this.history.replace(path);
-          return true;
-        }
-        return false;
-      },
-    );
+    this.history.replace(path);
   }
 
   getActiveFile() {

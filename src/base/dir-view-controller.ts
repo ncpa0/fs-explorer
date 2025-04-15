@@ -28,6 +28,7 @@ export class DirViewController {
   public readonly showHidden = sig(false);
   public readonly selection = sig<ReadonlyArray<FStat>>([]);
   public readonly loading = sig(false);
+  public readonly error = sig<any>();
 
   public readonly filesView = this.deriveFilesView();
   public readonly directoryInfo = this.deriveDirectoryInfo();
@@ -132,6 +133,7 @@ export class DirViewController {
         this.selection.dispatch([]);
         this.stat.dispatch(dirStat);
         this.files.dispatch(files);
+        this.error.dispatch(undefined);
         sig.commitBatch();
 
         setTimeout(() => {
@@ -142,6 +144,14 @@ export class DirViewController {
             this.onContentChange(scrollPosition!);
           }
         });
+      }).catch(err => {
+        sig.startBatch();
+        this.loading.dispatch(false);
+        this.selection.dispatch([]);
+        this.stat.dispatch(undefined);
+        this.files.dispatch([]);
+        this.error.dispatch(err);
+        sig.commitBatch();
       });
     });
   }
