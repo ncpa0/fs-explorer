@@ -24,13 +24,32 @@ export interface Place {
   readonly path: string;
 }
 
+export type ActionType =
+  | "newfile"
+  | "newdir"
+  | "open"
+  | "copy"
+  | "cut"
+  | "paste"
+  | "delete"
+  | "rename"
+  | "createShortcut";
+
+export interface ActionFilter {
+  readonly match: (
+    file: readonly FStat[],
+    info: { isCurrentDir: boolean },
+  ) => boolean;
+  allowed: Array<ActionType>;
+}
+
 export interface FileAction {
   readonly label: string;
   readonly match: (
     file: readonly FStat[],
     info: { isCurrentDir: boolean },
   ) => boolean;
-  readonly run: (file: readonly FStat[]) => void;
+  readonly run: (file: readonly FStat[], explorer: Explorer) => void;
 }
 
 export interface ExplorerAction {
@@ -52,6 +71,10 @@ export interface ExplorerOptions {
    * file is pressed.
    */
   readonly actions?: ReadonlyArray<FileAction>;
+  /**
+   * List of filters that can define which actions should be allowed for givent files.
+   */
+  readonly actionFilters?: ReadonlyArray<ActionFilter>;
   /**
    * Action available in the explorer toolbar menu.
    */
@@ -127,6 +150,7 @@ export class Explorer {
   public readonly hideLeftPane = sig(false);
   public readonly plainList = sig(false);
   public readonly noPreview = sig(false);
+  public readonly actionFilters: ReadonlyArray<ActionFilter> = [];
 
   currentTab = sig.derive(this.activeTab, this.tabs, (id, tabs) => {
     const activeTab = tabs.find((tab) => tab.id === id) ?? tabs[0]!;
@@ -154,6 +178,9 @@ export class Explorer {
     }
     if ("noPreview" in options) {
       this.noPreview.dispatch(!!options.noPreview);
+    }
+    if (options.actionFilters) {
+      this.actionFilters = options.actionFilters;
     }
 
     const onChange = (dirPath?: string) => {

@@ -1,5 +1,5 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
-import { Explorer, Place } from "../explorer";
+import { ActionType, Explorer, Place } from "../explorer";
 import { FStat } from "../filesystem-interface";
 import { FileActionContext } from "../interfaces/file-action";
 import { Path } from "../utils/path";
@@ -24,7 +24,7 @@ class BtnAccessController {
     protected explorer: Explorer,
   ) {}
 
-  canOpen(file?: FStat) {
+  canOpen(file?: FStat): boolean {
     if (!file) {
       return false;
     }
@@ -37,7 +37,7 @@ class BtnAccessController {
     return !!action;
   }
 
-  canCreateNewFile(parentFile?: FStat) {
+  canCreateNewFile(parentFile?: FStat): boolean {
     if (!parentFile) {
       return false;
     }
@@ -49,27 +49,41 @@ class BtnAccessController {
     return false;
   }
 
-  canPaste(to?: FStat) {
+  canPaste(to?: FStat): boolean {
     const clipboard = this.explorer.clipboard;
-    return to && to.directory && to.write && clipboard.data.get().files.length;
+    return Boolean(
+      to && to.directory && to.write && clipboard.data.get().files.length,
+    );
   }
 
-  canCopy(...files: FStat[]) {
+  canCopy(...files: FStat[]): boolean {
     return files.every(f => f.read);
   }
 
-  canCut(...files: FStat[]) {
+  canCut(...files: FStat[]): boolean {
     return files.every(f => f.read && f.write);
   }
 
-  canDelete(...files: FStat[]) {
+  canDelete(...files: FStat[]): boolean {
     return files.every(f => f.write);
   }
 
-  canRename(...files: FStat[]) {
+  canRename(...files: FStat[]): boolean {
     return files.every(f => f.write);
   }
 }
+
+const ALL_ALLOWED = [
+  "copy",
+  "createShortcut",
+  "cut",
+  "delete",
+  "newdir",
+  "newfile",
+  "open",
+  "paste",
+  "rename",
+] satisfies Array<ActionType>;
 
 export class ContextMenuController {
   static ContextMenuActions = class ContextMenuActions {
@@ -85,50 +99,77 @@ export class ContextMenuController {
 
     isPossibleTo = {
       open: () => {
+        if (!this.menu.filesAllowedActions.includes("open")) {
+          return false;
+        }
         const file = this.menu.triggerFile.get();
         return this.btnAccessController.canOpen(file);
       },
       createFile: () => {
+        if (!this.menu.dirAllowedActions.includes("newfile")) {
+          return false;
+        }
         return this.btnAccessController.canCreateNewFile(
           this.currentDir.get(),
         );
       },
       paste: () => {
+        if (!this.menu.dirAllowedActions.includes("paste")) {
+          return false;
+        }
         return this.btnAccessController.canPaste(
           this.currentDir.get(),
         );
       },
       pasteTo: () => {
-        const target = this.menu.getTargetFile();
+        if (!this.menu.filesAllowedActions.includes("paste")) {
+          return false;
+        }
+
         return this.btnAccessController.canPaste(
-          target,
+          this.menu.getTargetFile(),
         );
       },
       copy: () => {
+        if (!this.menu.filesAllowedActions.includes("copy")) {
+          return false;
+        }
         const target = this.menu.getTargetFile();
         return this.btnAccessController.canCopy(
           ...(target ? [target] : this.menu.selectedFiles.get()),
         );
       },
       cut: () => {
+        if (!this.menu.filesAllowedActions.includes("cut")) {
+          return false;
+        }
         const target = this.menu.getTargetFile();
         return this.btnAccessController.canCut(
           ...(target ? [target] : this.menu.selectedFiles.get()),
         );
       },
       delete: () => {
+        if (!this.menu.filesAllowedActions.includes("delete")) {
+          return false;
+        }
         const target = this.menu.getTargetFile();
         return this.btnAccessController.canDelete(
           ...(target ? [target] : this.menu.selectedFiles.get()),
         );
       },
       rename: () => {
+        if (!this.menu.filesAllowedActions.includes("rename")) {
+          return false;
+        }
         const target = this.menu.getTargetFile();
         return this.btnAccessController.canRename(
           ...(target ? [target] : this.menu.selectedFiles.get()),
         );
       },
       createShortcut: () => {
+        if (!this.menu.filesAllowedActions.includes("createShortcut")) {
+          return false;
+        }
         const target = this.menu.getTargetFile();
         return !!target && target.directory
           && !this.menu.explorer.places.findByPath(target.path);
@@ -323,6 +364,8 @@ export class ContextMenuController {
   public readonly isOpen = sig(false);
   public readonly selectedFiles = sig<readonly FStat[]>([]);
   public readonly triggerFile = sig<undefined | FStat>(undefined);
+  public filesAllowedActions: Array<ActionType> = ALL_ALLOWED;
+  public dirAllowedActions: Array<ActionType> = ALL_ALLOWED;
 
   protected btnAccessController: BtnAccessController;
   public readonly actions;
@@ -415,11 +458,53 @@ export class ContextMenuController {
     this.afterClose();
   }
 
+  private collectFilesAllowedActions(params: OpenMenuParams) {
+    const matchedFiles = params.relatedFiles.length > 0
+      ? params.relatedFiles
+      : params.triggerFile
+      ? [params.triggerFile]
+      : undefined;
+    const filesFilters = matchedFiles
+      ? this.explorer.actionFilters.filter(af =>
+        af.match(matchedFiles, { isCurrentDir: false })
+      )
+      : [];
+    if (filesFilters.length > 0) {
+      this.filesAllowedActions = Array.from(
+        new Set(
+          filesFilters.flatMap(af => af.allowed),
+        ),
+      );
+    } else {
+      this.filesAllowedActions = ALL_ALLOWED;
+    }
+  }
+
+  private collectDirAllowedActions(params: OpenMenuParams) {
+    const dir = this.explorer.directory.get().stat.get();
+    if (dir) {
+      const dirFilters = this.explorer.actionFilters.filter(af =>
+        af.match([dir], { isCurrentDir: true })
+      );
+      if (dirFilters.length > 0) {
+        this.dirAllowedActions = Array.from(
+          new Set(
+            dirFilters.flatMap(af => af.allowed),
+          ),
+        );
+        return;
+      }
+    }
+    this.dirAllowedActions = ALL_ALLOWED;
+  }
+
   open(params: OpenMenuParams) {
+    const isCurrentDir = !params.triggerFile
+      && params.relatedFiles.length === 0;
     // check if, given the relatedFiles and the triggerFile,
     // any buttons will appear in the context menu, if not
     // do not open the context menu as it will be empty anyway
-    if (!params.triggerFile && params.relatedFiles.length === 0) {
+    if (isCurrentDir) {
       const currentDir = this.explorer.directory.get().stat.get();
 
       if (!currentDir) {
@@ -450,6 +535,9 @@ export class ContextMenuController {
       this.triggerFile.dispatch(params.triggerFile);
     }
     sig.commitBatch();
+
+    this.collectDirAllowedActions(params);
+    this.collectFilesAllowedActions(params);
 
     this.explorer.overlay.display(
       {

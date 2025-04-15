@@ -116,7 +116,7 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
 
         const handler = (action: FileAction) => () => {
           menu.close();
-          action.run(f);
+          action.run(f, explorer);
         };
 
         const topSeparator = hideOpenBtn && hideNewFileBtn
@@ -276,7 +276,7 @@ const DirMenuButtons = $component((props: {
 
         const handler = (action: FileAction) => () => {
           menu.close();
-          action.run([dirStat]);
+          action.run([dirStat], explorer);
         };
 
         const topSeparator = hideCreateFileBtn

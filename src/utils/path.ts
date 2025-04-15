@@ -158,6 +158,17 @@ export class Path {
     return true;
   }
 
+  isInside(parent: Path | string): boolean {
+    parent = Path.from(parent);
+    if (parent._segments.length >= this._segments.length) return false;
+    for (let i = 0; i < parent._segments.length; i++) {
+      const thisSegment = this._segments[i];
+      const parentSegment = parent._segments[i];
+      if (thisSegment !== parentSegment) return false;
+    }
+    return true;
+  }
+
   /**
    * Returns the extension of the file or undefined if there is none.
    */
