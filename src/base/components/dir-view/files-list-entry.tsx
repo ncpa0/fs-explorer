@@ -95,7 +95,7 @@ export function FileListEntry(
       const action = explorer.options?.openAction?.(file);
       if (action) {
         action(file, actionCtx);
-      } else {
+      } else if (explorer.noPreview.get() === false) {
         actionCtx.openPreview();
       }
     }
@@ -121,7 +121,7 @@ export function FileListEntry(
 
   const Icon = getFileIcon(file);
 
-  const element = (
+  return (
     <div
       class={{
         "active-entry": props.activeEntry.derive(ae => ae === file),
@@ -153,6 +153,4 @@ export function FileListEntry(
       </div>
     </div>
   );
-
-  return element;
 }

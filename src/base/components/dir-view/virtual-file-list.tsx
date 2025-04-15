@@ -60,9 +60,10 @@ export const VirtualFileList = $component(
           [ADW.ScrollView.scrollView]: true,
           "dir-view": true,
           empty: files.derive((files) => files.length === 0),
+          "plain-list": explorer.plainList,
         }}
       >
-        {dir.filesView.derive(files => {
+        {dir.filesView.derive((files) => {
           if (files.length === 0) {
             return (
               <div class="empty-dir-msg">
@@ -226,10 +227,10 @@ const Observable = $component(function Observable(
 function Gap() {
   return (
     <>
-      <div class="gaper" />
-      <div class="gaper" />
-      <div class="gaper" />
-      <div class="gaper" />
+      <div class="gaper col1" />
+      <div class="gaper col2" />
+      <div class="gaper col3" />
+      <div class="gaper col4" />
     </>
   );
 }

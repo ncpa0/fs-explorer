@@ -218,7 +218,7 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
         title={"Remove shortcurt"}
       />
       <MenuButton
-        hidden={false}
+        hidden={explorer.noPreview}
         action={() => menu.actions.showPreview()}
         title="Properties"
       />

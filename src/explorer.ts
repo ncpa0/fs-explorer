@@ -66,7 +66,20 @@ export interface ExplorerOptions {
    * remove or reorder these.
    */
   readonly staticPlaces?: ReadonlyArray<Place>;
+  /**
+   * When set to true the left panel displaying the shortcuts will not be visible
+   */
   readonly hideLeftPane?: boolean;
+  /**
+   * When set to true the directory file list will only show the icon and the filename, without the additional
+   * information about the file size and modified date.
+   */
+  readonly plainList?: boolean;
+  /**
+   * When set to true clikcking on a file will never open a preview right panel, also the "Properties" option will
+   * disappear from the context menu.
+   */
+  readonly noPreview?: boolean;
   /**
    * Path to the directory that will be opened when the explorer is initieated. The Default is `/`.
    */
@@ -111,7 +124,9 @@ export class Explorer {
   public readonly staticPlaces = sig<ReadonlyArray<Place>>([]);
 
   public readonly actionError = sig<ActionError | undefined>(undefined);
-  public readonly hideLeftPane = sig<boolean>(false);
+  public readonly hideLeftPane = sig(false);
+  public readonly plainList = sig(false);
+  public readonly noPreview = sig(false);
 
   currentTab = sig.derive(this.activeTab, this.tabs, (id, tabs) => {
     const activeTab = tabs.find((tab) => tab.id === id) ?? tabs[0]!;
@@ -133,6 +148,12 @@ export class Explorer {
     }
     if ("hideLeftPane" in options) {
       this.hideLeftPane.dispatch(!!options.hideLeftPane);
+    }
+    if ("plainList" in options) {
+      this.plainList.dispatch(!!options.plainList);
+    }
+    if ("noPreview" in options) {
+      this.noPreview.dispatch(!!options.noPreview);
     }
 
     const onChange = (dirPath?: string) => {
