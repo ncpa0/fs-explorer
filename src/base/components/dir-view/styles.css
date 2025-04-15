@@ -55,7 +55,8 @@
         --icon-size: 2em;
 
         &.plain-list {
-            grid-template-columns: 3.75em auto;
+            max-width: 100cqw;
+            grid-template-columns: 3.75em minmax(auto, calc(100cqw - 5em));
 
             & .dirview-header {
                 & .header-size,

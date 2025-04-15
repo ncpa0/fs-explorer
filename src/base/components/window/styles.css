@@ -24,6 +24,8 @@
             display: flex;
             flex-direction: column;
             max-height: 100%;
+            container-type: inline-size;
+            container-name: mainviewcontainer;
 
             & .dir-view-wrapper {
                 flex: 1;
