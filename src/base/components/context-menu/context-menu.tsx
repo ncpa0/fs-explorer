@@ -12,10 +12,38 @@ export type ContextMenuProps = {
 
 export function ContextMenu(props: ContextMenuProps) {
   const menu = props.explorer.contextMenu;
+  const files = menu.selectedFiles.get();
+  const target = menu.triggerFile.get();
 
   const handleMenuClick = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+  };
+
+  const renderButtons = () => {
+    if (files.length > 0) {
+      return (
+        <FileMenuButtons
+          explorer={props.explorer}
+          files={files}
+        />
+      );
+    }
+
+    if (target) {
+      return (
+        <FileMenuButtons
+          explorer={props.explorer}
+          files={[target]}
+        />
+      );
+    }
+
+    return (
+      <DirMenuButtons
+        explorer={props.explorer}
+      />
+    );
   };
 
   return (
@@ -24,35 +52,7 @@ export function ContextMenu(props: ContextMenuProps) {
       oncontextmenu={e => e.preventDefault()}
       onmousedown={handleMenuClick}
     >
-      {sig.derive(
-        menu.selectedFiles,
-        menu.triggerFile,
-        (files, target) => {
-          if (files.length > 0) {
-            return (
-              <FileMenuButtons
-                explorer={props.explorer}
-                files={files}
-              />
-            );
-          }
-
-          if (target) {
-            return (
-              <FileMenuButtons
-                explorer={props.explorer}
-                files={[target]}
-              />
-            );
-          }
-
-          return (
-            <DirMenuButtons
-              explorer={props.explorer}
-            />
-          );
-        },
-      )}
+      {renderButtons()}
     </div>
   );
 }
@@ -232,7 +232,7 @@ const DirMenuButtons = $component((props: {
   explorer: Explorer;
 }, api) => {
   const { explorer } = props;
-  const dirStat = explorer.directory.get().stat;
+  const dirStat = explorer.directory.get().stat.get();
   const menu = explorer.contextMenu;
 
   const showCustomActions = sig(false);
@@ -268,7 +268,7 @@ const DirMenuButtons = $component((props: {
         action={() => menu.actions.createDirectory()}
         title="New Directory"
       />
-      {dirStat.derive((dirStat) => {
+      {(() => {
         if (customActions.length === 0 || !dirStat) {
           subBtnsList = undefined;
           return <span />;
@@ -337,7 +337,7 @@ const DirMenuButtons = $component((props: {
           bottomSeparator,
           subBtnsList,
         ];
-      })}
+      })()}
       <MenuButton
         hidden={!canPaste}
         disabled={!canPaste}
