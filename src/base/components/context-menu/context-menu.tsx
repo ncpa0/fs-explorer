@@ -136,7 +136,7 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
           ].flat();
         }
 
-        const [a1, a2, ...restActions] = customActions;
+        const [a1, ...restActions] = customActions;
 
         subBtnsList = (
           <div class="custom-actions buttons-list">
@@ -160,10 +160,6 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
           <MenuButton
             action={handler(a1!)}
             title={a1!.label}
-          />,
-          <MenuButton
-            action={handler(a2!)}
-            title={a2!.label}
           />,
           <MenuButton
             action={() => {
@@ -299,7 +295,7 @@ const DirMenuButtons = $component((props: {
           ].flat();
         }
 
-        const [a1, a2, ...restActions] = customActions;
+        const [a1, ...restActions] = customActions;
 
         subBtnsList = (
           <div class="custom-actions buttons-list">
@@ -323,10 +319,6 @@ const DirMenuButtons = $component((props: {
           <MenuButton
             action={handler(a1!)}
             title={a1!.label}
-          />,
-          <MenuButton
-            action={handler(a2!)}
-            title={a2!.label}
           />,
           <MenuButton
             action={() => {
@@ -400,10 +392,12 @@ export function contextSubMenuToggleFn(
       setTimeout(
         () => {
           const finalHeight = subBtnsList!.getBoundingClientRect().height;
-          const finalWidth = subBtnsList!.getBoundingClientRect().width;
+          let finalWidth = subBtnsList!.getBoundingClientRect().width;
 
           const initialHeight = mainBtnList!.getBoundingClientRect().height;
           const initialWidth = mainBtnList!.getBoundingClientRect().width;
+
+          finalWidth = Math.max(finalWidth + 10, initialWidth);
 
           originalHeight = initialHeight;
           originalWidth = initialWidth;
