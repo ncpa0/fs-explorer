@@ -38,6 +38,10 @@
         display: contents;
     }
 
+    & .btn.btn.btn {
+        justify-content: flex-start;
+    }
+
     & .btn.square {
         display: flex;
         justify-content: center;

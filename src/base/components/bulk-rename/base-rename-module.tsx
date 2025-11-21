@@ -1,5 +1,5 @@
 import { Signal } from "@ncpa0cpl/vanilla-jsx/signals";
-import { SwitchChangeEvent } from "adwaveui";
+import { AdwSwitchChangeEvent } from "adwaveui";
 import { FStat } from "../../../filesystem-interface";
 
 export type RenameMode = "numbering" | "replace" | "regex" | "trim" | "insert";
@@ -59,8 +59,8 @@ export abstract class RenameModule<
   ): JSX.Element {
     const { param: paramKey, disabled } = p;
 
-    const handleChange = (e: SwitchChangeEvent) => {
-      const newValue = e.detail.active;
+    const handleChange = (e: AdwSwitchChangeEvent) => {
+      const newValue = e.active;
       this.parameters.dispatch(current => ({
         ...current,
         [paramKey]: newValue,
@@ -71,7 +71,7 @@ export abstract class RenameModule<
       <adw-switch
         active={this.parameters.derive(p => p[paramKey]) as any}
         disabled={disabled as any}
-        onChange={handleChange}
+        onchange={handleChange}
       />
     );
   }

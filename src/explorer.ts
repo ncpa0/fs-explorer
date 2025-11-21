@@ -1,5 +1,6 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { ClipcoardController } from "./base/clipboard-controller";
+import { BulkRename } from "./base/components/bulk-rename/bulk-rename";
 import { ExplorerWindow } from "./base/components/window/window";
 import { ContextMenuController } from "./base/context-menu-controller";
 import { DragController } from "./base/drag-controller";
@@ -15,8 +16,8 @@ import { ActionError } from "./interfaces/action-error";
 import { Styles } from "./styles-component";
 import { Immediate } from "./utils/immediate";
 import { Path } from "./utils/path";
-import "adwaveui";
-import { BulkRename } from "./base/components/bulk-rename/bulk-rename";
+import "adwaveui/dist/esm/components/switch/switch";
+import "adwaveui/dist/esm/components/selector/selector";
 
 export interface Place {
   readonly id: string;

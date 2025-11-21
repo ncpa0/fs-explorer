@@ -1,3 +1,4 @@
+import { $component } from "@ncpa0cpl/vanilla-jsx";
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { ADW } from "../../../utils/css";
 
@@ -61,18 +62,26 @@ export const Prompt = function Prompt(props: PropmptProps) {
     }
   };
 
-  const inputElem = (
-    <input
-      class={{
-        [ADW.Input.input]: true,
-      }}
-      value={inputValue}
-      oninput={handleInput}
-      onkeydown={handleKeyDown}
-      placeholder={placeholder}
-      autofocus
-    />
-  ) as HTMLInputElement;
+  const PromptInput = $component((_: {}, api) => {
+    api.onMount(() => {
+      input.focus();
+    });
+
+    const input = (
+      <input
+        class={{
+          [ADW.Input.input]: true,
+        }}
+        value={inputValue}
+        oninput={handleInput}
+        onkeydown={handleKeyDown}
+        placeholder={placeholder}
+        autofocus
+      />
+    ) as HTMLInputElement;
+
+    return input;
+  });
 
   return (
     <div class={[ADW.Dialog.dialog, "prompt-dialog"]}>
@@ -105,7 +114,7 @@ export const Prompt = function Prompt(props: PropmptProps) {
         <span class={[ADW.Typography.text, "prompt-message"]}>
           {message}
         </span>
-        {type === "input" && inputElem}
+        {type === "input" && <PromptInput />}
         {validationResult.derive(
           (vres) => {
             if (type === "input" && vres !== "ok") {

@@ -2,10 +2,11 @@
     & .bulk-rename-modal {
         display: flex;
         flex-direction: column;
-        height: 40em;
+        height: fit-content;
         max-height: 65vh;
         width: 42em;
         max-width: 75vw;
+        overflow: auto;
 
         & .rename-preview {
             flex: 1;
@@ -40,6 +41,9 @@
                 overflow-y: auto;
                 margin: 0;
                 max-height: min(18em, calc(65vh - 22em));
+                min-height: 4em;
+                background-color: var(--clr-bg-5);
+                font-size: 0.9em;
 
                 & li {
                     display: flex;
@@ -49,15 +53,18 @@
                 & .old-name,
                 & .new-name {
                     display: block;
-                    width: 50%;
+                    min-width: 50%;
                     padding: .2em .5em;
                     background-color: var(--clr-bg-5);
+                    white-space: nowrap;
                 }
 
                 & .old-name {
                     border-right: 1px;
                     border-color: rgba(255, 255, 255, 0.12);
                     border-right-style: solid;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
                 }
             }
         }
@@ -65,6 +72,7 @@
         & .rename-form-container {
             display: flex;
             flex-direction: column;
+            margin-top: 1em;
         }
 
         & .buttons {

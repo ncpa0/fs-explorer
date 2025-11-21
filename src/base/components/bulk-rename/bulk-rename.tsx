@@ -20,19 +20,23 @@ export function BulkRename(props: BulkRenameProps) {
   const disabled = sig<boolean>(false);
   const error = sig<string | null>(null);
 
+  const files = props.files.toSorted((a, b) => {
+    return a.name.localeCompare(b.name, undefined, { numeric: true });
+  });
+
   const parameters = sig<Record<string, any>>({});
   const module = mode.derive((mode): RenameModule<any> => {
     switch (mode) {
       case "replace":
-        return new ReplaceRename(props.files, parameters);
+        return new ReplaceRename(files, parameters);
       case "numbering":
-        return new NumberingRename(props.files, parameters);
+        return new NumberingRename(files, parameters);
       case "trim":
-        return new TrimRename(props.files, parameters);
+        return new TrimRename(files, parameters);
       case "insert":
-        return new InsertRename(props.files, parameters);
+        return new InsertRename(files, parameters);
       case "regex":
-        return new RegexRename(props.files, parameters);
+        return new RegexRename(files, parameters);
     }
     throw new Error("Invalid mode");
   });
@@ -43,7 +47,7 @@ export function BulkRename(props: BulkRenameProps) {
       const fs = props.explorer.fs;
       const m = module.get();
 
-      const renames = props.files.map(
+      const renames = files.map(
         (f): [FStat, string | undefined] => {
           const newName = m.getNewName(f.name);
           if (newName === f.name) return [f, undefined];
@@ -77,7 +81,7 @@ export function BulkRename(props: BulkRenameProps) {
         return;
       }
 
-      const outDir = props.files[0]!.basedir;
+      const outDir = files[0]!.basedir;
       const dirFiles = await props.explorer.filesystem.readdir(outDir);
 
       const futureDirList = dirFiles.map(file => {
@@ -168,7 +172,7 @@ export function BulkRename(props: BulkRenameProps) {
   };
 
   return (
-    <div class="bulk-rename-modal card">
+    <div class="bulk-rename-modal card scrollview">
       <h2 class={Typography.header}>Bulk Rename</h2>
       <div class="rename-preview">
         <div class={["preview-list-header"]}>
@@ -176,7 +180,7 @@ export function BulkRename(props: BulkRenameProps) {
           <span class={["col-label", Typography.label]}>New Name</span>
         </div>
         <ul class={["preview-list", ScrollView.scrollView]}>
-          {props.files.map(file => (
+          {files.map(file => (
             <li>
               <span class={["old-name", Typography.text]}>{file.name}</span>
               <span class={["new-name", Typography.text]}>
@@ -193,8 +197,7 @@ export function BulkRename(props: BulkRenameProps) {
       </div>
       <div class="rename-form-container">
         <adw-selector
-          onChange={(e) =>
-            mode.dispatch((e.detail.value as RenameMode) ?? "replace")}
+          onchange={(e) => mode.dispatch((e.value as RenameMode) ?? "replace")}
         >
           <adw-option value="replace" selected>Replace</adw-option>
           <adw-option value="numbering">Numbering</adw-option>

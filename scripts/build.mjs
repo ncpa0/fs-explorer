@@ -44,6 +44,8 @@ async function main() {
       "@ncpa0cpl/vanilla-jsx/signals",
       "@ncpa0cpl/vanilla-jsx/jsx-runtime",
       "adwaveui",
+      "adwaveui/dist/esm/components/switch/switch",
+      "adwaveui/dist/esm/components/selector/selector",
     ],
   };
 
