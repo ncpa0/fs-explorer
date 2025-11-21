@@ -69,7 +69,7 @@ export function DirView(props: DirViewProps) {
     dragEnterCount.dispatch(c => c - 1);
   };
 
-  const handleMouseUp = (event: MouseEvent) => {
+  const handleMouseUp = () => {
     if (!explorer.drag.isDragging()) {
       return;
     }

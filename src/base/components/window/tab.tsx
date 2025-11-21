@@ -11,7 +11,7 @@ export type TabProps = {
 };
 
 export function Tab({ explorer, tab }: TabProps) {
-  const handleHeaderMouseUp = (e: MouseEvent) => {
+  const handleHeaderMouseUp = () => {
     if (!explorer.drag.isDragging()) return;
     const files = explorer.drag.getDraggedFiles();
     explorer.drag.endDrag();

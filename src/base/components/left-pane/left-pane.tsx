@@ -17,7 +17,7 @@ export function LeftPane(props: LeftPaneProps) {
   const places = explorer.places.list();
   const tabPath = explorer.location.derive(l => l.signal);
 
-  const handleOpenOptions = (ev: MouseEvent) => {
+  const handleOpenOptions = () => {
     const window = explorer.window!;
 
     const btnRelPos = getRelativePosition(optionsBtn, window);

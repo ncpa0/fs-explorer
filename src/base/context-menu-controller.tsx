@@ -480,7 +480,7 @@ export class ContextMenuController {
     }
   }
 
-  private collectDirAllowedActions(params: OpenMenuParams) {
+  private collectDirAllowedActions() {
     const dir = this.explorer.directory.get().stat.get();
     if (dir) {
       const dirFilters = this.explorer.actionFilters.filter(af =>
@@ -536,7 +536,7 @@ export class ContextMenuController {
     }
     sig.commitBatch();
 
-    this.collectDirAllowedActions(params);
+    this.collectDirAllowedActions();
     this.collectFilesAllowedActions(params);
 
     this.explorer.overlay.display(

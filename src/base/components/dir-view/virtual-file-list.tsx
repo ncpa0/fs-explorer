@@ -15,173 +15,173 @@ export type VirtualFileListProps = {
   tab: TabController;
 };
 
-export const VirtualFileList = $component(
-  function VirtualFileList(props: VirtualFileListProps, api) {
-    const { tab, explorer } = props;
-    const dir = tab.directory;
-    const files = dir.filesView.readonly();
-    const selectedFiles = dir.selection.readonly();
+export function VirtualFileList(
+  props: VirtualFileListProps,
+) {
+  const { tab, explorer } = props;
+  const dir = tab.directory;
+  const files = dir.filesView.readonly();
+  const selectedFiles = dir.selection.readonly();
 
-    const viewState = sig({
-      visiblePages: new Set([0]),
-    });
-    const pages = files.derive((files) => {
-      return chunks(files, 30);
-    });
+  const viewState = sig({
+    visiblePages: new Set([0]),
+  });
+  const pages = files.derive((files) => {
+    return chunks(files, 30);
+  });
 
-    const setActiveEntry = (entry: FStat | null) => {
-      dir.activeEntry.dispatch(entry);
-    };
+  const setActiveEntry = (entry: FStat | null) => {
+    dir.activeEntry.dispatch(entry);
+  };
 
-    const observerHandler = (page: string) => {
-      const pageIdx = Number(page);
-      if (!Number.isNaN(pageIdx)) {
-        const newVisible = new Set(viewState.get().visiblePages);
-        newVisible.add(pageIdx - 3);
-        newVisible.add(pageIdx - 2);
-        newVisible.add(pageIdx - 1);
-        newVisible.add(pageIdx);
-        newVisible.add(pageIdx + 1);
-        newVisible.add(pageIdx + 2);
-        newVisible.add(pageIdx + 3);
+  const observerHandler = (page: string) => {
+    const pageIdx = Number(page);
+    if (!Number.isNaN(pageIdx)) {
+      const newVisible = new Set(viewState.get().visiblePages);
+      newVisible.add(pageIdx - 3);
+      newVisible.add(pageIdx - 2);
+      newVisible.add(pageIdx - 1);
+      newVisible.add(pageIdx);
+      newVisible.add(pageIdx + 1);
+      newVisible.add(pageIdx + 2);
+      newVisible.add(pageIdx + 3);
 
-        if (newVisible.size !== viewState.get().visiblePages.size) {
-          viewState.dispatch(current => {
-            return { visiblePages: newVisible };
-          });
-        }
-        return;
+      if (newVisible.size !== viewState.get().visiblePages.size) {
+        viewState.dispatch(current => {
+          return { ...current, visiblePages: newVisible };
+        });
       }
-    };
+      return;
+    }
+  };
 
-    const scrollview = (
-      <div
-        class={{
-          [ADW.ScrollView.scrollView]: true,
-          "dir-view": true,
-          empty: files.derive((files) => files.length === 0),
-          "plain-list": explorer.plainList,
-        }}
-      >
-        {dir.filesView.derive((files) => {
-          if (files.length === 0) {
-            return (
-              <div class="empty-dir-msg">
-                <span class={[Typography.subtitle]}>
-                  This directory is empty.
-                </span>
+  const scrollview = (
+    <div
+      class={{
+        [ADW.ScrollView.scrollView]: true,
+        "dir-view": true,
+        empty: files.derive((files) => files.length === 0),
+        "plain-list": explorer.plainList,
+      }}
+    >
+      {dir.filesView.derive((files) => {
+        if (files.length === 0) {
+          return (
+            <div class="empty-dir-msg">
+              <span class={[Typography.subtitle]}>
+                This directory is empty.
+              </span>
+            </div>
+          );
+        }
+
+        return <FileViewHeader sorting={dir.sorting} dir={dir} />;
+      })}
+      <Gap />
+    </div>
+  ) as HTMLDivElement;
+
+  scrollview.onscroll = () => {
+    const yPos = scrollview.scrollTop;
+    tab.history.setCurrentScrollPosition(yPos);
+  };
+  dir.onContentChange = scrollPos => {
+    scrollview.scrollTo({ top: scrollPos, behavior: "instant" });
+  };
+
+  const pagesElements = (
+    <div class="dcontents">
+      {pages.derive((pages) => {
+        return pages.map((page, idx) => {
+          const renderPage = () => {
+            const halfPoint = Math.floor(page.length / 2);
+            const firstHalf = page.slice(0, halfPoint);
+            const secondHalf = page.slice(halfPoint, 30);
+
+            const pageElement = (
+              <div class={`dir-page dcontents page-${idx}`}>
+                {firstHalf.map((file) => {
+                  return (
+                    <FileListEntry
+                      tab={tab}
+                      explorer={explorer}
+                      activeEntry={dir.activeEntry}
+                      setActiveEntry={setActiveEntry}
+                      selectedFiles={selectedFiles}
+                      file={file}
+                    />
+                  );
+                })}
+                <Memo
+                  cacheKey={"page-observable-" + String(idx)}
+                  dependencies={[observerHandler]}
+                >
+                  {() => (
+                    <Observable
+                      root={scrollview}
+                      threshold={0.51}
+                      onIntersect={observerHandler}
+                      fill={false}
+                      data={String(idx)}
+                    />
+                  )}
+                </Memo>
+                {secondHalf.map((file) => {
+                  return (
+                    <FileListEntry
+                      tab={tab}
+                      explorer={explorer}
+                      activeEntry={dir.activeEntry}
+                      setActiveEntry={setActiveEntry}
+                      selectedFiles={selectedFiles}
+                      file={file}
+                    />
+                  );
+                })}
               </div>
             );
-          }
 
-          return <FileViewHeader sorting={dir.sorting} dir={dir} />;
-        })}
-        <Gap />
-      </div>
-    ) as HTMLDivElement;
+            return pageElement;
+          };
 
-    scrollview.onscroll = e => {
-      const yPos = scrollview.scrollTop;
-      tab.history.setCurrentScrollPosition(yPos);
-    };
-    dir.onContentChange = scrollPos => {
-      scrollview.scrollTo({ top: scrollPos, behavior: "instant" });
-    };
+          return (
+            <div class="dcontents">
+              {viewState
+                .derive(({ visiblePages: viewed }) => {
+                  const shouldRender = viewed.has(idx);
+                  return shouldRender;
+                })
+                .derive(shouldRender => {
+                  if (shouldRender) {
+                    return renderPage();
+                  }
 
-    const pagesElements = (
-      <div class="dcontents">
-        {pages.derive((pages) => {
-          return pages.map((page, idx) => {
-            const renderPage = () => {
-              const halfPoint = Math.floor(page.length / 2);
-              const firstHalf = page.slice(0, halfPoint);
-              const secondHalf = page.slice(halfPoint, 30);
-
-              const pageElement = (
-                <div class={`dir-page dcontents page-${idx}`}>
-                  {firstHalf.map((file) => {
-                    return (
-                      <FileListEntry
-                        tab={tab}
-                        explorer={explorer}
-                        activeEntry={dir.activeEntry}
-                        setActiveEntry={setActiveEntry}
-                        selectedFiles={selectedFiles}
-                        file={file}
-                      />
-                    );
-                  })}
-                  <Memo
-                    cacheKey={"page-observable-" + String(idx)}
-                    dependencies={[observerHandler]}
-                  >
-                    {() => (
+                  return Memo({
+                    cacheKey: "empty-observable-" + String(idx),
+                    dependencies: [observerHandler],
+                    children: () => (
                       <Observable
                         root={scrollview}
-                        threshold={0.51}
+                        threshold={0.1}
                         onIntersect={observerHandler}
-                        fill={false}
+                        fill={true}
                         data={String(idx)}
                       />
-                    )}
-                  </Memo>
-                  {secondHalf.map((file) => {
-                    return (
-                      <FileListEntry
-                        tab={tab}
-                        explorer={explorer}
-                        activeEntry={dir.activeEntry}
-                        setActiveEntry={setActiveEntry}
-                        selectedFiles={selectedFiles}
-                        file={file}
-                      />
-                    );
-                  })}
-                </div>
-              );
+                    ),
+                  });
+                })}
+            </div>
+          );
+        });
+      })}
+    </div>
+  );
 
-              return pageElement;
-            };
+  scrollview.appendChild(pagesElements);
+  scrollview.appendChild(<Gap />);
 
-            return (
-              <div class="dcontents">
-                {viewState
-                  .derive(({ visiblePages: viewed }) => {
-                    const shouldRender = viewed.has(idx);
-                    return shouldRender;
-                  })
-                  .derive(shouldRender => {
-                    if (shouldRender) {
-                      return renderPage();
-                    }
-
-                    return Memo({
-                      cacheKey: "empty-observable-" + String(idx),
-                      dependencies: [observerHandler],
-                      children: () => (
-                        <Observable
-                          root={scrollview}
-                          threshold={0.1}
-                          onIntersect={observerHandler}
-                          fill={true}
-                          data={String(idx)}
-                        />
-                      ),
-                    });
-                  })}
-              </div>
-            );
-          });
-        })}
-      </div>
-    );
-
-    scrollview.appendChild(pagesElements);
-    scrollview.appendChild(<Gap />);
-
-    return scrollview;
-  },
-);
+  return scrollview;
+}
 
 const Observable = $component(function Observable(
   props: {
