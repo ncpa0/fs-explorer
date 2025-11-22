@@ -4,32 +4,32 @@
         flex-direction: row;
         padding: .5em .3em .5em .2em;
 
-        & button.btn {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-            & .control-icon {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-
-                & svg {
-                    width: 1.2em;
-                    height: 1.2em;
-
-                    & path,
-                    & rect {
-                        fill: var(--clr-text) !important;
-                    }
-                }
-            }
-        }
-
         & .control-buttons {
             display: flex;
             flex-direction: row;
             margin-right: .3em;
+
+            & .btn.btn.btn.btn.btn.btn {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+
+                & .control-icon {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+
+                    & svg {
+                        width: 1.2em;
+                        height: 1.2em;
+
+                        & path,
+                        & rect {
+                            fill: var(--clr-text) !important;
+                        }
+                    }
+                }
+            }
         }
 
         & .location-editor {

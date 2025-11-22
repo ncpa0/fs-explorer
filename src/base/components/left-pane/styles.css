@@ -149,7 +149,7 @@
             justify-content: flex-start;
         }
 
-        & .show-hidden-btn {
+        & .show-hidden-btn.show-hidden-btn.show-hidden-btn.show-hidden-btn {
             display: flex;
             justify-content: space-between;
 

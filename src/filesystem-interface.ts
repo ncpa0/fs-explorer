@@ -40,4 +40,6 @@ export interface Filesystem {
   offChange(callback: (dirPath?: string) => void): void;
   /** Returns the size of all files within the directory in bytes */
   dirSize?(path: string): Resolvable<number>;
+  /** If a file can have a thumbnail, this function should return the src for the image html element. */
+  thumbnail?(path: string): Resolvable<string | null>;
 }

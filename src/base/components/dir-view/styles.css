@@ -253,6 +253,39 @@
         }
     }
 
+    & .media-dir-view {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(8em, 50%));
+        overflow-y: auto;
+        max-height: 100%;
+        min-height: 100%;
+        height: fit-content;
+        align-content: baseline;
+        background-color: inherit;
+        --icon-size: 2em;
+
+        &.hidden {
+            animation: fsexplorer-dirview-hidden 100ms;
+            animation-fill-mode: forwards;
+        }
+
+        &.empty {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+
+            & .empty-dir-msg {
+                font-size: 1.6em;
+            }
+        }
+
+        & .page-filler {
+            height: 78em;
+        }
+    }
+
     & .error-dir-msg {
         display: flex;
         justify-content: center;
