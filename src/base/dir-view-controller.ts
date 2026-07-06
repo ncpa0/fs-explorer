@@ -6,6 +6,7 @@ import { Fmt } from "../utils/formatters";
 import { Immediate } from "../utils/immediate";
 import { Path } from "../utils/path";
 import { sortFiles, SortMode } from "./components/dir-view/sort-files";
+import { HistoryEntry } from "./history";
 import { TabController } from "./tab-controller";
 
 export interface DirectoryInfo {
@@ -21,7 +22,7 @@ export interface DirectoryInfo {
 
 export class DirViewController {
   private readonly cdQueue = new Queue(1);
-  public readonly activeEntry = sig<FStat | null>(null);
+  public readonly activeEntry = sig<string | null>(null);
   public readonly stat = sig<FStat | undefined>(undefined);
   public readonly files = sig<ReadonlyArray<FStat>>([]);
   public readonly sorting = sig({ mode: SortMode.Alpha, reverse: false });
@@ -114,11 +115,24 @@ export class DirViewController {
   }
 
   changeDirectory(
-    dirpath: string | Path,
+    entry: HistoryEntry,
     scrollPosition?: number | "RETAIN",
+    noloader = false,
   ) {
+    const dirpath = entry.path;
+
     this.cdQueue.run(async () => {
-      this.loading.dispatch(true);
+      if (noloader && entry.files) {
+        this.selection.dispatch([]);
+        this.files.dispatch(entry.files);
+        queueMicrotask(() => {
+          if (this.onContentChange) {
+            this.onContentChange(entry.scrollPosition!);
+          }
+        });
+      } else {
+        this.loading.dispatch(true);
+      }
 
       const locationPath = Path.from(dirpath).toString();
 
@@ -128,6 +142,8 @@ export class DirViewController {
       );
 
       await data.then(([dirStat, files]) => {
+        entry.files = files;
+
         sig.startBatch();
         this.loading.dispatch(false);
         this.selection.dispatch([]);
@@ -136,7 +152,7 @@ export class DirViewController {
         this.error.dispatch(undefined);
         sig.commitBatch();
 
-        setTimeout(() => {
+        queueMicrotask(() => {
           if (this.onContentChange && scrollPosition != null) {
             if (scrollPosition === "RETAIN") {
               scrollPosition = this.tab.history.getEntry()?.scrollPosition;
@@ -203,7 +219,7 @@ export class DirViewController {
     if (sel.length) {
       return sel;
     }
-    const active = this.activeEntry.get();
+    const active = this.getActiveEntryFile();
     if (active) {
       return [active];
     }
@@ -212,5 +228,14 @@ export class DirViewController {
 
   selectAll() {
     this.selection.dispatch(this.files.get());
+  }
+
+  getActiveEntryFile() {
+    const fpath = this.activeEntry.get();
+    const allfiles = this.files.get();
+    if (fpath != null) {
+      const p = Path.from(fpath);
+      return allfiles.find(f => p.equals(f.path));
+    }
   }
 }

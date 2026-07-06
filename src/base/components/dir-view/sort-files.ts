@@ -1,4 +1,5 @@
 import { FStat } from "../../../filesystem-interface";
+import { collator } from "../../../utils/collator";
 
 export enum SortMode {
   Alpha,
@@ -6,15 +7,8 @@ export enum SortMode {
   Date,
 }
 
-const STR_CMP_OPTS: Intl.CollatorOptions = {
-  caseFirst: "false",
-  numeric: true,
-  sensitivity: "accent",
-  usage: "sort",
-};
-
 function SortAlhpa(a: FStat, b: FStat): number {
-  return a.name.localeCompare(b.name, undefined, STR_CMP_OPTS);
+  return collator.compare(a.name, b.name);
 }
 
 function SortAlphaReverse(a: FStat, b: FStat): number {

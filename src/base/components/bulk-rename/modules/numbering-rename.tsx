@@ -1,6 +1,7 @@
 import { Signal } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Input, Typography } from "adwavecss";
 import { FStat } from "../../../../filesystem-interface";
+import { collator } from "../../../../utils/collator";
 import { Path } from "../../../../utils/path";
 import { RenameModule } from "../base-rename-module";
 
@@ -23,7 +24,7 @@ export class NumberingRename extends RenameModule<RenameParameters> {
     super(allFiles, parameters);
 
     this.sortedFiles = allFiles.slice().map(f => f.name).sort((a, b) =>
-      a.localeCompare(b, undefined, { numeric: true })
+      collator.compare(a, b)
     );
   }
 

@@ -27,8 +27,8 @@ export function FileViewHeader(props: {
   };
 
   return (
-    <div class="dcontents dirview-header">
-      <span></span>
+    <div class="dirview-header">
+      <span />
       <div
         class={["header-name", Typography.subtitle]}
         onmousedown={handleNameClick}

@@ -5,6 +5,7 @@ import { isLmb } from "../../../utils/events";
 import { Path } from "../../../utils/path";
 import { TabController } from "../../tab-controller";
 import { LoadingIndicator } from "../_common/loader";
+import { FileViewHeader } from "./list-header";
 import { VirtualFileList } from "./virtual-file-list";
 
 export type DirViewProps = {
@@ -105,6 +106,7 @@ export function DirView(props: DirViewProps) {
       ondragleave={handleDragLeave}
       onmouseup={handleMouseUp}
     >
+      <FileViewHeader dir={tab.directory} sorting={tab.directory.sorting} />
       {sig.derive(dir.loading, dir.error, (loading, err) => {
         if (loading) {
           return <LoadingIndicator />;

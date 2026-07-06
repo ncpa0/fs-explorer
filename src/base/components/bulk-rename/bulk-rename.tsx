@@ -2,6 +2,7 @@ import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Button, Message, ScrollView, Typography } from "adwavecss";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
+import { collator } from "../../../utils/collator";
 import { Path } from "../../../utils/path";
 import { RenameMode, RenameModule } from "./base-rename-module";
 import { InsertRename } from "./modules/insert-rename";
@@ -21,7 +22,7 @@ export function BulkRename(props: BulkRenameProps) {
   const error = sig<string | null>(null);
 
   const files = props.files.toSorted((a, b) => {
-    return a.name.localeCompare(b.name, undefined, { numeric: true });
+    return collator.compare(a.name, b.name);
   });
 
   const parameters = sig<Record<string, any>>({});

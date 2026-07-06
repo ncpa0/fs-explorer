@@ -2,7 +2,6 @@ import { $component } from "@ncpa0cpl/vanilla-jsx";
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Typography } from "adwavecss";
 import { Explorer } from "../../../explorer";
-import { FStat } from "../../../filesystem-interface";
 import { chunks } from "../../../utils/chunks";
 import { ADW } from "../../../utils/css";
 import { TabController } from "../../tab-controller";
@@ -29,7 +28,7 @@ export function MediaFileList(
     return chunks(files, 30);
   });
 
-  const setActiveEntry = (entry: FStat | null) => {
+  const setActiveEntry = (entry: string | null) => {
     dir.activeEntry.dispatch(entry);
   };
 

@@ -2,24 +2,30 @@
   "format_on_save": "on",
   "languages": {
     "JavaScript": {
-      "language_servers": ["!eslint", "vtsls"]
+      "language_servers": ["!eslint", "typescript-language-server"]
     },
     "TypeScript": {
-      "language_servers": ["!eslint", "vtsls"],
+      "language_servers": ["!eslint", "typescript-language-server"],
       "formatter": {
         "external": {
           "command": "dprint",
           "arguments": ["fmt", "--stdin", "{buffer_path}"]
         }
+      },
+      "code_actions_on_format": {
+        "source.removeUnusedImports": true
       }
     },
     "TSX": {
-      "language_servers": ["!eslint", "vtsls"],
+      "language_servers": ["!eslint", "typescript-language-server"],
       "formatter": {
         "external": {
           "command": "dprint",
           "arguments": ["fmt", "--stdin", "{buffer_path}"]
         }
+      },
+      "code_actions_on_format": {
+        "source.removeUnusedImports": true
       }
     },
     "CSS": {

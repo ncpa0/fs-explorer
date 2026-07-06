@@ -5,6 +5,7 @@ import {
   ExplorerLocation,
   ExplorerPopEvent,
   ExplorerTabHistory,
+  HistoryEntry,
 } from "./history";
 
 let i = 0;
@@ -27,12 +28,14 @@ export class TabController {
   }
 
   private updateDirContents(
-    path: Path | string,
+    entry: HistoryEntry,
     scrollPosition: number | "RETAIN",
+    noloader = false,
   ) {
     this.directory.changeDirectory(
-      path,
+      entry,
       scrollPosition,
+      noloader,
     );
   }
 
@@ -40,7 +43,12 @@ export class TabController {
     const popHandler = (event: Event) => {
       ExplorerPopEvent.assertIs(event);
       this.explorer.previewPane.close();
-      this.updateDirContents(event.path, event.historyEntry.scrollPosition);
+
+      this.updateDirContents(
+        event.historyEntry,
+        event.historyEntry.scrollPosition,
+        event.trigger === "back" || event.trigger === "forward",
+      );
     };
 
     this.history.addEventListener(
@@ -91,17 +99,21 @@ export class TabController {
     this.clearQueue();
 
     if (dir != null) {
-      if (this.location.path.equals(dir)) {
+      const dirEntry = this.history.findEntry(dir);
+      if (dirEntry) {
         this.updateDirContents(
-          this.location.pathname,
+          dirEntry,
           "RETAIN",
         );
       }
     } else {
-      this.updateDirContents(
-        this.location.pathname,
-        "RETAIN",
-      );
+      const currentEntry = this.history.getEntry();
+      if (currentEntry) {
+        this.updateDirContents(
+          currentEntry,
+          "RETAIN",
+        );
+      }
     }
   }
 

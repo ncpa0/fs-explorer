@@ -2,10 +2,17 @@
   "name": "fs-explorer",
   "version": "1.0.0",
   "main": "./dist/legacy/index.js",
+  "types": "./dist/types/index.d.ts",
   "exports": {
-    "types": "./dist/types/index.d.ts",
-    "import": "./dist/esm/index.mjs",
-    "require": "./dist/cjs/index.cjs"
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.cjs"
+    },
+    "./dist/bundle/esm/index": {
+      "types": "./dist/bundle/esm/types/index.d.ts",
+      "import": "./dist/bundle/esm/index.mjs"
+    }
   },
   "keywords": [],
   "repository": {
@@ -47,7 +54,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@ncpa0cpl/vanilla-jsx": "^0.0.1-alpha.44",
+    "@ncpa0cpl/vanilla-jsx": "^0.0.1-alpha.46",
     "adwavecss": "^0.2.5",
     "adwaveui": "^0.2.1",
     "async-await-queue": "^2.1.4",

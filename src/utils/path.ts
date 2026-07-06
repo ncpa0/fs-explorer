@@ -26,6 +26,10 @@ export class Path {
     return new Path(path);
   }
 
+  static equal(p1: Path | string, p2: Path | string) {
+    return Path.from(p1).equals(p2);
+  }
+
   private _segments: string[] = [];
   private _type: "absolute" | "relative" = "absolute";
 
@@ -195,5 +199,10 @@ export class Path {
       }
     }
     return lastSegment;
+  }
+
+  @memo
+  dirname() {
+    return this.slice(-1);
   }
 }

@@ -14,8 +14,8 @@ export function MediaFileListEntry(
     tab: TabController;
     file: FStat;
     selectedFiles: ReadonlySignal<readonly FStat[]>;
-    activeEntry: ReadonlySignal<FStat | null>;
-    setActiveEntry: (entry: FStat | null) => void;
+    activeEntry: ReadonlySignal<string | null>;
+    setActiveEntry: (entry: string | null) => void;
   },
 ) {
   const { explorer, tab, file, selectedFiles } = props;
@@ -99,7 +99,7 @@ export function MediaFileListEntry(
       }
     }
 
-    props.setActiveEntry(file);
+    props.setActiveEntry(file.path);
 
     event.stopPropagation();
   };
@@ -130,7 +130,7 @@ export function MediaFileListEntry(
   return (
     <div
       class={{
-        "active-entry": props.activeEntry.derive(ae => ae === file),
+        "active-entry": props.activeEntry.derive(ae => ae === file.path),
         "file-entry": true,
         selected: isSelected,
         "file-cut": explorer.clipboard.data.derive(data => {

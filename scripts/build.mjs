@@ -25,6 +25,7 @@ async function main() {
     watch: watch,
     esbuildOptions: {
       minify: !isDev,
+      keepNames: isDev,
       // sourcemap: isDev ? "inline" : false,
       jsxImportSource: "@ncpa0cpl/vanilla-jsx",
       plugins: [cssPlugin(), svgLoaderPlugin()],
@@ -39,13 +40,21 @@ async function main() {
     entrypoint: p("src/index.js"),
     outDir: p("dist/bundle"),
     formats: ["esm"],
+    replaceImports: {
+      "@ncpa0cpl/vanilla-jsx":
+        "/home/owner/Documents/fs-explorer/node_modules/@ncpa0cpl/vanilla-jsx/dist/esm/index.mjs",
+      "@ncpa0cpl/vanilla-jsx/signals":
+        "/home/owner/Documents/fs-explorer/node_modules/@ncpa0cpl/vanilla-jsx/dist/esm/signals.mjs",
+      "@ncpa0cpl/vanilla-jsx/jsx-runtime":
+        "/home/owner/Documents/fs-explorer/node_modules/@ncpa0cpl/vanilla-jsx/dist/esm/jsx-runtime.mjs",
+    },
     external: [
-      "@ncpa0cpl/vanilla-jsx",
-      "@ncpa0cpl/vanilla-jsx/signals",
-      "@ncpa0cpl/vanilla-jsx/jsx-runtime",
-      "adwaveui",
-      "adwaveui/dist/esm/components/switch/switch",
-      "adwaveui/dist/esm/components/selector/selector",
+      // "@ncpa0cpl/vanilla-jsx",
+      // "@ncpa0cpl/vanilla-jsx/signals",
+      // "@ncpa0cpl/vanilla-jsx/jsx-runtime",
+      // "adwaveui",
+      // "adwaveui/dist/esm/components/switch/switch",
+      // "adwaveui/dist/esm/components/selector/selector",
     ],
   };
 
@@ -120,23 +129,16 @@ function svgLoaderPlugin() {
 
 function JsxComponentForSvg(svgContent) {
   const code = /** js */ `
-    function htmlstr(html) {
-      if (typeof window.trustedTypes !== "undefined") {
-        const sanitizer = trustedTypes.createPolicy("known-trusted", {
-          createHTML: (input) => input,
-        });
-        const content = sanitizer.createHTML(html);
-      }
-      return html;
+    const parser = new DOMParser();
+    function strToSvg(str) {
+        const doc = parser.parseFromString(str, "image/svg+xml");
+        return doc.documentElement;
     }
 
-    const content = htmlstr(${JSON.stringify(svgContent)});
+    const svg = strToSvg(${JSON.stringify(svgContent)});
 
     export default function Svg(props) {
-      const tmp = document.createElement("div");
-      tmp.innerHTML = content;
-
-      const elem = tmp.children[0];
+      const elem = svg.cloneNode(true);
 
       for (const [key, value] of Object.entries(props)) {
         if (key in elem) {
@@ -145,6 +147,7 @@ function JsxComponentForSvg(svgContent) {
         }
         elem.setAttribute(key, String(value));
       }
+
       return elem;
     }
   `;

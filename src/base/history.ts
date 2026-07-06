@@ -1,5 +1,13 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
+import { FStat } from "../filesystem-interface";
 import { Path } from "../utils/path";
+
+export type ExplorerPopEventTrigger =
+  | "push"
+  | "replace"
+  | "back"
+  | "forward"
+  | "go";
 
 export class ExplorerPopEvent extends Event {
   static assertIs(event: unknown): asserts event is ExplorerPopEvent {
@@ -11,6 +19,7 @@ export class ExplorerPopEvent extends Event {
   constructor(
     public readonly path: Path,
     public readonly historyEntry: HistoryEntry,
+    public readonly trigger: ExplorerPopEventTrigger,
   ) {
     super("pop");
   }
@@ -34,9 +43,10 @@ export class ExplorerLocation {
   }
 }
 
-interface HistoryEntry {
-  path: Path;
+export interface HistoryEntry {
+  readonly path: Path;
   scrollPosition: number;
+  files?: FStat[];
 }
 
 export class ExplorerTabHistory extends EventTarget {
@@ -62,7 +72,7 @@ export class ExplorerTabHistory extends EventTarget {
     this.stack.push(entry);
     this.stackPosition = this.stack.length;
     ExplorerLocation.set(this.location, path);
-    this.dispatchEvent(new ExplorerPopEvent(path, { ...entry }));
+    this.dispatchEvent(new ExplorerPopEvent(path, entry, "push"));
   }
 
   replace(p: string | Path, scrollPos = 0): void {
@@ -74,8 +84,8 @@ export class ExplorerTabHistory extends EventTarget {
     }
     this.stackPosition = this.stack.length;
     ExplorerLocation.set(this.location, path);
-    const entry = { ...this.stack[this.stackPosition - 1]! };
-    this.dispatchEvent(new ExplorerPopEvent(path, entry));
+    const entry = this.stack[this.stackPosition - 1]!;
+    this.dispatchEvent(new ExplorerPopEvent(path, entry, "replace"));
   }
 
   back(): HistoryEntry | undefined {
@@ -83,8 +93,8 @@ export class ExplorerTabHistory extends EventTarget {
     if (newState) {
       this.stackPosition -= 1;
       ExplorerLocation.set(this.location, newState.path);
-      const entry = { ...this.stack[this.stackPosition - 1]! };
-      this.dispatchEvent(new ExplorerPopEvent(newState.path, entry));
+      const entry = this.stack[this.stackPosition - 1]!;
+      this.dispatchEvent(new ExplorerPopEvent(newState.path, entry, "back"));
       return entry;
     }
   }
@@ -94,8 +104,8 @@ export class ExplorerTabHistory extends EventTarget {
     if (newState) {
       this.stackPosition += 1;
       ExplorerLocation.set(this.location, newState.path);
-      const entry = { ...this.stack[this.stackPosition - 1]! };
-      this.dispatchEvent(new ExplorerPopEvent(newState.path, entry));
+      const entry = this.stack[this.stackPosition - 1]!;
+      this.dispatchEvent(new ExplorerPopEvent(newState.path, entry, "forward"));
       return entry;
     }
   }
@@ -109,8 +119,8 @@ export class ExplorerTabHistory extends EventTarget {
     if (newState) {
       this.stackPosition += delta;
       ExplorerLocation.set(this.location, newState.path);
-      const entry = { ...this.stack[this.stackPosition - 1]! };
-      this.dispatchEvent(new ExplorerPopEvent(newState.path, entry));
+      const entry = this.stack[this.stackPosition - 1]!;
+      this.dispatchEvent(new ExplorerPopEvent(newState.path, entry, "go"));
       return entry;
     }
   }
@@ -129,6 +139,15 @@ export class ExplorerTabHistory extends EventTarget {
   getEntry(delta = 0) {
     const entry = this.stack[this.stackPosition + delta - 1];
     return entry ? { ...entry } : undefined;
+  }
+
+  findEntry(path: Path | string) {
+    path = Path.from(path);
+
+    const idx = this.stack.findLastIndex(e => e.path.equals(path));
+    if (idx !== -1) {
+      return this.stack[idx];
+    }
   }
 
   get length(): number {

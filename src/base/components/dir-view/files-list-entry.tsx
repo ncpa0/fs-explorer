@@ -1,4 +1,4 @@
-import { ReadonlySignal } from "@ncpa0cpl/vanilla-jsx/signals";
+import { ReadonlySignal, sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Typography } from "adwavecss";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
@@ -13,10 +13,10 @@ export function FileListEntry(
   props: {
     explorer: Explorer;
     tab: TabController;
-    file: FStat;
+    file: ReadonlySignal<FStat>;
     selectedFiles: ReadonlySignal<readonly FStat[]>;
-    activeEntry: ReadonlySignal<FStat | null>;
-    setActiveEntry: (entry: FStat | null) => void;
+    activeEntry: ReadonlySignal<string | null>;
+    setActiveEntry: (entry: string | null) => void;
   },
 ) {
   const { explorer, tab, file, selectedFiles } = props;
@@ -24,22 +24,24 @@ export function FileListEntry(
   const menu = explorer.contextMenu;
   let isPressed = false;
 
-  const isSelected = selectedFiles.derive(selected =>
-    selected.some(f => f.path === file.path)
+  const isSelected = sig.derive(
+    selectedFiles,
+    file,
+    (selected, file) => selected.some(f => f.path === file.path),
   );
 
   const toggleSelect = () => {
-    dir.toggleSelectFile(file);
+    dir.toggleSelectFile(file.get());
   };
 
   const handleInternalDrop = () => {
-    if (!file.directory) return;
+    if (!file.get().directory) return;
 
     const files = explorer.drag.getDraggedFiles();
     explorer.drag.endDrag();
 
     if (!files || !files.length) return;
-    explorer.fs.move(files, file.path);
+    explorer.fs.move(files, file.get().path);
   };
 
   const handleContextMenu = (event: MouseEvent) => {
@@ -53,7 +55,7 @@ export function FileListEntry(
 
     const selected = selectedFiles.get();
     menu.open({
-      triggerFile: file,
+      triggerFile: file.get(),
       relatedFiles: selected,
       position: {
         left: `min(${left}px, calc(${windowRect.width}px - 13em))`,
@@ -84,23 +86,23 @@ export function FileListEntry(
 
     if (!isLmb(event)) return;
 
-    if (file.directory) {
-      const path = new Path(file.path);
+    if (file.get().directory) {
+      const path = new Path(file.get().path);
       tab.open(path);
     } else {
       const actionCtx = new FileActionContext(
         explorer,
-        file,
+        file.get(),
       );
-      const action = explorer.options?.openAction?.(file);
+      const action = explorer.options?.openAction?.(file.get());
       if (action) {
-        action(file, actionCtx);
+        action(file.get(), actionCtx);
       } else if (explorer.noPreview.get() === false) {
         actionCtx.openPreview();
       }
     }
 
-    props.setActiveEntry(file);
+    props.setActiveEntry(file.get().path);
 
     event.stopPropagation();
   };
@@ -114,42 +116,53 @@ export function FileListEntry(
   const handleMouseLeave = () => {
     if (isPressed) {
       const selected = selectedFiles.get();
-      explorer.drag.startDrag(selected.length != 0 ? selected : [file]);
+      explorer.drag.startDrag(selected.length != 0 ? selected : [file.get()]);
     }
     isPressed = false;
   };
 
-  const Icon = getFileIcon(file);
-
   return (
     <div
       class={{
-        "active-entry": props.activeEntry.derive(ae => ae === file),
+        "active-entry": sig.derive(props.activeEntry, file, (ae, file) =>
+          ae && Path.equal(ae, file.path)),
         "file-entry": true,
         selected: isSelected,
-        "file-cut": explorer.clipboard.data.derive(data => {
-          if (data.files.length === 0 || data.mode === "copy") return false;
-          return data.files.some(f => f.path === file.path);
-        }),
+        "file-cut": sig.derive(
+          file,
+          explorer.clipboard.data,
+          (file, clipboard) => {
+            if (clipboard.mode === "copy") {
+              return false;
+            }
+            return clipboard.files.some(f =>
+              Path.equal(f.path, file.path)
+            );
+          },
+        ),
       }}
       onmouseup={handleMouseUp}
       onmousedown={handleMouseDown}
       onmouseleave={handleMouseLeave}
       oncontextmenu={handleContextMenu}
     >
-      <div class={{ "file-icon": true, directory: file.directory }}>
-        <Icon />
+      <div class={{ "file-icon": true, directory: file.$prop("directory") }}>
+        {file
+          .derive(file => getFileIcon(file))
+          .derive(Svg => <Svg />)}
       </div>
       <div class="filename">
-        <span class={Typography.text}>{file.name}</span>
+        <span class={Typography.text}>{file.$prop("name")}</span>
       </div>
       <div class="file-size">
         <span class={Typography.text}>
-          {file.directory ? "" : Fmt.size(file.size)}
+          {file.derive(file => file.directory ? "" : Fmt.size(file.size))}
         </span>
       </div>
       <div class="file-modified">
-        <span class={Typography.text}>{Fmt.date(file.mtime)}</span>
+        <span class={Typography.text}>
+          {file.derive(file => Fmt.date(file.mtime))}
+        </span>
       </div>
     </div>
   );
