@@ -61,6 +61,10 @@ export class ExplorerTabHistory extends EventTarget {
   ];
   private stackPosition = 1;
 
+  currentEntry() {
+    return this.stack.at(this.stackPosition - 1);
+  }
+
   push(p: string | Path, scrollPos = 0): void {
     if (this.stackPosition < this.stack.length) {
       this.stack.splice(
@@ -101,18 +105,28 @@ export class ExplorerTabHistory extends EventTarget {
   }
 
   backPush(): HistoryEntry | undefined {
-    const prevEntry = this.stack[this.stackPosition - 2];
-    if (prevEntry) {
-      const entry: HistoryEntry = {
+    const currentPath = this.currentEntry()?.path;
+    if (!currentPath) return;
+
+    const dir = currentPath.dir();
+
+    const prevEntry = this.stack.findLast(e => e.path.equals(dir));
+
+    const entry: HistoryEntry = prevEntry
+      ? {
         ...prevEntry,
         files: prevEntry.files?.slice(),
+      }
+      : {
+        path: dir,
+        scrollPosition: 0,
       };
-      this.stack.push(entry);
-      this.stackPosition = this.stack.length;
-      ExplorerLocation.set(this.location, entry.path);
-      this.dispatchEvent(new ExplorerPopEvent(entry.path, entry, "backpush"));
-      return entry;
-    }
+
+    this.stack.push(entry);
+    this.stackPosition = this.stack.length;
+    ExplorerLocation.set(this.location, entry.path);
+    this.dispatchEvent(new ExplorerPopEvent(entry.path, entry, "backpush"));
+    return entry;
   }
 
   forward(): HistoryEntry | undefined {
