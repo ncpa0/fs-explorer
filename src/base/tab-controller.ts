@@ -47,7 +47,8 @@ export class TabController {
       this.updateDirContents(
         event.historyEntry,
         event.historyEntry.scrollPosition,
-        event.trigger === "back" || event.trigger === "forward",
+        event.trigger === "back" || event.trigger === "forward"
+          || event.trigger === "backpush",
       );
     };
 
@@ -71,7 +72,7 @@ export class TabController {
   * Normal refresh, open and replace operations will
   * cancel the queued refresh.
   */
-  queueRefresh(dir?: string) {
+  queueRefresh(dir?: string, noLoader = false) {
     if (this.isRefreshQueued) {
       return;
     }
@@ -80,7 +81,7 @@ export class TabController {
     this.refreshTimer = setTimeout(() => {
       this.isRefreshQueued = false;
       this.refreshTimer = undefined;
-      this.refresh(dir);
+      this.refresh(dir, noLoader);
     }, 100);
   }
 
@@ -95,7 +96,7 @@ export class TabController {
     }
   }
 
-  refresh(dir?: string) {
+  refresh(dir?: string, noLoader = false) {
     this.clearQueue();
 
     if (dir != null) {
@@ -104,6 +105,7 @@ export class TabController {
         this.updateDirContents(
           dirEntry,
           "RETAIN",
+          noLoader,
         );
       }
     } else {
@@ -112,6 +114,7 @@ export class TabController {
         this.updateDirContents(
           currentEntry,
           "RETAIN",
+          noLoader,
         );
       }
     }

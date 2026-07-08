@@ -314,7 +314,7 @@ export class ContextMenuController {
           validate: this.menu.nameValidator(file.name),
         }).then((name) => {
           if (!name) return;
-          const newPath = Path.from(file.path).base().joinSegment(
+          const newPath = Path.from(file.path).dir().joinSegment(
             name,
           );
           explorer.fs.move(file, newPath);

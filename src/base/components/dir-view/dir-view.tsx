@@ -84,7 +84,7 @@ export function DirView(props: DirViewProps) {
 
     const moveTo = tab.directory.stat.get();
     if (moveTo) {
-      const currentFileLocation = Path.from(files.at(0)!.path).base();
+      const currentFileLocation = Path.from(files.at(0)!.path).dir();
       if (currentFileLocation.equals(moveTo.path)) {
         return;
       }

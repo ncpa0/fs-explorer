@@ -281,7 +281,7 @@ export class Explorer {
               validate: this.contextMenu.nameValidator(file.name),
             }).then((name) => {
               if (!name) return;
-              const newPath = Path.from(file.path).base().joinSegment(
+              const newPath = Path.from(file.path).dir().joinSegment(
                 name,
               );
               this.fs.move(file, newPath);

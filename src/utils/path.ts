@@ -98,7 +98,7 @@ export class Path {
    * Removes the last segment from the path and returns a new Path object with the result.
    */
   @memo
-  base(): Path {
+  dir(): Path {
     const result = Object.create(Path.prototype) as Path;
     result._segments = this._segments.slice(0, -1);
     result._type = this._type;
@@ -199,10 +199,5 @@ export class Path {
       }
     }
     return lastSegment;
-  }
-
-  @memo
-  dirname() {
-    return this.slice(-1);
   }
 }

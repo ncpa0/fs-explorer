@@ -20,10 +20,8 @@ export class FsController {
 
   private propagatesChangesIn(...dirPaths: Path[]) {
     for (const tab of this.explorer.tabs.get()) {
-      if (
-        dirPaths.some(p => p.equals(tab.location.path))
-      ) {
-        tab.queueRefresh();
+      if (dirPaths.some(p => p.equals(tab.location.path))) {
+        tab.queueRefresh(undefined, true);
       }
     }
   }
@@ -38,7 +36,7 @@ export class FsController {
     const job = this.explorer.jobs.createJob("copy", from, () => {
       return this.filesystem.copy(from.path, to.toString())
         .then(() => {
-          this.propagatesChangesIn(to.base());
+          this.propagatesChangesIn(to.dir());
         })
         .catch(err => {
           this.explorer.actionError.dispatch(
@@ -61,8 +59,8 @@ export class FsController {
     const job = this.explorer.jobs.createJob("move", file, () => {
       return this.filesystem.move(filePath.toString(), to.toString())
         .then(() => {
-          const fromDir = filePath.base();
-          const toDir = to.base();
+          const fromDir = filePath.dir();
+          const toDir = to.dir();
           this.propagatesChangesIn(fromDir, toDir);
         })
         .catch(err => {
@@ -146,13 +144,13 @@ export class FsController {
           );
           if (!isDir) {
             filename = to.basename();
-            targetDir = to.base();
+            targetDir = to.dir();
           } else {
             targetDir = to;
             filename = file.name;
           }
         } else {
-          targetDir = to.base();
+          targetDir = to.dir();
           filename = to.basename();
         }
 
@@ -182,7 +180,7 @@ export class FsController {
 
     return this.filesystem.remove(path.toString())
       .then(() => {
-        this.propagatesChangesIn(path.base());
+        this.propagatesChangesIn(path.dir());
       })
       .catch(err => {
         this.explorer.actionError.dispatch(
@@ -196,7 +194,7 @@ export class FsController {
 
     return this.filesystem.mkdir(path.toString())
       .then(() => {
-        this.propagatesChangesIn(path.base());
+        this.propagatesChangesIn(path.dir());
       })
       .catch(err => {
         this.explorer.actionError.dispatch(
@@ -210,7 +208,7 @@ export class FsController {
 
     return this.filesystem.touch(path.toString())
       .then(() => {
-        this.propagatesChangesIn(path.base());
+        this.propagatesChangesIn(path.dir());
       })
       .catch(err => {
         this.explorer.actionError.dispatch(

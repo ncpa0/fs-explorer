@@ -44,12 +44,7 @@ export function LocationBar(props: LocationBarProps) {
   };
 
   const handleUp = () => {
-    const p = tab.get().location.path;
-    const up = p.base();
-    if (!up.equals(p)) {
-      const prevScrollPos = tab.get().history.getEntry(-1)?.scrollPosition;
-      tab.get().history.push(up, prevScrollPos);
-    }
+    tab.get().history.backPush();
   };
 
   return (

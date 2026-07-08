@@ -6,6 +6,7 @@ export type ExplorerPopEventTrigger =
   | "push"
   | "replace"
   | "back"
+  | "backpush"
   | "forward"
   | "go";
 
@@ -95,6 +96,21 @@ export class ExplorerTabHistory extends EventTarget {
       ExplorerLocation.set(this.location, newState.path);
       const entry = this.stack[this.stackPosition - 1]!;
       this.dispatchEvent(new ExplorerPopEvent(newState.path, entry, "back"));
+      return entry;
+    }
+  }
+
+  backPush(): HistoryEntry | undefined {
+    const prevEntry = this.stack[this.stackPosition - 2];
+    if (prevEntry) {
+      const entry: HistoryEntry = {
+        ...prevEntry,
+        files: prevEntry.files?.slice(),
+      };
+      this.stack.push(entry);
+      this.stackPosition = this.stack.length;
+      ExplorerLocation.set(this.location, entry.path);
+      this.dispatchEvent(new ExplorerPopEvent(entry.path, entry, "backpush"));
       return entry;
     }
   }
