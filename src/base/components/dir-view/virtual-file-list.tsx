@@ -26,9 +26,12 @@ export function VirtualFileList(
     <VirtualList
       data={dir.filesView}
       getKey={f => f.path}
-      pageSize={32}
-      overscanTrailing={1024}
-      overscanLeading={4096}
+      pageSize={24}
+      overscanTrailing={2000}
+      overscanLeading={9000}
+      bailThreshold={3000}
+      estimateItemHeight={47}
+      itemHeight="homogeneous"
       onscroll={(_, pos) => {
         tab.history.setCurrentScrollPosition(pos);
       }}
