@@ -124,9 +124,9 @@ export function FileListEntry(
   return (
     <div
       class={{
+        "file-entry": true,
         "active-entry": sig.derive(props.activeEntry, file, (ae, file) =>
           ae && Path.equal(ae, file.path)),
-        "file-entry": true,
         selected: isSelected,
         "file-cut": sig.derive(
           file,

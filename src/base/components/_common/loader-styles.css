@@ -1,6 +1,8 @@
 .explorer-window.explorer-window.explorer-window.explorer-window {
     .loader-indicator {
         opacity: 0;
+        place-self: center;
+        margin-block: auto;
 
         &:not(.visible) {
             display: none;

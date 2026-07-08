@@ -41,20 +41,20 @@ async function main() {
     outDir: p("dist/bundle"),
     formats: ["esm"],
     replaceImports: {
-      "@ncpa0cpl/vanilla-jsx":
-        "/home/owner/Documents/fs-explorer/node_modules/@ncpa0cpl/vanilla-jsx/dist/esm/index.mjs",
-      "@ncpa0cpl/vanilla-jsx/signals":
-        "/home/owner/Documents/fs-explorer/node_modules/@ncpa0cpl/vanilla-jsx/dist/esm/signals.mjs",
-      "@ncpa0cpl/vanilla-jsx/jsx-runtime":
-        "/home/owner/Documents/fs-explorer/node_modules/@ncpa0cpl/vanilla-jsx/dist/esm/jsx-runtime.mjs",
+      // "@ncpa0cpl/vanilla-jsx":
+      //   "/home/owner/Documents/fs-explorer/node_modules/@ncpa0cpl/vanilla-jsx/dist/esm/index.mjs",
+      // "@ncpa0cpl/vanilla-jsx/signals":
+      //   "/home/owner/Documents/fs-explorer/node_modules/@ncpa0cpl/vanilla-jsx/dist/esm/signals.mjs",
+      // "@ncpa0cpl/vanilla-jsx/jsx-runtime":
+      //   "/home/owner/Documents/fs-explorer/node_modules/@ncpa0cpl/vanilla-jsx/dist/esm/jsx-runtime.mjs",
     },
     external: [
-      // "@ncpa0cpl/vanilla-jsx",
-      // "@ncpa0cpl/vanilla-jsx/signals",
-      // "@ncpa0cpl/vanilla-jsx/jsx-runtime",
-      // "adwaveui",
-      // "adwaveui/dist/esm/components/switch/switch",
-      // "adwaveui/dist/esm/components/selector/selector",
+      "@ncpa0cpl/vanilla-jsx",
+      "@ncpa0cpl/vanilla-jsx/signals",
+      "@ncpa0cpl/vanilla-jsx/jsx-runtime",
+      "adwaveui",
+      "adwaveui/dist/esm/components/switch/switch",
+      "adwaveui/dist/esm/components/selector/selector",
     ],
   };
 

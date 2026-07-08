@@ -97,6 +97,7 @@ export function DirView(props: DirViewProps) {
       class={{
         "dir-view-container": true,
         "file-drag-over": sig.when(dragEnterCount, true, false),
+        "plain-list": explorer.plainList,
       }}
       onmousedown={handleClick}
       oncontextmenu={handleContextMenu}

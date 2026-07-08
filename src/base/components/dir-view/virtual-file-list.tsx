@@ -37,7 +37,6 @@ export function VirtualFileList(
           [ADW.ScrollView.scrollView]: true,
           "dir-view": true,
           empty: files.derive((files) => files.length === 0),
-          "plain-list": explorer.plainList,
         },
       }}
       renderEmpty={() => (

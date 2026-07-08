@@ -42,6 +42,28 @@
             border-bottom-right-radius: 6px;
         }
 
+        &.plain-list.plain-list.plain-list {
+            max-width: 100cqw;
+
+            & .dirview-header.dirview-header {
+                grid-template-columns: 3.75em auto;
+
+                & .header-size,
+                & .header-date {
+                    display: none;
+                }
+            }
+
+            & .file-entry.file-entry {
+                grid-template-columns: 3.75em auto;
+
+                & .file-size,
+                & .file-modified {
+                    display: none;
+                }
+            }
+        }
+
         & .dirview-header {
             display: grid;
             grid-template-columns: var(--dirview-cols);
@@ -86,39 +108,6 @@
             background-color: inherit;
             padding-block: .6em;
             --icon-size: 2em;
-
-            &.plain-list {
-                max-width: 100cqw;
-
-                & .dirview-header {
-                    & .header-size,
-                    & .header-date {
-                        display: none;
-                    }
-                }
-
-                & .file-entry {
-                    & .file-size,
-                    & .file-modified {
-                        display: none;
-                    }
-
-                    & .filename {
-                        border-top-right-radius: 4px;
-                        border-bottom-right-radius: 4px;
-                        margin-right: 1em;
-                    }
-
-                    &.active-entry.active-entry.active-entry .filename {
-                        border-right: 1px solid var(--clr-primary-100);
-                    }
-                }
-
-                & .gaper.col3,
-                & .gaper.col4 {
-                    display: none;
-                }
-            }
 
             &.hidden {
                 animation: fsexplorer-dirview-hidden 100ms;
