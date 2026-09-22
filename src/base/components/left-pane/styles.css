@@ -61,6 +61,7 @@
                 flex-direction: column;
                 height: fit-content;
                 align-items: center;
+                overflow: auto;
 
                 & .separator {
                     margin-bottom: 1em;
