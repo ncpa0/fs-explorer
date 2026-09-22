@@ -70,7 +70,7 @@ export class PlacesStorage {
       this.storage.set(current => {
         const newPlaces = current.map(p => {
           if (p.id === placeID) {
-            return { ...p, name: newName };
+            return { ...p, label: newName };
           }
           return p;
         });
@@ -80,7 +80,7 @@ export class PlacesStorage {
     this.places.dispatch(current => {
       const newPlaces = current.map(p => {
         if (p.id === placeID) {
-          return { ...p, name: newName };
+          return { ...p, label: newName };
         }
         return p;
       });

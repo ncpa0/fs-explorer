@@ -42,12 +42,13 @@ export function PlaceContextMenu(props: {
     <div
       class={{
         "buttons-list": true,
+        "left-pane-context-menu": true,
       }}
     >
       <MenuButton title="Open" action={openPlace} />
       <MenuButton title="Open in split view" action={openPlaceInSplitView} />
-      <MenuButton title="Remove Shortcut" action={removePlace} />
-      <MenuButton title="Rename Shortcut" action={renamePlace} />
+      <MenuButton title="Remove shortcut" action={removePlace} />
+      <MenuButton title="Rename" action={renamePlace} />
     </div>
   );
 }

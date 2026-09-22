@@ -2,50 +2,50 @@
   "format_on_save": "on",
   "languages": {
     "JavaScript": {
-      "language_servers": ["!eslint", "typescript-language-server"]
+      "language_servers": ["typescript-ls"],
     },
     "TypeScript": {
-      "language_servers": ["!eslint", "typescript-language-server"],
+      "language_servers": ["typescript-ls"],
       "formatter": {
         "external": {
           "command": "dprint",
-          "arguments": ["fmt", "--stdin", "{buffer_path}"]
-        }
+          "arguments": ["fmt", "--stdin", "{buffer_path}"],
+        },
       },
       "code_actions_on_format": {
-        "source.removeUnusedImports": true
-      }
+        "source.removeUnusedImports": true,
+      },
     },
     "TSX": {
-      "language_servers": ["!eslint", "typescript-language-server"],
+      "language_servers": ["typescript-ls"],
       "formatter": {
         "external": {
           "command": "dprint",
-          "arguments": ["fmt", "--stdin", "{buffer_path}"]
-        }
+          "arguments": ["fmt", "--stdin", "{buffer_path}"],
+        },
       },
       "code_actions_on_format": {
-        "source.removeUnusedImports": true
-      }
+        "source.removeUnusedImports": true,
+      },
     },
     "CSS": {
       "formatter": {
         "external": {
           "command": "dprint",
-          "arguments": ["fmt", "--stdin", "{buffer_path}"]
-        }
-      }
+          "arguments": ["fmt", "--stdin", "{buffer_path}"],
+        },
+      },
     },
     "JSON": {
       "formatter": {
         "external": {
           "command": "dprint",
-          "arguments": ["fmt", "--stdin", "{buffer_path}"]
-        }
-      }
-    }
+          "arguments": ["fmt", "--stdin", "{buffer_path}"],
+        },
+      },
+    },
   },
   "lsp": {
-    "eslint": {}
-  }
+    "eslint": {},
+  },
 }

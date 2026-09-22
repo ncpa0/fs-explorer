@@ -1,8 +1,3 @@
-/* padding-left: .4em;
-                        margin-left: .7em; */
-/* padding-left: .3em;
-                        margin-right: .7em; */
-/* padding-block: .6em; */
 .explorer-window.explorer-window.explorer-window.explorer-window {
     .left-pane {
         display: flex;
@@ -158,5 +153,16 @@
                 margin: 0;
             }
         }
+    }
+
+    & .left-pane-context-menu {
+        display: flex;
+        background-color: var(--clr-bg-2);
+        border-radius: var(--border-radius);
+        font-size: .9em;
+        flex-direction: column;
+        justify-content: stretch;
+        padding: .3em;
+        transition: height .2s ease-in-out, width .2s ease-in-out;
     }
 }
