@@ -6,6 +6,7 @@ import { ADW } from "../../../utils/css";
 import { isLmb } from "../../../utils/events";
 import { getRelativePosition } from "../../../utils/get-relative-position";
 import { JobsView } from "../jobs/jobs-view";
+import { PlaceContextMenu } from "./place-context-menu";
 
 export type LeftPaneProps = {
   explorer: Explorer;
@@ -54,6 +55,35 @@ export function LeftPane(props: LeftPaneProps) {
     </button>
   );
 
+  const openPlaceContextMenu = (event: MouseEvent, place: Place) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const windowRect = explorer.window!.getBoundingClientRect();
+    const left = event.clientX - windowRect.left;
+    const top = event.clientY - windowRect.top;
+    const bottom = windowRect.height - top;
+
+    const halfPoint = windowRect.height / 2;
+    const isBelowHalf = top > halfPoint;
+
+    explorer.overlay.display(
+      {
+        dimBackground: false,
+        closeOnBackgroundClick: true,
+        position: {
+          left: `min(${left}px, calc(${windowRect.width}px - 13em))`,
+          top: isBelowHalf ? undefined : `${top}px`,
+          bottom: isBelowHalf ? `${bottom}px` : undefined,
+        },
+      },
+      <PlaceContextMenu
+        explorer={explorer}
+        place={place}
+      />,
+    );
+  };
+
   return (
     <div
       class={{
@@ -82,6 +112,7 @@ export function LeftPane(props: LeftPaneProps) {
                   ),
                 }}
                 onclick={() => handlePlaceClick(place)}
+                oncontextmenu={e => openPlaceContextMenu(e, place)}
               >
                 <div class="icon">
                   <DirectoryIcon />
