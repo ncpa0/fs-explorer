@@ -296,7 +296,11 @@ export class DirViewController {
   }
 
   selectAll() {
-    this.selection.dispatch(this.files.get());
+    if (this.showHidden.get()) {
+      this.selection.dispatch(this.files.get());
+    } else {
+      this.selection.dispatch(this.files.get().filter(f => !f.hidden));
+    }
   }
 
   getActiveEntryFile() {
