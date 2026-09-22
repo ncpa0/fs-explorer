@@ -1,6 +1,7 @@
 import { Explorer } from "../explorer";
 import { Path } from "../utils/path";
 import { DirViewController } from "./dir-view-controller";
+import { FilesMutation } from "./fs-controller";
 import {
   ExplorerLocation,
   ExplorerPopEvent,
@@ -15,8 +16,6 @@ export class TabController {
   public readonly history: ExplorerTabHistory;
   public readonly location: ExplorerLocation;
   public readonly directory: DirViewController;
-  private isRefreshQueued = false;
-  private refreshTimer?: Timer;
 
   constructor(
     protected explorer: Explorer,
@@ -30,12 +29,10 @@ export class TabController {
   private updateDirContents(
     entry: HistoryEntry,
     scrollPosition: number | "RETAIN",
-    noloader = false,
   ) {
     this.directory.changeDirectory(
       entry,
       scrollPosition,
-      noloader,
     );
   }
 
@@ -47,8 +44,6 @@ export class TabController {
       this.updateDirContents(
         event.historyEntry,
         event.historyEntry.scrollPosition,
-        event.trigger === "back" || event.trigger === "forward"
-          || event.trigger === "backpush",
       );
     };
 
@@ -65,47 +60,21 @@ export class TabController {
     });
   }
 
-  /*&
-  * Queue a refresh to happen after a short delay or
-  * do nothing if a refresh is already queued tyo happen.
-  *
-  * Normal refresh, open and replace operations will
-  * cancel the queued refresh.
-  */
-  queueRefresh(dir?: string, noLoader = false) {
-    if (this.isRefreshQueued) {
-      return;
-    }
-    this.isRefreshQueued = true;
-
-    this.refreshTimer = setTimeout(() => {
-      this.isRefreshQueued = false;
-      this.refreshTimer = undefined;
-      this.refresh(dir, noLoader);
-    }, 100);
+  async updateFiles(
+    dir: string | Path,
+    updates: FilesMutation[],
+    skipFetch = false,
+  ) {
+    this.directory.updateFiles(dir, updates, skipFetch);
   }
 
-  /**
-   * If there is a refresh queued, prevent it from happening.
-   */
-  clearQueue() {
-    if (this.refreshTimer) {
-      clearTimeout(this.refreshTimer);
-      this.isRefreshQueued = false;
-      this.refreshTimer = undefined;
-    }
-  }
-
-  refresh(dir?: string, noLoader = false) {
-    this.clearQueue();
-
+  refresh(dir?: string) {
     if (dir != null) {
       const dirEntry = this.history.findEntry(dir);
       if (dirEntry) {
-        this.updateDirContents(
+        this.directory.refreshDirectory(
           dirEntry,
           "RETAIN",
-          noLoader,
         );
       }
     } else {
@@ -114,15 +83,12 @@ export class TabController {
         this.updateDirContents(
           currentEntry,
           "RETAIN",
-          noLoader,
         );
       }
     }
   }
 
   open(path: string | Path) {
-    this.clearQueue();
-
     path = Path.from(path);
 
     if (this.location.path.equals(path)) {
@@ -133,8 +99,6 @@ export class TabController {
   }
 
   replace(path: string | Path) {
-    this.clearQueue();
-
     path = Path.from(path);
 
     if (this.location.path.equals(path)) {

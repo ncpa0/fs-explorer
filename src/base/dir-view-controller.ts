@@ -5,7 +5,9 @@ import { FStat } from "../filesystem-interface";
 import { Fmt } from "../utils/formatters";
 import { Immediate } from "../utils/immediate";
 import { Path } from "../utils/path";
+import { Scheduler } from "../utils/scheduler";
 import { sortFiles, SortMode } from "./components/dir-view/sort-files";
+import { FilesMutation } from "./fs-controller";
 import { HistoryEntry } from "./history";
 import { TabController } from "./tab-controller";
 
@@ -35,6 +37,8 @@ export class DirViewController {
   public readonly directoryInfo = this.deriveDirectoryInfo();
 
   public onContentChange?: (scrollPosition: number) => void;
+
+  private scheduler = new Scheduler(250);
 
   constructor(
     protected explorer: Explorer,
@@ -114,27 +118,90 @@ export class DirViewController {
     );
   }
 
+  updateFiles(
+    dir: string | Path,
+    updates: FilesMutation[],
+    skipFetch = false,
+  ) {
+    dir = Path.from(dir);
+
+    if (!skipFetch) {
+      const s = this.scheduler.byKey(dir.toString());
+      s.cancelNext();
+      s.schedule(() => {
+        this.explorer.filesystem.readdirStat(dir.toString())
+          .then((files) => {
+            this.explorer.cache.add(dir.toString(), files);
+
+            const current = this.stat.get();
+            if (current && dir.equals(current.path)) {
+              this.files.dispatch(files);
+            }
+          });
+      });
+    }
+
+    const current = this.stat.get();
+    if (!current) return false;
+
+    if (dir.equals(current.path)) {
+      this.files.dispatch(files => {
+        for (const update of updates) {
+          files = update(files);
+        }
+        return files;
+      });
+      this.explorer.cache.add(dir.toString(), this.files.get());
+      return true;
+    }
+
+    return false;
+  }
+
+  refreshDirectory(
+    entry: HistoryEntry,
+    scrollPosition?: number | "RETAIN",
+  ) {
+    const current = this.stat.get();
+    if (current && entry.path.equals(current.path)) {
+      return this.changeDirectory(entry, scrollPosition);
+    }
+
+    const locationPath = entry.path.toString();
+    this.scheduler.byKey(locationPath).cancelNext();
+
+    return this.explorer.filesystem.readdirStat(locationPath)
+      .then((files) => {
+        this.explorer.cache.add(entry.path.toString(), files);
+      });
+  }
+
   changeDirectory(
     entry: HistoryEntry,
     scrollPosition?: number | "RETAIN",
-    noloader = false,
   ) {
     const dirpath = entry.path;
 
+    const isSameDir = dirpath.equals(this.stat.get()?.path ?? "");
+
     this.cdQueue.run(async () => {
-      if (noloader && entry.files) {
-        this.selection.dispatch([]);
-        this.files.dispatch(entry.files);
-        queueMicrotask(() => {
-          if (this.onContentChange) {
-            this.onContentChange(entry.scrollPosition!);
-          }
-        });
+      const locationPath = Path.from(dirpath).toString();
+      this.scheduler.byKey(locationPath).cancelNext();
+
+      const cached = this.explorer.cache.get(dirpath.toString());
+      if (cached) {
+        if (!isSameDir) {
+          this.selection.dispatch([]);
+        }
+        this.files.dispatch(cached.files);
+        if (this.onContentChange) {
+          queueMicrotask(() => {
+            this.onContentChange!(entry.scrollPosition!);
+          });
+        }
       } else {
         this.loading.dispatch(true);
       }
-
-      const locationPath = Path.from(dirpath).toString();
 
       const data = Immediate.all(
         this.explorer.filesystem.stat(locationPath),
@@ -142,11 +209,13 @@ export class DirViewController {
       );
 
       await data.then(([dirStat, files]) => {
-        entry.files = files;
+        this.explorer.cache.add(dirpath.toString(), files);
 
         sig.startBatch();
         this.loading.dispatch(false);
-        this.selection.dispatch([]);
+        if (!isSameDir) {
+          this.selection.dispatch([]);
+        }
         this.stat.dispatch(dirStat);
         this.files.dispatch(files);
         this.error.dispatch(undefined);

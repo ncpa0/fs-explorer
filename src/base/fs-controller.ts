@@ -5,6 +5,8 @@ import { Resolvable } from "../utils/immediate";
 import { Path } from "../utils/path";
 import { QueuedJob } from "./jobs-controller";
 
+export type FilesMutation = (files: readonly FStat[]) => readonly FStat[];
+
 const overwritePrompt = (filename: string) => ({
   title: "File already exist",
   message: `File "${filename}" already exists, do you want to overwrite it?`,
@@ -18,11 +20,59 @@ export class FsController {
     protected filesystem: Filesystem,
   ) {}
 
-  private propagatesChangesIn(...dirPaths: Path[]) {
-    for (const tab of this.explorer.tabs.get()) {
-      if (dirPaths.some(p => p.equals(tab.location.path))) {
-        tab.queueRefresh(undefined, true);
+  private createDirFStat(filepath: string | Path): FStat {
+    filepath = Path.from(filepath);
+    return {
+      name: filepath.basename(),
+      basedir: filepath.dir().toString(),
+      size: 0,
+      path: filepath.toString(),
+      directory: true,
+      hidden: filepath.basename().startsWith("."),
+      read: true,
+      write: true,
+      mtime: Date.now(),
+    };
+  }
+
+  private createFileFStat(filepath: string | Path): FStat {
+    filepath = Path.from(filepath);
+    return {
+      name: filepath.basename(),
+      basedir: filepath.dir().toString(),
+      size: 0,
+      path: filepath.toString(),
+      directory: false,
+      hidden: filepath.basename().startsWith("."),
+      read: true,
+      write: true,
+      mtime: Date.now(),
+    };
+  }
+
+  private actionRemoveFile(file: FStat): FilesMutation {
+    const filepath = Path.from(file.path);
+    return (files) => {
+      if (files.some(f => filepath.equals(f.path))) {
+        return files.filter(f => !filepath.equals(f.path));
       }
+      return files;
+    };
+  }
+
+  private actionAddFile(file: FStat): FilesMutation {
+    const filepath = Path.from(file.path);
+    return (files) => {
+      if (files.some(f => filepath.equals(f.path))) {
+        return files;
+      }
+      return [...files, { ...file }];
+    };
+  }
+
+  private updateTabFiles(dir: string | Path, ...updates: FilesMutation[]) {
+    for (const tab of this.explorer.tabs.get()) {
+      tab.updateFiles(dir, updates);
     }
   }
 
@@ -36,7 +86,7 @@ export class FsController {
     const job = this.explorer.jobs.createJob("copy", from, () => {
       return this.filesystem.copy(from.path, to.toString())
         .then(() => {
-          this.propagatesChangesIn(to.dir());
+          this.updateTabFiles(to.dir(), this.actionAddFile(from));
         })
         .catch(err => {
           this.explorer.actionError.dispatch(
@@ -61,7 +111,9 @@ export class FsController {
         .then(() => {
           const fromDir = filePath.dir();
           const toDir = to.dir();
-          this.propagatesChangesIn(fromDir, toDir);
+
+          this.updateTabFiles(fromDir, this.actionRemoveFile(file));
+          this.updateTabFiles(toDir, this.actionAddFile(file));
         })
         .catch(err => {
           this.explorer.actionError.dispatch(
@@ -180,7 +232,7 @@ export class FsController {
 
     return this.filesystem.remove(path.toString())
       .then(() => {
-        this.propagatesChangesIn(path.dir());
+        this.updateTabFiles(path.dir(), this.actionRemoveFile(file));
       })
       .catch(err => {
         this.explorer.actionError.dispatch(
@@ -194,7 +246,10 @@ export class FsController {
 
     return this.filesystem.mkdir(path.toString())
       .then(() => {
-        this.propagatesChangesIn(path.dir());
+        this.updateTabFiles(
+          path.dir(),
+          this.actionAddFile(this.createDirFStat(path)),
+        );
       })
       .catch(err => {
         this.explorer.actionError.dispatch(
@@ -208,7 +263,10 @@ export class FsController {
 
     return this.filesystem.touch(path.toString())
       .then(() => {
-        this.propagatesChangesIn(path.dir());
+        this.updateTabFiles(
+          path.dir(),
+          this.actionAddFile(this.createFileFStat(path)),
+        );
       })
       .catch(err => {
         this.explorer.actionError.dispatch(

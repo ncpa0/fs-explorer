@@ -1,5 +1,4 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
-import { FStat } from "../filesystem-interface";
 import { Path } from "../utils/path";
 
 export type ExplorerPopEventTrigger =
@@ -47,7 +46,6 @@ export class ExplorerLocation {
 export interface HistoryEntry {
   readonly path: Path;
   scrollPosition: number;
-  files?: FStat[];
 }
 
 export class ExplorerTabHistory extends EventTarget {
@@ -115,7 +113,6 @@ export class ExplorerTabHistory extends EventTarget {
     const entry: HistoryEntry = prevEntry
       ? {
         ...prevEntry,
-        files: prevEntry.files?.slice(),
       }
       : {
         path: dir,

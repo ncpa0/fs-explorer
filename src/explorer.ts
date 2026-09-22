@@ -18,6 +18,7 @@ import { Immediate } from "./utils/immediate";
 import { Path } from "./utils/path";
 import "adwaveui/dist/esm/components/switch/switch";
 import "adwaveui/dist/esm/components/selector/selector";
+import { DirCache } from "./base/dir-cache";
 
 export interface Place {
   readonly id: string;
@@ -152,6 +153,8 @@ export class Explorer {
   public readonly plainList = sig(false);
   public readonly noPreview = sig(false);
   public readonly actionFilters: ReadonlyArray<ActionFilter> = [];
+
+  public readonly cache = new DirCache();
 
   currentTab = sig.derive(this.activeTab, this.tabs, (id, tabs) => {
     const activeTab = tabs.find((tab) => tab.id === id) ?? tabs[0]!;
@@ -356,7 +359,9 @@ export class Explorer {
   }
 
   refresh(dir?: string) {
-    this.currentTab.get().refresh();
+    for (const tab of this.tabs.get()) {
+      tab.refresh(dir);
+    }
   }
 
   open(path: string | Path) {

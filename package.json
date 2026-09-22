@@ -44,11 +44,11 @@
     "dedent": "^1.7.0",
     "dprint": "^0.50.2",
     "esbuild": "^0.27.0",
+    "git-hook-tasks": "https://github.com/ncpa0cpl/git-hook-tasks#42157935c4202b19e7ffdd39ced8342979ac4f19",
     "husky": "~8",
     "lightningcss": "^1.30.2",
-    "git-hook-tasks": "https://github.com/ncpa0cpl/git-hook-tasks#42157935c4202b19e7ffdd39ced8342979ac4f19",
     "oxlint": "^1.29.0",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
