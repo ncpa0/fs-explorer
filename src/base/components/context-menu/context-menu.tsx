@@ -290,7 +290,7 @@ const DirMenuButtons = $component((props: {
           ? <span class={ADW.Separator.separator} />
           : <></>;
 
-        if (customActions.length <= 3) {
+        if (customActions.length <= 4) {
           return [
             topSeparator,
             customActions.map(action => (
@@ -303,7 +303,7 @@ const DirMenuButtons = $component((props: {
           ].flat();
         }
 
-        const [a1, ...restActions] = customActions;
+        const [a1, a2, a3, ...restActions] = customActions;
 
         subBtnsList = (
           <div class="custom-actions buttons-list">
@@ -311,7 +311,7 @@ const DirMenuButtons = $component((props: {
               action={() => {
                 showCustomActions.dispatch(false);
               }}
-              title="<"
+              title="◂"
             />
             {restActions.map(action => (
               <MenuButton
@@ -327,6 +327,14 @@ const DirMenuButtons = $component((props: {
           <MenuButton
             action={handler(a1!)}
             title={a1!.label}
+          />,
+          <MenuButton
+            action={handler(a2!)}
+            title={a2!.label}
+          />,
+          <MenuButton
+            action={handler(a3!)}
+            title={a3!.label}
           />,
           <MenuButton
             action={() => {
