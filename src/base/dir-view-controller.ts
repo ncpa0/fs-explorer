@@ -182,9 +182,8 @@ export class DirViewController {
   ) {
     const dirpath = entry.path;
 
-    const isSameDir = dirpath.equals(this.stat.get()?.path ?? "");
-
     this.cdQueue.run(async () => {
+      const isSameDir = dirpath.equals(this.stat.get()?.path ?? "");
       const locationPath = Path.from(dirpath).toString();
       this.scheduler.byKey(locationPath).cancelNext();
 

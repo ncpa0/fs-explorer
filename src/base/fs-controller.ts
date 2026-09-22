@@ -60,8 +60,21 @@ export class FsController {
     };
   }
 
-  private actionAddFile(file: FStat): FilesMutation {
+  private actionAddFile(
+    file: FStat,
+    newParentDir?: string | Path,
+  ): FilesMutation {
     const filepath = Path.from(file.path);
+
+    if (newParentDir) {
+      const newFullPath = Path.from(newParentDir).joinSegment(file.name);
+      file = {
+        ...file,
+        path: newFullPath.toString(),
+        basedir: newParentDir.toString(),
+      };
+    }
+
     return (files) => {
       if (files.some(f => filepath.equals(f.path))) {
         return files;
@@ -86,7 +99,7 @@ export class FsController {
     const job = this.explorer.jobs.createJob("copy", from, () => {
       return this.filesystem.copy(from.path, to.toString())
         .then(() => {
-          this.updateTabFiles(to.dir(), this.actionAddFile(from));
+          this.updateTabFiles(to.dir(), this.actionAddFile(from, to));
         })
         .catch(err => {
           this.explorer.actionError.dispatch(
@@ -113,7 +126,7 @@ export class FsController {
           const toDir = to.dir();
 
           this.updateTabFiles(fromDir, this.actionRemoveFile(file));
-          this.updateTabFiles(toDir, this.actionAddFile(file));
+          this.updateTabFiles(toDir, this.actionAddFile(file, toDir));
         })
         .catch(err => {
           this.explorer.actionError.dispatch(
