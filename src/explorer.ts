@@ -20,6 +20,12 @@ import "adwaveui/dist/esm/components/switch/switch";
 import "adwaveui/dist/esm/components/selector/selector";
 import { DirCache } from "./base/dir-cache";
 
+export interface StorageInterface {
+  getItem(key: string): string | null;
+  removeItem(key: string): void;
+  setItem(key: string, value: string): void;
+}
+
 export interface Place {
   readonly id: string;
   readonly label: string;
@@ -110,6 +116,7 @@ export interface ExplorerOptions {
    */
   readonly initDir?: string;
   readonly fileDropHandler?: (data: DataTransfer, droppedInto: FStat) => void;
+  readonly storage?: StorageInterface;
 }
 
 export interface PromptModal {
@@ -169,7 +176,10 @@ export class Explorer {
     public readonly options: ExplorerOptions = {},
   ) {
     this.fs = new FsController(this, filesystem);
-    this.places = new PlacesStorage(options.places);
+    this.places = new PlacesStorage(
+      options.storage ?? localStorage,
+      options.places,
+    );
 
     if (options.staticPlaces) {
       this.staticPlaces.dispatch(options.staticPlaces.slice());
@@ -394,6 +404,14 @@ export class Explorer {
 
   removePlace(id: string) {
     this.places.removePlace(id);
+  }
+
+  listPlaces() {
+    return this.places.list().get();
+  }
+
+  removeAllPlaces() {
+    return this.places.clear();
   }
 
   addStaticPlace(place: Place) {
