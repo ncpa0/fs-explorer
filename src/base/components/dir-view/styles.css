@@ -35,13 +35,6 @@
             z-index: 100;
         }
 
-        & .explorer-tab .dir-view-container {
-            flex: unset;
-            height: calc(100% - 2.5em);
-            border-bottom-left-radius: 6px;
-            border-bottom-right-radius: 6px;
-        }
-
         &.plain-list.plain-list.plain-list {
             max-width: 100cqw;
 
@@ -285,6 +278,15 @@
             & span {
                 font-size: 1.6em;
             }
+        }
+    }
+
+    & .explorer-tab {
+        & .dir-view-container {
+            flex: unset;
+            height: calc(100% - 2.5em);
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
         }
     }
 }
