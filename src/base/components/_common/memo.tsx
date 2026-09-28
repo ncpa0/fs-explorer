@@ -9,6 +9,7 @@ export function Memo(props: {
     if (props.dependencies) {
       const depsChanged = !deps || !cmpArrays(deps, props.dependencies);
       if (!depsChanged) {
+        memoed.remove();
         return memoed;
       }
     }

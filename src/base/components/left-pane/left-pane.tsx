@@ -14,46 +14,13 @@ export type LeftPaneProps = {
 
 export function LeftPane(props: LeftPaneProps) {
   const { explorer } = props;
-  const { staticPlaces, overlay } = explorer;
+  const { staticPlaces } = explorer;
   const places = explorer.places.list();
   const tabPath = explorer.location.derive(l => l.signal);
-
-  const handleOpenOptions = () => {
-    const window = explorer.window!;
-
-    const btnRelPos = getRelativePosition(optionsBtn, window);
-    const btnSize = optionsBtn.getBoundingClientRect();
-
-    overlay.display(
-      {
-        dimBackground: false,
-        position: {
-          top: btnRelPos.top + btnSize.height + 6,
-          left: btnRelPos.left,
-        },
-      },
-      <OptionsMenu explorer={explorer} close={() => overlay.close()} />,
-    );
-  };
 
   const handlePlaceClick = (place: Place) => {
     explorer.open(place.path);
   };
-
-  const optionsBtn = (
-    <button
-      class={{
-        "options-btn": true,
-        [ADW.Button.button]: true,
-        [ADW.Button.flat]: true,
-        [ADW.Button.square]: true,
-        [ADW.Button.adaptive]: true,
-      }}
-      onmousedown={handleOpenOptions}
-    >
-      <MoreIcon />
-    </button>
-  );
 
   const openPlaceContextMenu = (event: MouseEvent, place: Place) => {
     event.preventDefault();
@@ -96,7 +63,7 @@ export function LeftPane(props: LeftPaneProps) {
       <div class="places scrollview">
         <div class={"pane-header"}>
           <span class={[ADW.Typography.text, "header-title"]}>Places</span>
-          {optionsBtn}
+          <DirectoryOptionsButton explorer={explorer} />
         </div>
         <div class={["left-pane-places", "scrollview"]}>
           {places.derive(places => {
@@ -158,12 +125,61 @@ export function LeftPane(props: LeftPaneProps) {
   );
 }
 
+export function DirectoryOptionsButton(props: { explorer: Explorer }) {
+  const { explorer } = props;
+  const { overlay } = explorer;
+
+  const handleOpenOptions = () => {
+    const window = explorer.window!;
+
+    const btnRelPos = getRelativePosition(optionsBtn, window);
+    const btnSize = optionsBtn.getBoundingClientRect();
+
+    overlay.display(
+      {
+        dimBackground: false,
+        position: {
+          top: btnRelPos.top + btnSize.height + 6,
+          left: btnRelPos.left,
+        },
+      },
+      <OptionsMenu explorer={explorer} close={() => overlay.close()} />,
+    );
+  };
+
+  const optionsBtn = (
+    <button
+      class={{
+        "dir-options-btn": true,
+        [ADW.Button.button]: true,
+        [ADW.Button.flat]: true,
+        [ADW.Button.square]: true,
+        [ADW.Button.adaptive]: true,
+      }}
+      onmousedown={handleOpenOptions}
+    >
+      <MoreIcon />
+    </button>
+  );
+
+  return optionsBtn;
+}
+
 function OptionsMenu(props: { explorer: Explorer; close: () => void }) {
   const { explorer } = props;
 
   const hanldeShowHiddenClick = (ev: MouseEvent) => {
     if (isLmb(ev)) {
       props.explorer.directory.get().showHiddenFilesToggle();
+      props.close();
+    }
+    ev.preventDefault();
+    ev.stopPropagation();
+  };
+
+  const handleGalleryViewClick = (ev: MouseEvent) => {
+    if (isLmb(ev)) {
+      props.explorer.directory.get().galleryView.dispatch(v => !v);
       props.close();
     }
     ev.preventDefault();
@@ -215,6 +231,25 @@ function OptionsMenu(props: { explorer: Explorer; close: () => void }) {
       ))}
       <button
         class={{
+          "toggle-btn": true,
+          "gallery-view-btn": true,
+          [ADW.Button.button]: true,
+          [ADW.Button.flat]: true,
+          [ADW.Button.adaptive]: true,
+        }}
+        onmousedown={handleGalleryViewClick}
+      >
+        <span>
+          Gallery view
+        </span>
+        <input
+          type="radio"
+          checked={props.explorer.directory.derive(d => d.galleryView.get())}
+        />
+      </button>
+      <button
+        class={{
+          "toggle-btn": true,
           "show-hidden-btn": true,
           [ADW.Button.button]: true,
           [ADW.Button.flat]: true,

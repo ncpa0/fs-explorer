@@ -1,5 +1,5 @@
 .explorer-window.explorer-window.explorer-window.explorer-window {
-    .left-pane {
+    & .left-pane {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -31,22 +31,6 @@
                     text-align: center;
                     margin-left: 2.5em;
                     font-weight: 600;
-                }
-
-                & .btn {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-
-                    & svg {
-                        height: 1.2em;
-                        width: 1.2em;
-
-                        & path,
-                        & rect {
-                            fill: var(--clr-text) !important;
-                        }
-                    }
                 }
             }
 
@@ -130,6 +114,22 @@
         }
     }
 
+    & .dir-options-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        & svg {
+            height: 1.2em;
+            width: 1.2em;
+
+            & path,
+            & rect {
+                fill: var(--clr-text) !important;
+            }
+        }
+    }
+
     & .options-menu {
         display: flex;
         flex-direction: column;
@@ -145,7 +145,7 @@
             justify-content: flex-start;
         }
 
-        & .show-hidden-btn.show-hidden-btn.show-hidden-btn.show-hidden-btn {
+        & .toggle-btn.toggle-btn.toggle-btn.toggle-btn {
             display: flex;
             justify-content: space-between;
 

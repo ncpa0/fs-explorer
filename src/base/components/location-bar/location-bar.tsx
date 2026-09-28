@@ -7,6 +7,7 @@ import RefreshIcon from "../../../assets/main-theme/icons/refresh.svg";
 import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 import { Path } from "../../../utils/path";
+import { DirectoryOptionsButton } from "../left-pane/left-pane";
 
 export type LocationBarProps = {
   explorer: Explorer;
@@ -50,6 +51,7 @@ export function LocationBar(props: LocationBarProps) {
   return (
     <div class={["location-bar", ADW.Box.box, ADW.Box.bg2]}>
       <ControlButtons
+        explorer={explorer}
         onBack={handleBack}
         onForward={handleForward}
         onUp={handleUp}
@@ -80,6 +82,7 @@ export function LocationBar(props: LocationBarProps) {
 }
 
 function ControlButtons(props: {
+  explorer: Explorer;
   onBack: () => void;
   onForward: () => void;
   onUp: () => void;
@@ -88,6 +91,9 @@ function ControlButtons(props: {
 }) {
   return (
     <div class={["control-buttons"]}>
+      {props.explorer.hideLeftPane.derive((show) =>
+        show ? <DirectoryOptionsButton explorer={props.explorer} /> : <></>
+      )}
       <button
         onmousedown={props.onBack}
         class={[

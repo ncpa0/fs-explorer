@@ -1,4 +1,5 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
+import CloseIcon from "../../../assets/main-theme/icons/close.svg";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { ADW } from "../../../utils/css";
@@ -31,11 +32,38 @@ export function PreviewPane(props: PreviewPaneProps) {
           class={ADW.Button.className({ flat: true, shape: "square" })}
           onmousedown={handleCloseClick}
         >
-          X
+          <CloseIcon />
         </button>
       </div>
       {preview.file.derive(file => {
+        if (file) return <FileThumbnail file={file} explorer={explorer} />;
+        return <div />;
+      })}
+      {preview.file.derive(file => {
         if (file) return <FileInfo file={file} explorer={explorer} />;
+        return <div />;
+      })}
+    </div>
+  );
+}
+
+function FileThumbnail(props: { file: FStat; explorer: Explorer }) {
+  const { file, explorer } = props;
+
+  if (!file.mimetype?.startsWith("image/")) {
+    return <div />;
+  }
+
+  const thumbnail = sig<string>();
+
+  explorer.filesystem.thumbnail?.(file.path).then(src => {
+    if (src) thumbnail.dispatch(src);
+  });
+
+  return (
+    <div class="preview-thumbnail">
+      {thumbnail.derive(src => {
+        if (src) return <img src={src} />;
         return <div />;
       })}
     </div>

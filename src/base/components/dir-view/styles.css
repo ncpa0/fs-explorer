@@ -3,6 +3,7 @@
         --dirview-cols: 3.75em auto 7em 12em;
         position: relative;
         flex: 1;
+        min-width: 0;
         height: -webkit-fill-available;
         display: flex;
         align-items: stretch;
@@ -233,6 +234,85 @@
 
             & .gaper {
                 height: 1em;
+            }
+        }
+
+        & .gallery-view {
+            & .gallery-row {
+                display: flex;
+                flex-wrap: nowrap;
+                margin-inline: .5em;
+            }
+
+            & .gallery-entry {
+                position: relative;
+                box-sizing: border-box;
+                flex: 0 0 auto;
+                width: 8em;
+                height: 10em;
+                margin: .5em;
+                border-radius: 4px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                background-color: var(--clr-bg-2);
+
+                & .gallery-media {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
+
+                    & svg {
+                        width: 3.5em;
+                        height: 3.5em;
+                    }
+
+                    & img {
+                        max-width: 100%;
+                        max-height: 100%;
+                        object-fit: contain;
+                    }
+                }
+
+                & .filename-overlay {
+                    box-sizing: border-box;
+                    height: 2.4em;
+                    padding: 0em .4em;
+                    display: flex;
+                    align-items: center;
+
+                    & .filename {
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        margin-left: auto;
+                        margin-right: auto;
+                    }
+                }
+
+                &.selected {
+                    background-color: var(--clr-primary-100);
+                    outline: 1px solid var(--clr-primary-500);
+
+                    &:hover {
+                        background-color: var(--clr-primary-200);
+                    }
+                }
+
+                &.active-entry {
+                    outline: 1px solid var(--clr-primary-100);
+                }
+
+                &.file-cut {
+                    opacity: .5;
+                }
+
+                &:hover {
+                    cursor: var(--current-cursor, pointer);
+                    background-color: #86868646;
+                }
             }
         }
 

@@ -29,6 +29,8 @@ export class DirViewController {
   public readonly files = sig<ReadonlyArray<FStat>>([]);
   public readonly sorting = sig({ mode: SortMode.Alpha, reverse: false });
   public readonly showHidden = sig(false);
+  /** Whether this tab should display its files in a gallery grid instead of a list */
+  public readonly galleryView = sig(false);
   public readonly selection = sig<ReadonlyArray<FStat>>([]);
   public readonly loading = sig(false);
   public readonly error = sig<any>();

@@ -7,6 +7,7 @@
         margin-right: .3em;
         margin-top: .5em;
         display: none;
+        container: prevpane inline-size;
 
         &.preview-visible {
             display: flex;
@@ -17,6 +18,19 @@
             display: flex;
             justify-content: flex-end;
             margin: .4em 1em;
+        }
+
+        & .preview-thumbnail {
+            margin: 0em 1em;
+
+            & img {
+                display: block;
+                max-width: 100%;
+                max-height: 50cqh;
+                margin: 0em auto;
+                object-fit: contain;
+                border-radius: 6px;
+            }
         }
 
         & .file-info {

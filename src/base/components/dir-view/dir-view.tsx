@@ -5,6 +5,7 @@ import { isLmb } from "../../../utils/events";
 import { Path } from "../../../utils/path";
 import { TabController } from "../../tab-controller";
 import { LoadingIndicator } from "../_common/loader";
+import { GalleryFileList } from "./gallery-file-list";
 import { FileViewHeader } from "./list-header";
 import { VirtualFileList } from "./virtual-file-list";
 
@@ -107,21 +108,35 @@ export function DirView(props: DirViewProps) {
       ondragleave={handleDragLeave}
       onmouseup={handleMouseUp}
     >
-      <FileViewHeader dir={tab.directory} sorting={tab.directory.sorting} />
-      {sig.derive(dir.loading, dir.error, (loading, err) => {
-        if (loading) {
-          return <LoadingIndicator />;
-        } else if (err) {
-          return <OpenDirErrorMessage />;
-        } else {
-          return (
-            <VirtualFileList
-              explorer={explorer}
-              tab={tab}
-            />
-          );
+      {dir.galleryView.derive(galleryView => {
+        if (galleryView) {
+          return null;
         }
+        return (
+          <FileViewHeader dir={tab.directory} sorting={tab.directory.sorting} />
+        );
       })}
+      {sig.derive(
+        dir.loading,
+        dir.error,
+        dir.galleryView,
+        (loading, err, galleryView) => {
+          if (loading) {
+            return <LoadingIndicator />;
+          } else if (err) {
+            return <OpenDirErrorMessage />;
+          } else if (galleryView) {
+            return <GalleryFileList explorer={explorer} tab={tab} />;
+          } else {
+            return (
+              <VirtualFileList
+                explorer={explorer}
+                tab={tab}
+              />
+            );
+          }
+        },
+      )}
       <div class="dir-view-drop-overlay" />
     </div>
   );
