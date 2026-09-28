@@ -207,10 +207,10 @@
     html-element-attributes "^3.4.0"
     immer "^10.1.1"
 
-"@ncpa0cpl/vanilla-jsx@^0.0.1-alpha.48":
-  version "0.0.1-alpha.48"
-  resolved "https://registry.yarnpkg.com/@ncpa0cpl/vanilla-jsx/-/vanilla-jsx-0.0.1-alpha.48.tgz#bbb39cbd5eb31caf124e760cbe4f1aca6ea8b224"
-  integrity sha512-7vnjORLkrr9vvShFzlDsayohnFtpnwXW09rX0RmPP97gQF2c0LPhCxudP6jahNmOBDUtKgnNO/PzRjXeq3e+7Q==
+"@ncpa0cpl/vanilla-jsx@^0.0.1-alpha.51":
+  version "0.0.1-alpha.51"
+  resolved "https://registry.yarnpkg.com/@ncpa0cpl/vanilla-jsx/-/vanilla-jsx-0.0.1-alpha.51.tgz#e9d6e45818c3fc78a2bddc98cae2063366bea979"
+  integrity sha512-JntwN/lI6wGZoYadgkwoGWt1hU1ENu0bdY6cF9p2d584QIY0R5Qj5mKKtrT6O8AZtbNA0VJxirW3wfXn1RRrRQ==
   dependencies:
     html-element-attributes "^3.4.0"
     immer "^10.1.1"

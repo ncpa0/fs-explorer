@@ -59,7 +59,8 @@ export function GalleryFileListEntry(
   const file = props.file;
   const Icon = getFileIcon(file);
 
-  const canThumbnail = isThumbnailable(file);
+  const canThumbnail = explorer.filesystem.thumbnail != null
+    && isThumbnailable(file);
   const thumbnail = sig<string>();
   if (canThumbnail) {
     requestThumbnail(explorer.filesystem, file, thumbnail);
