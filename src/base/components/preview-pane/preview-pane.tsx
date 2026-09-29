@@ -1,4 +1,5 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
+import { ScrollView } from "adwavecss";
 import CloseIcon from "../../../assets/main-theme/icons/close.svg";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
@@ -35,14 +36,16 @@ export function PreviewPane(props: PreviewPaneProps) {
           <CloseIcon />
         </button>
       </div>
-      {preview.file.derive(file => {
-        if (file) return <FileThumbnail file={file} explorer={explorer} />;
-        return <div />;
-      })}
-      {preview.file.derive(file => {
-        if (file) return <FileInfo file={file} explorer={explorer} />;
-        return <div />;
-      })}
+      <div class={[ScrollView.scrollView, "preview-pane-scrollable"]}>
+        {preview.file.derive(file => {
+          if (file) return <FileThumbnail file={file} explorer={explorer} />;
+          return <div />;
+        })}
+        {preview.file.derive(file => {
+          if (file) return <FileInfo file={file} explorer={explorer} />;
+          return <div />;
+        })}
+      </div>
     </div>
   );
 }
@@ -87,7 +90,7 @@ function FileInfo(props: { file: FStat; explorer: Explorer }) {
   }
 
   return (
-    <div class="file-info scrollview">
+    <div class="file-info">
       <div class={["dcontents", "info-entry", ADW.Typography.text]}>
         <span class="info-label">Filename:</span>
         <span class="info-value">{props.file.name}</span>

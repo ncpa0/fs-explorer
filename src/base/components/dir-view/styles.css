@@ -11,6 +11,10 @@
         flex-direction: column;
         width: 100%;
 
+        & .vjsx-switch-container {
+            display: contents;
+        }
+
         &.spinner {
             font-size: 1.5em;
         }
@@ -248,8 +252,8 @@
                 position: relative;
                 box-sizing: border-box;
                 flex: 0 0 auto;
-                width: 8em;
-                height: 10em;
+                width: var(--gallery-entry-width, 8em);
+                height: var(--gallery-entry-height, 10em);
                 margin: .5em;
                 border-radius: 4px;
                 overflow: hidden;
@@ -367,6 +371,12 @@
             height: calc(100% - 2.5em);
             border-bottom-left-radius: 6px;
             border-bottom-right-radius: 6px;
+        }
+
+        & .gallery-view {
+            & .gallery-entry {
+                background-color: var(--clr-bg-3);
+            }
         }
     }
 }

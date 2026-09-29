@@ -13,7 +13,8 @@ import { GalleryFileListEntry } from "./gallery-file-list-entry";
  * Width taken up by a single gallery entry, in em units. This includes the
  * entry itself and its surrounding margins.
  */
-const GALLERY_ITEM_SIZE_EM = 9;
+const GALLERY_ITEM_WIDTH_EM = 8;
+const GALLERY_ITEM_MARGIN_EM = 1;
 const GALLERY_INLINE_MARGIN_EM = 1;
 
 export type GalleryFileListProps = {
@@ -35,6 +36,8 @@ export const GalleryFileList = $component(function GalleryFileList(
    * observer so that all entries always fit within the container.
    */
   const itemsPerRow = sig(1);
+  const itemWidth = sig(GALLERY_ITEM_WIDTH_EM);
+  const itemHeight = itemWidth.derive(w => w + 2);
 
   const rows = sig.derive(
     dir.filesView,
@@ -66,6 +69,10 @@ export const GalleryFileList = $component(function GalleryFileList(
           "gallery-view": true,
           empty: files.derive(files => files.length === 0),
         },
+        style: {
+          "--gallery-entry-width": sig.literal`${itemWidth}em`,
+          "--gallery-entry-height": sig.literal`${itemHeight}em`,
+        },
       }}
       renderEmpty={() => (
         <div class="empty-dir-msg">
@@ -96,15 +103,31 @@ export const GalleryFileList = $component(function GalleryFileList(
     const width = list.clientWidth - (GALLERY_INLINE_MARGIN_EM * fontSize);
     if (!width) return;
 
-    const perRow = Math.max(
+    const widthInPx = GALLERY_ITEM_WIDTH_EM * fontSize;
+    const marginInPx = GALLERY_ITEM_MARGIN_EM * fontSize;
+
+    const rowItemCount = Math.max(
       1,
       Math.floor(
-        width / (GALLERY_ITEM_SIZE_EM * fontSize),
+        width / (widthInPx + marginInPx),
       ),
     );
-    if (perRow !== itemsPerRow.get()) {
-      itemsPerRow.dispatch(perRow);
+
+    if (rowItemCount !== itemsPerRow.get()) {
+      itemsPerRow.dispatch(rowItemCount);
     }
+
+    const totalRowItemsWidth = rowItemCount * (widthInPx + marginInPx);
+    const unusedSpace = width - totalRowItemsWidth;
+    if (unusedSpace <= rowItemCount) {
+      itemWidth.dispatch(GALLERY_ITEM_WIDTH_EM);
+      return;
+    }
+
+    const expandItemsBy = unusedSpace - rowItemCount;
+    const expandPerItemPx = expandItemsBy / rowItemCount;
+    const expandPerItemEm = expandPerItemPx / fontSize;
+    itemWidth.dispatch(expandPerItemEm + GALLERY_ITEM_WIDTH_EM);
   };
 
   api.onMount(() => {

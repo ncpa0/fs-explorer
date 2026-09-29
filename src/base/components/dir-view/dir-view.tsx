@@ -1,4 +1,5 @@
-import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
+import { Case, Switch } from "@ncpa0cpl/vanilla-jsx";
+import { sig, SignalOf } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Typography } from "adwavecss";
 import { Explorer } from "../../../explorer";
 import { isLmb } from "../../../utils/events";
@@ -93,6 +94,15 @@ export function DirView(props: DirViewProps) {
     }
   };
 
+  const swSig = sig.derive(
+    dir.loading,
+    dir.error,
+    dir.galleryView,
+    (loading, err, gallery) => ({ loading, err, gallery }),
+  );
+
+  type SwSig = SignalOf<typeof swSig>;
+
   return (
     <div
       class={{
@@ -116,27 +126,22 @@ export function DirView(props: DirViewProps) {
           <FileViewHeader dir={tab.directory} sorting={tab.directory.sorting} />
         );
       })}
-      {sig.derive(
-        dir.loading,
-        dir.error,
-        dir.galleryView,
-        (loading, err, galleryView) => {
-          if (loading) {
-            return <LoadingIndicator />;
-          } else if (err) {
-            return <OpenDirErrorMessage />;
-          } else if (galleryView) {
-            return <GalleryFileList explorer={explorer} tab={tab} />;
-          } else {
-            return (
-              <VirtualFileList
-                explorer={explorer}
-                tab={tab}
-              />
-            );
-          }
-        },
-      )}
+      <Switch
+        value={swSig}
+      >
+        <Case<SwSig> match={v => v.loading}>
+          {() => <LoadingIndicator />}
+        </Case>
+        <Case<SwSig> match={v => !v.loading && v.err != null}>
+          {() => <OpenDirErrorMessage />}
+        </Case>
+        <Case<SwSig> match={v => !v.loading && v.err == null && v.gallery}>
+          {() => <GalleryFileList explorer={explorer} tab={tab} />}
+        </Case>
+        <Case<SwSig> match={v => !v.loading && v.err == null && !v.gallery}>
+          {() => <VirtualFileList explorer={explorer} tab={tab} />}
+        </Case>
+      </Switch>
       <div class="dir-view-drop-overlay" />
     </div>
   );
