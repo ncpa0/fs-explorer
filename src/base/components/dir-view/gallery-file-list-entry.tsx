@@ -61,6 +61,7 @@ export function GalleryFileListEntry(
 
   const canThumbnail = explorer.filesystem.thumbnail != null
     && isThumbnailable(file);
+  const isVideo = file.mimetype?.toLowerCase().startsWith("video/") ?? false;
   const thumbnail = sig<string>();
   if (canThumbnail) {
     requestThumbnail(explorer.filesystem, file, thumbnail);
@@ -81,7 +82,24 @@ export function GalleryFileListEntry(
     >
       <div class="gallery-media">
         {canThumbnail
-          ? thumbnail.derive(t => <img src={t} class="gallery-thumbnail" />)
+          ? thumbnail.derive(t => (
+            <>
+              <img src={t} class="gallery-thumbnail" />
+              {isVideo && (
+                <div class="video-play-overlay">
+                  <svg attribute:viewBox="0 0 24 24">
+                    <circle
+                      attribute:cx="12"
+                      attribute:cy="12"
+                      attribute:r="10.5"
+                      attribute:fill="#00000099"
+                    />
+                    <path attribute:d="M9.5 7v10l8.5-5z" />
+                  </svg>
+                </div>
+              )}
+            </>
+          ))
           : <Icon />}
       </div>
       <div class="filename-overlay">
