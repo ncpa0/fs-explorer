@@ -116,6 +116,14 @@ export interface ExplorerOptions {
    */
   readonly initDir?: string;
   readonly fileDropHandler?: (data: DataTransfer, droppedInto: FStat) => void;
+  /**
+   * Called when an active (emulated) file drag leaves the explorer window
+   * (pointer exit while the drag is still held). Return true if the host took
+   * over the drag (e.g. handed it to the OS) - the emulated drag is then ended
+   * without dropping. Return false (or omit) to keep the previous behavior
+   * (the drag is cancelled when the pointer leaves the window).
+   */
+  readonly nativeDragOut?: (files: readonly FStat[]) => boolean;
   readonly storage?: StorageInterface;
 }
 
@@ -148,7 +156,7 @@ export class Explorer {
 
   public readonly contextMenu = new ContextMenuController(this);
   public readonly overlay = new OverlayController();
-  public readonly drag = new DragController();
+  public readonly drag = new DragController(this, this.cleanups);
   public readonly jobs = new JobsController();
 
   // location visible on the left pane

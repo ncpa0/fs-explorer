@@ -272,12 +272,14 @@
                     & svg {
                         width: 3.5em;
                         height: 3.5em;
+                        -webkit-user-drag: none;
                     }
 
                     & img {
                         max-width: 100%;
                         max-height: 100%;
                         object-fit: contain;
+                        -webkit-user-drag: none;
                     }
 
                     & .video-play-overlay {
@@ -293,6 +295,7 @@
                             height: 3em;
                             fill: rgba(255, 255, 255, .75);
                             filter: drop-shadow(0 0 2px rgba(0, 0, 0, .6));
+                            -webkit-user-drag: none;
                         }
                     }
                 }

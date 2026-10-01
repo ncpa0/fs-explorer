@@ -32,7 +32,7 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
         "explorer-window": true,
         "drag-pointer": explorer.drag.isDragging(),
       }}
-      onmouseleave={() => explorer.drag.endDrag()}
+      onmouseleave={() => explorer.drag.mouseLeave()}
       onmouseup={() => explorer.drag.endDrag()}
     >
       <div class={[ADW.Box.className({ bg: 2 }), "explorer-content"]}>

@@ -135,10 +135,13 @@ export function DirView(props: DirViewProps) {
         <Case<SwSig> match={v => !v.loading && v.err != null}>
           {() => <OpenDirErrorMessage />}
         </Case>
-        <Case<SwSig> match={v => !v.loading && v.err == null && v.gallery}>
+        <Case<SwSig> match={v => !v.loading && v.err == null && v.gallery} memo>
           {() => <GalleryFileList explorer={explorer} tab={tab} />}
         </Case>
-        <Case<SwSig> match={v => !v.loading && v.err == null && !v.gallery}>
+        <Case<SwSig>
+          match={v => !v.loading && v.err == null && !v.gallery}
+          memo
+        >
           {() => <VirtualFileList explorer={explorer} tab={tab} />}
         </Case>
       </Switch>

@@ -33,6 +33,13 @@ export type FileEntry = {
 };
 
 /**
+ * Extra margin subtracted from the cached entry rect when deciding whether
+ * the pointer has left the entry bounds, so that pixel-edge jitter right at
+ * the border does not (or conversely, does) trigger a drag start by accident.
+ */
+export const DRAG_START_MARGIN = 2;
+
+/**
  * Logic shared between all file entry variants (the list entry and the
  * gallery entry). Handles entry state (selection, active entry, cut state)
  * as well as all the mouse interactions: selecting, opening files and
