@@ -1,5 +1,12 @@
 import { memo } from "./decorators/memo";
 
+/**
+ * Matches a scheme-rooted path prefix such as `trash:///` (the virtual trash
+ * location used by host applications). Deliberately narrow: lowercase
+ * scheme name followed by the empty-authority `://` form.
+ */
+const SCHEME_PREFIX_RE = /^([a-z]+):\/\//;
+
 export class Path {
   static from(
     path: Path | string | string[],
@@ -32,8 +39,19 @@ export class Path {
 
   private _segments: string[] = [];
   private _type: "absolute" | "relative" = "absolute";
+  /**
+   * Scheme name for scheme-rooted paths (e.g. `"trash"` for `trash:///`),
+   * `undefined` for plain filesystem paths. The segments/type below describe
+   * the part after the `scheme://` prefix.
+   */
+  private _scheme: string | undefined;
 
   constructor(path: string) {
+    const schemeMatch = SCHEME_PREFIX_RE.exec(path);
+    if (schemeMatch) {
+      this._scheme = schemeMatch[1];
+      path = path.slice(schemeMatch[0].length);
+    }
     this._type = path.startsWith("/") ? "absolute" : "relative";
     for (let i = 0; i < path.length; i++) {
       let segment = "";
@@ -50,7 +68,16 @@ export class Path {
   }
 
   private concatSegments(): string {
-    let result = this._type === "absolute" ? "/" : "";
+    // Scheme paths are emitted in their canonical `scheme:///...` form (the
+    // empty authority adds the extra slash for the absolute-root case).
+    let result = this._scheme !== undefined
+      ? `${this._scheme}://`
+      : this._type === "absolute"
+      ? "/"
+      : "";
+    if (this._scheme !== undefined && this._type === "absolute") {
+      result += "/";
+    }
     for (const segment of this._segments) {
       result += segment + "/";
     }
@@ -61,12 +88,24 @@ export class Path {
   }
 
   /**
+   * The scheme name for scheme-rooted paths (`"trash"` for `trash:///`),
+   * `undefined` for plain filesystem paths.
+   */
+  scheme(): string | undefined {
+    return this._scheme;
+  }
+
+  /**
    * Joins two paths together and returns a new Path object with the result.
    */
   join(path: Path): Path {
     const result = Object.create(Path.prototype) as Path;
     result._segments = this._segments.concat(path._segments);
     result._type = path._type;
+    // A scheme-rooted argument marks the result as scheme-rooted too; keeping
+    // `this._scheme` here would silently downgrade e.g. `Path.from("/a").join(
+    // Path.from("trash:///x"))` to the plain filesystem path `/a/x`.
+    result._scheme = path._scheme ?? this._scheme;
     Object.freeze(result._segments);
     return result;
   }
@@ -82,6 +121,7 @@ export class Path {
     result._segments = this._segments.slice();
     result._segments.push(segment);
     result._type = this._type;
+    result._scheme = this._scheme;
     Object.freeze(result._segments);
     return result;
   }
@@ -90,6 +130,7 @@ export class Path {
     const result = Object.create(Path.prototype) as Path;
     result._segments = this._segments.slice(0, endIdx);
     result._type = this._type;
+    result._scheme = this._scheme;
     Object.freeze(result._segments);
     return result;
   }
@@ -102,6 +143,7 @@ export class Path {
     const result = Object.create(Path.prototype) as Path;
     result._segments = this._segments.slice(0, -1);
     result._type = this._type;
+    result._scheme = this._scheme;
     Object.freeze(result._segments);
     return result;
   }
@@ -114,6 +156,7 @@ export class Path {
     const result = Object.create(Path.prototype) as Path;
     result._segments = [];
     result._type = this._type;
+    result._scheme = this._scheme;
     for (let i = 0; i < this._segments.length; i++) {
       const segment = this._segments[i]!;
       if (segment === "..") {
@@ -149,6 +192,10 @@ export class Path {
     const otherPath = Path.from(other).normalize();
     const selfNormal = this.normalize();
 
+    if (otherPath._scheme !== selfNormal._scheme) {
+      return false;
+    }
+
     if (otherPath._segments.length !== selfNormal._segments.length) {
       return false;
     }
@@ -163,12 +210,26 @@ export class Path {
   }
 
   isInside(parent: Path | string): boolean {
-    parent = Path.from(parent);
-    if (parent._segments.length >= this._segments.length) return false;
-    for (let i = 0; i < parent._segments.length; i++) {
-      const thisSegment = this._segments[i];
-      const parentSegment = parent._segments[i];
-      if (thisSegment !== parentSegment) return false;
+    const parentPath = Path.from(parent).normalize();
+    const self = this.normalize();
+
+    // Paths from different roots are never related: a plain filesystem path is
+    // not inside a scheme root (e.g. `/foo` is NOT inside `trash:///`), and
+    // two different schemes are unrelated.
+    if (parentPath._scheme !== self._scheme) {
+      return false;
+    }
+
+    // A relative path can only be inside a relative parent (and vice versa).
+    if (parentPath._type !== self._type) {
+      return false;
+    }
+
+    if (parentPath._segments.length >= self._segments.length) return false;
+    for (let i = 0; i < parentPath._segments.length; i++) {
+      const selfSegment = self._segments[i];
+      const parentSegment = parentPath._segments[i];
+      if (selfSegment !== parentSegment) return false;
     }
     return true;
   }
@@ -178,7 +239,11 @@ export class Path {
    */
   @memo
   ext(): string | undefined {
-    const lastSegment = this._segments[this._segments.length - 1]!;
+    const lastSegment = this._segments[this._segments.length - 1];
+    if (lastSegment === undefined) {
+      // Scheme roots (e.g. `trash:///`) have no segments.
+      return undefined;
+    }
     const idx = lastSegment.lastIndexOf(".");
     if (idx === -1) {
       return;
@@ -191,7 +256,12 @@ export class Path {
    */
   @memo
   basename(ext = true): string {
-    const lastSegment = this._segments[this._segments.length - 1]!;
+    const lastSegment = this._segments[this._segments.length - 1];
+    if (lastSegment === undefined) {
+      // Scheme roots (e.g. `trash:///`) have no segments; the scheme name
+      // itself acts as the basename.
+      return this._scheme ?? "";
+    }
     if (!ext) {
       const idx = lastSegment.lastIndexOf(".");
       if (idx !== -1) {

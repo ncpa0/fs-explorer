@@ -187,7 +187,7 @@ function LocationPreview(
           }
         }}
       >
-        Root
+        {props.location.derive(loc => loc.scheme() ?? "Root")}
       </div>
       <div class="breadcrumb-separator"></div>
       {props.location.derive(loc => {
