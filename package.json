@@ -5,12 +5,12 @@
   "keywords": [],
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/ncpa0/fs-explorer"
   },
   "license": "MIT",
   "author": {
     "name": "Szymon Bretner (ncpa0cpl)",
-    "email": ""
+    "email": "szymonb21@gmail.com"
   },
   "type": "module",
   "exports": {
@@ -27,6 +27,11 @@
   "main": "./dist/legacy/index.js",
   "module": "index.ts",
   "types": "./dist/types/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "test:tsc": "tsc --noEmit",
     "prepare": "husky install",
