@@ -45,6 +45,12 @@ export class TabController {
         event.historyEntry,
         event.historyEntry.scrollPosition,
       );
+
+      // Navigation changed this tab's location - re-push the set of dirs
+      // open in tabs so the host filesystem keeps watchers in sync.
+      // (Location is only ever mutated by the history methods, and every one
+      // of them dispatches a pop event, so this covers all navigations.)
+      this.explorer.syncWatchedDirs();
     };
 
     this.history.addEventListener(

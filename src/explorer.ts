@@ -141,6 +141,8 @@ const isHtmlElem = (v: any): v is HTMLElement => "closest" in v;
 export class Explorer {
   private cleanups: Array<() => void> = [];
   private escapeKeyHandlers: Array<(e: KeyboardEvent) => void> = [];
+  /** Last set of dirs pushed via `setWatchedDirs`, for change detection. */
+  private lastWatchedDirs: readonly string[] | null = null;
 
   public window: Element | null = null;
 
@@ -212,6 +214,14 @@ export class Explorer {
     };
     filesystem.onChange(onChange);
     this.cleanups.push(() => filesystem.offChange(onChange));
+
+    // Watcher support: keep the filesystem implementation informed about the
+    // set of directories currently open in tabs, so hosts that implement
+    // `setWatchedDirs` only keep watchers for dirs the user is actually
+    // looking at (instead of everything ever browsed). Tab navigation pushes
+    // the set via the tabs' pop handler (see TabController.initiate); the
+    // initial set is pushed here because no pop event fires at construction.
+    this.syncWatchedDirs();
 
     window.addEventListener("keydown", this.globalKeyDownHandler);
     this.cleanups.push(() => {
@@ -344,12 +354,18 @@ export class Explorer {
 
   newTab(initLocation?: Path | string) {
     const tab = new TabController(this, this.cleanups);
+    // The tab must join the tabs list BEFORE its history is seeded below:
+    // `history.replace` fires a pop event whose handler recomputes the
+    // watched dirs from the open tabs, and the new tab has to be part of it.
+    this.tabs.dispatch(current => current.concat(tab));
+    this.activeTab.dispatch(tab.id);
     tab.initiate();
     if (initLocation) {
       tab.history.replace(initLocation);
     }
-    this.tabs.dispatch(current => current.concat(tab));
-    this.activeTab.dispatch(tab.id);
+    // Covers the no-initLocation case (no pop event fires then) and is a
+    // no-op otherwise (syncWatchedDirs skips unchanged sets).
+    this.syncWatchedDirs();
   }
 
   closeTab(id: symbol) {
@@ -364,6 +380,10 @@ export class Explorer {
       }
     }
     sig.commitBatch();
+
+    // Closing a tab fires no pop event, so the watched set is recomputed
+    // explicitly here.
+    this.syncWatchedDirs();
   }
 
   onEscapePress(handler: (e: KeyboardEvent) => void) {
@@ -450,5 +470,30 @@ export class Explorer {
     for (const cleanup of this.cleanups) {
       cleanup();
     }
+  }
+
+  /**
+   * Pushes the set of directories currently open in tabs (one per tab
+   * location, deduplicated) to the filesystem implementation. Called on
+   * every tab navigation (from the tabs' pop handler), when a tab is opened
+   * or closed, and once at construction. Skips unchanged sets so redundant
+   * pop events don't re-push the same set. No-op for filesystems without
+   * watcher support.
+   */
+  syncWatchedDirs() {
+    const dirs = new Set<string>();
+    for (const tab of this.tabs.get()) {
+      dirs.add(tab.location.pathname);
+    }
+    const next = [...dirs];
+    const prev = this.lastWatchedDirs;
+    if (
+      prev !== null && prev.length === next.length
+      && next.every(dir => prev.includes(dir))
+    ) {
+      return;
+    }
+    this.lastWatchedDirs = next;
+    this.filesystem.setWatchedDirs?.(next);
   }
 }
