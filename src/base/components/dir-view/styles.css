@@ -55,6 +55,10 @@
             & .file-entry.file-entry {
                 grid-template-columns: 3.75em auto;
 
+                & .filename {
+                    margin-right: 1em;
+                }
+
                 & .file-size,
                 & .file-modified {
                     display: none;
