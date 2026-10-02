@@ -117,6 +117,12 @@ export interface ExplorerOptions {
   readonly initDir?: string;
   readonly fileDropHandler?: (data: DataTransfer, droppedInto: FStat) => void;
   /**
+   * When set to true dragging files inside the explorer window will be
+   * disabled. Dropping files from outside of the window (via
+   * `fileDropHandler`) is unaffected and keeps working.
+   */
+  readonly disableDrag?: boolean;
+  /**
    * Called when an active (emulated) file drag leaves the explorer window
    * (pointer exit while the drag is still held). Return true if the host took
    * over the drag (e.g. handed it to the OS) - the emulated drag is then ended
