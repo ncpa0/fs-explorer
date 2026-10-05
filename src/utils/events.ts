@@ -1,4 +1,4 @@
-export type ModKey = "ctrl" | "shift" | "alt" | "any";
+export type ModKey = "ctrl" | "shift" | "alt" | "cmd" | "any";
 
 export const isLmb = (event: MouseEvent, ...mods: ModKey[]) => {
   if (event.button !== 0) {
@@ -15,6 +15,7 @@ export const isLmb = (event: MouseEvent, ...mods: ModKey[]) => {
   let expCtrl = false;
   let expShift = false;
   let expAlt = false;
+  let expMeta = false;
   for (const mod of mods) {
     if (mod === "ctrl") {
       expCtrl = true;
@@ -22,11 +23,13 @@ export const isLmb = (event: MouseEvent, ...mods: ModKey[]) => {
       expShift = true;
     } else if (mod === "alt") {
       expAlt = true;
+    } else if (mod === "cmd") {
+      expMeta = true;
     }
   }
 
   return event.ctrlKey === expCtrl && event.shiftKey === expShift
-    && event.altKey === expAlt;
+    && event.altKey === expAlt && event.metaKey === expMeta;
 };
 
 export const isRmb = (event: MouseEvent, ...mods: ModKey[]) => {

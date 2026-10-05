@@ -128,9 +128,16 @@ export function useFileEntry(props: FileEntryProps): FileEntry {
     }
     isPressed = false;
 
-    if (isLmb(event, "ctrl")) {
-      toggleSelect();
-      return;
+    if (isMac()) {
+      if (isLmb(event, "cmd")) {
+        toggleSelect();
+        return;
+      }
+    } else {
+      if (isLmb(event, "ctrl")) {
+        toggleSelect();
+        return;
+      }
     }
 
     if (!isLmb(event)) return;
