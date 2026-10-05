@@ -3,6 +3,7 @@ import { ReadonlySignal, sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import ArrowBackwardIcon from "../../../assets/main-theme/icons/arrow-back.svg";
 import ArrowForwardIcon from "../../../assets/main-theme/icons/arrow-forward.svg";
 import ArrowUpIcon from "../../../assets/main-theme/icons/arrow-up.svg";
+import PlusIcon from "../../../assets/main-theme/icons/plus.svg";
 import RefreshIcon from "../../../assets/main-theme/icons/refresh.svg";
 import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
@@ -48,6 +49,10 @@ export function LocationBar(props: LocationBarProps) {
     tab.get().history.backPush();
   };
 
+  const handleNewTab = () => {
+    explorer.newTabGroup(tab.get().location.path);
+  };
+
   return (
     <div class={["location-bar", ADW.Box.box, ADW.Box.bg2]}>
       <ControlButtons
@@ -77,6 +82,19 @@ export function LocationBar(props: LocationBarProps) {
           );
         }
       })}
+      <button
+        onmousedown={handleNewTab}
+        class={[
+          ADW.Button.button,
+          ADW.Button.square,
+          ADW.Button.adaptive,
+          "new-tab-btn",
+          "btn-with-icon",
+          ADW.Typography.text,
+        ]}
+      >
+        <PlusIcon />
+      </button>
     </div>
   );
 }
@@ -103,7 +121,7 @@ function ControlButtons(props: {
           ADW.Button.adaptive,
         ]}
       >
-        <span class={["control-icon", ADW.Typography.text]}>
+        <span class={["btn-with-icon", ADW.Typography.text]}>
           <ArrowBackwardIcon />
         </span>
       </button>
@@ -116,7 +134,7 @@ function ControlButtons(props: {
           ADW.Button.adaptive,
         ]}
       >
-        <span class={["control-icon", ADW.Typography.text]}>
+        <span class={["btn-with-icon", ADW.Typography.text]}>
           <ArrowForwardIcon />
         </span>
       </button>
@@ -129,7 +147,7 @@ function ControlButtons(props: {
           ADW.Button.adaptive,
         ]}
       >
-        <span class={["control-icon", ADW.Typography.text]}>
+        <span class={["btn-with-icon", ADW.Typography.text]}>
           <ArrowUpIcon />
         </span>
       </button>
@@ -142,7 +160,7 @@ function ControlButtons(props: {
           ADW.Button.adaptive,
         ]}
       >
-        <span class={["control-icon", ADW.Typography.text]}>
+        <span class={["btn-with-icon", ADW.Typography.text]}>
           <RefreshIcon />
         </span>
       </button>

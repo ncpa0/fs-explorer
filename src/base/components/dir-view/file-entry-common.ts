@@ -5,6 +5,7 @@ import { FStat } from "../../../filesystem-interface";
 import { FileActionContext } from "../../../interfaces/file-action";
 import { isLmb } from "../../../utils/events";
 import { Path } from "../../../utils/path";
+import { isMac } from "../../../utils/platform";
 import { TabController } from "../../tab-controller";
 
 export type FileEntryProps = {

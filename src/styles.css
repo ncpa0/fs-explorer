@@ -16,6 +16,8 @@
 
 @import "./base/components/statusbar/styles.css";
 
+@import "./base/components/tabs-bar/styles.css";
+
 @import "./base/components/_common/loader-styles.css";
 
 @import "./base/components/jobs/styles.css";
@@ -46,5 +48,21 @@
         display: flex;
         justify-content: center;
         align-items: center;
+    }
+
+    & .btn-with-icon.btn-with-icon.btn-with-icon.btn-with-icon.btn-with-icon.btn-with-icon.btn-with-icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        & svg {
+            width: var(--btn-icon-dimm, 1.2em);
+            height: var(--btn-icon-dimm, 1.2em);
+
+            & path,
+            & rect {
+                fill: var(--clr-text) !important;
+            }
+        }
     }
 }

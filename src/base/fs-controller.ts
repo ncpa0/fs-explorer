@@ -84,9 +84,9 @@ export class FsController {
   }
 
   private updateTabFiles(dir: string | Path, ...updates: FilesMutation[]) {
-    for (const tab of this.explorer.tabs.get()) {
+    this.explorer.forEachTab(tab => {
       tab.updateFiles(dir, updates);
-    }
+    });
   }
 
   private _copy(from: FStat, to: string | Path) {

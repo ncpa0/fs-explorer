@@ -3,14 +3,16 @@ import CloseIcon from "../../../assets/main-theme/icons/close.svg";
 import { Explorer } from "../../../explorer";
 import { Path } from "../../../utils/path";
 import { TabController } from "../../tab-controller";
+import { TabGroup } from "../../tab-group";
 import { DirView } from "../dir-view/dir-view";
 
 export type TabProps = {
   explorer: Explorer;
+  group: TabGroup;
   tab: TabController;
 };
 
-export function Tab({ explorer, tab }: TabProps) {
+export function Tab({ explorer, tab, group }: TabProps) {
   const handleHeaderMouseUp = () => {
     if (!explorer.drag.isDragging()) return;
     const files = explorer.drag.getDraggedFiles();
@@ -38,10 +40,10 @@ export function Tab({ explorer, tab }: TabProps) {
     <div
       class={{
         "explorer-tab": true,
-        active: explorer.activeTab.derive(id => id === tab.id),
+        active: group.activeTabID.derive(id => id === tab.id),
       }}
       onmousedown={() => {
-        explorer.focusTab(tab.id);
+        group.focusTab(tab.id);
       }}
     >
       <div class="explorer-tab-header" onmouseup={handleHeaderMouseUp}>

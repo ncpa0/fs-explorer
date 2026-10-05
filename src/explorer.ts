@@ -10,7 +10,6 @@ import { OverlayController } from "./base/overlay-controller";
 import { PlacesStorage } from "./base/places-storage";
 import { PreviewPaneController } from "./base/preview-pane-controller";
 import { PromptController } from "./base/prompt-controller";
-import { TabController } from "./base/tab-controller";
 import { Filesystem, FStat } from "./filesystem-interface";
 import { ActionError } from "./interfaces/action-error";
 import { Styles } from "./styles-component";
@@ -19,6 +18,8 @@ import { Path } from "./utils/path";
 import "adwaveui/dist/esm/components/switch/switch";
 import "adwaveui/dist/esm/components/selector/selector";
 import { DirCache } from "./base/dir-cache";
+import { TabController } from "./base/tab-controller";
+import { TabGroup } from "./base/tab-group";
 
 export interface StorageInterface {
   getItem(key: string): string | null;
@@ -157,10 +158,10 @@ export class Explorer {
   public readonly prompt = new PromptController(this);
   public readonly fs;
 
-  public readonly tabs = sig<ReadonlyArray<TabController>>([
-    new TabController(this, this.cleanups),
+  public readonly tabGroups = sig<Array<TabGroup>>([
+    new TabGroup(this, this.cleanups),
   ]);
-  public readonly activeTab = sig(this.tabs.get()[0]!.id);
+  public readonly activeTabGroup = sig(this.tabGroups.get()[0]!.id);
 
   public readonly contextMenu = new ContextMenuController(this);
   public readonly overlay = new OverlayController();
@@ -179,10 +180,15 @@ export class Explorer {
 
   public readonly cache = new DirCache();
 
-  currentTab = sig.derive(this.activeTab, this.tabs, (id, tabs) => {
-    const activeTab = tabs.find((tab) => tab.id === id) ?? tabs[0]!;
-    return activeTab;
-  });
+  currentTabGroup = sig.derive(
+    this.activeTabGroup,
+    this.tabGroups,
+    (id, groups) => {
+      const activeGroup = groups.find((g) => g.id === id) ?? groups[0]!;
+      return activeGroup;
+    },
+  );
+  currentTab = this.currentTabGroup.derive(g => g.activeTab);
   history = this.currentTab.derive(t => t.history);
   location = this.currentTab.derive(t => t.location);
   directory = this.currentTab.derive(t => t.directory);
@@ -214,8 +220,8 @@ export class Explorer {
     }
 
     const onChange = (dirPath?: string) => {
-      for (const tab of this.tabs.get()) {
-        tab.refresh(dirPath);
+      for (const g of this.tabGroups.get()) {
+        g.refresh(dirPath);
       }
     };
     filesystem.onChange(onChange);
@@ -234,8 +240,8 @@ export class Explorer {
       window.removeEventListener("keydown", this.globalKeyDownHandler);
     });
 
-    for (const tab of this.tabs.get()) {
-      tab.initiate();
+    for (const g of this.tabGroups.get()) {
+      g.initiate();
     }
 
     if (options.initDir) {
@@ -352,44 +358,59 @@ export class Explorer {
   };
 
   focusTab(id: symbol) {
-    const tabs = this.tabs.get();
-    if (tabs.some(tab => tab.id === id)) {
-      this.activeTab.dispatch(id);
-    }
+    const groups = this.tabGroups.get();
+    const g = groups.find(g => g.hasTab(id));
+    g?.focusTab(id);
   }
 
   newTab(initLocation?: Path | string) {
-    const tab = new TabController(this, this.cleanups);
-    // The tab must join the tabs list BEFORE its history is seeded below:
-    // `history.replace` fires a pop event whose handler recomputes the
-    // watched dirs from the open tabs, and the new tab has to be part of it.
-    this.tabs.dispatch(current => current.concat(tab));
-    this.activeTab.dispatch(tab.id);
-    tab.initiate();
-    if (initLocation) {
-      tab.history.replace(initLocation);
-    }
+    this.currentTabGroup.get().addTab(initLocation);
     // Covers the no-initLocation case (no pop event fires then) and is a
     // no-op otherwise (syncWatchedDirs skips unchanged sets).
     this.syncWatchedDirs();
   }
 
   closeTab(id: symbol) {
-    sig.startBatch();
-    const currentTabs = this.tabs.get();
-    const newTabs = currentTabs.filter(tab => tab.id !== id);
-    this.tabs.dispatch(newTabs);
-    if (this.activeTab.get() === id) {
-      const newActiveTab = newTabs[0];
-      if (newActiveTab) {
-        this.activeTab.dispatch(newActiveTab.id);
-      }
+    const groups = this.tabGroups.get();
+    const g = groups.find(g => g.hasTab(id));
+    if (g) {
+      g.closeTab(id);
+      // Closing a tab fires no pop event, so the watched set is recomputed
+      // explicitly here.
+      this.syncWatchedDirs();
     }
-    sig.commitBatch();
+  }
 
-    // Closing a tab fires no pop event, so the watched set is recomputed
-    // explicitly here.
+  newTabGroup(initLocation?: Path | string) {
+    const g = new TabGroup(this, this.cleanups);
+    this.tabGroups.dispatch(groups => groups.concat(g));
+    this.activeTabGroup.dispatch(g.id);
+    g.initiate();
+    if (initLocation) {
+      g.activeTab.get().history.replace(initLocation);
+    }
     this.syncWatchedDirs();
+    return g;
+  }
+
+  closeTabGroup(id: symbol) {
+    if (this.tabGroups.get().length === 1) {
+      return;
+    }
+
+    this.tabGroups.dispatch(groups => groups.filter(g => g.id !== id));
+    if (this.activeTabGroup.get() === id) {
+      this.activeTabGroup.dispatch(this.tabGroups.get()[0]!.id);
+    }
+    this.syncWatchedDirs();
+  }
+
+  focusTabGroup(id: symbol) {
+    if (!this.tabGroups.get().some(g => g.id === id)) {
+      return;
+    }
+
+    this.activeTabGroup.dispatch(id);
   }
 
   onEscapePress(handler: (e: KeyboardEvent) => void) {
@@ -403,8 +424,8 @@ export class Explorer {
   }
 
   refresh(dir?: string) {
-    for (const tab of this.tabs.get()) {
-      tab.refresh(dir);
+    for (const g of this.tabGroups.get()) {
+      g.refresh(dir);
     }
   }
 
@@ -488,9 +509,9 @@ export class Explorer {
    */
   syncWatchedDirs() {
     const dirs = new Set<string>();
-    for (const tab of this.tabs.get()) {
+    this.forEachTab(tab => {
       dirs.add(tab.location.pathname);
-    }
+    });
     const next = [...dirs];
     const prev = this.lastWatchedDirs;
     if (
@@ -501,5 +522,15 @@ export class Explorer {
     }
     this.lastWatchedDirs = next;
     this.filesystem.setWatchedDirs?.(next);
+  }
+
+  forEachTab<R>(cb: (t: TabController) => R): R[] {
+    let res: R[] = [];
+    for (const g of this.tabGroups.get()) {
+      for (const tab of g.tabs.get()) {
+        res.push(cb(tab));
+      }
+    }
+    return res;
   }
 }

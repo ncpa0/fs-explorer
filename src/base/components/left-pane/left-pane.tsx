@@ -205,7 +205,6 @@ function OptionsMenu(props: { explorer: Explorer; close: () => void }) {
           [ADW.Button.flat]: true,
           [ADW.Button.adaptive]: true,
           "split-view-btn": true,
-          "hidden": explorer.tabs.derive(t => t.length > 1),
         }}
         onmousedown={handleNewTabClick}
       >

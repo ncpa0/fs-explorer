@@ -16,6 +16,8 @@ export class TabController {
   public readonly history: ExplorerTabHistory;
   public readonly location: ExplorerLocation;
   public readonly directory: DirViewController;
+  public readonly fullLocationPreview;
+  public readonly locationPreview;
 
   constructor(
     protected explorer: Explorer,
@@ -24,6 +26,10 @@ export class TabController {
     this.history = new ExplorerTabHistory();
     this.location = this.history["location"];
     this.directory = new DirViewController(explorer, this);
+    this.fullLocationPreview = this.location.signal.derive(l => l.toString());
+    this.locationPreview = this.location.signal.derive(l =>
+      l.basename() || "/"
+    );
   }
 
   private updateDirContents(

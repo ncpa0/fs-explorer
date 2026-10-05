@@ -31,17 +31,17 @@
                 flex: 1;
                 display: flex;
                 flex-direction: row;
-                height: calc(100% - 3.5em);
                 background-color: var(--clr-bg-2);
+                min-height: 0px;
             }
 
             & .explorer-tabs-container {
                 flex: 1;
                 display: flex;
                 flex-direction: row;
-                height: calc(100% - 3.5em);
                 justify-content: center;
                 padding-inline: .3em;
+                min-height: 0px;
 
                 & .explorer-tab {
                     flex: 1;
@@ -120,5 +120,13 @@
 
     & > * {
         max-height: 100%;
+    }
+
+    & .tab-group-view {
+        display: none;
+
+        &.active-group {
+            display: contents;
+        }
     }
 }

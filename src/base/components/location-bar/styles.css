@@ -13,22 +13,6 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
-
-                & .control-icon {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-
-                    & svg {
-                        width: 1.2em;
-                        height: 1.2em;
-
-                        & path,
-                        & rect {
-                            fill: var(--clr-text) !important;
-                        }
-                    }
-                }
             }
         }
 
@@ -47,6 +31,11 @@
             & .breadcrumb-item {
                 white-space: nowrap;
             }
+        }
+
+        & .new-tab-btn {
+            margin-left: .3em;
+            --btn-icon-dimm: 2em;
         }
     }
 }
