@@ -159,7 +159,7 @@ export class Explorer {
   public readonly fs;
 
   public readonly tabGroups = sig<Array<TabGroup>>([
-    new TabGroup(this, this.cleanups),
+    new TabGroup(this),
   ]);
   public readonly activeTabGroup = sig(this.tabGroups.get()[0]!.id);
 
@@ -382,7 +382,7 @@ export class Explorer {
   }
 
   newTabGroup(initLocation?: Path | string) {
-    const g = new TabGroup(this, this.cleanups);
+    const g = new TabGroup(this);
     this.tabGroups.dispatch(groups => groups.concat(g));
     this.activeTabGroup.dispatch(g.id);
     g.initiate();
@@ -398,10 +398,12 @@ export class Explorer {
       return;
     }
 
+    const closedGroup = this.tabGroups.get().find(g => g.id === id);
     this.tabGroups.dispatch(groups => groups.filter(g => g.id !== id));
     if (this.activeTabGroup.get() === id) {
       this.activeTabGroup.dispatch(this.tabGroups.get()[0]!.id);
     }
+    closedGroup?.dispose();
     this.syncWatchedDirs();
   }
 
@@ -496,6 +498,9 @@ export class Explorer {
   dispose() {
     for (const cleanup of this.cleanups) {
       cleanup();
+    }
+    for (const g of this.tabGroups.get()) {
+      g.dispose();
     }
   }
 

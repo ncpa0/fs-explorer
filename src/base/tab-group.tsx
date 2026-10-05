@@ -13,10 +13,9 @@ export class TabGroup {
 
   constructor(
     protected explorer: Explorer,
-    protected cleanups: Array<() => void>,
   ) {
     this.tabs = sig<ReadonlyArray<TabController>>([
-      new TabController(this.explorer, this.cleanups),
+      new TabController(this.explorer),
     ]);
     this.activeTabID = sig(this.tabs.get()[0]!.id);
     this.activeTab = sig.derive(this.tabs, this.activeTabID, (tabs, id) => {
@@ -31,7 +30,7 @@ export class TabGroup {
   }
 
   addTab(initLocation?: Path | string) {
-    const tab = new TabController(this.explorer, this.cleanups);
+    const tab = new TabController(this.explorer);
     this.tabs.dispatch(current => current.concat(tab));
     this.activeTabID.dispatch(tab.id);
     this.explorer.activeTabGroup.dispatch(this.id);
@@ -43,9 +42,11 @@ export class TabGroup {
   }
 
   closeTab(id: symbol) {
-    const currentTabs = this.tabs.get();
-    const newTabs = currentTabs.filter(tab => tab.id !== id);
-    if (newTabs.length === 0) return;
+    const closedTab = this.tabs.get().find(tab => tab.id === id);
+    const newTabs = this.tabs.get().filter(tab => tab.id !== id);
+    if (!closedTab || newTabs.length === 0) return;
+
+    closedTab.dispose();
 
     sig.startBatch();
     this.tabs.dispatch(newTabs);
@@ -61,6 +62,12 @@ export class TabGroup {
   refresh(dir?: string) {
     for (const tab of this.tabs.get()) {
       tab.refresh(dir);
+    }
+  }
+
+  dispose() {
+    for (const tab of this.tabs.get()) {
+      tab.dispose();
     }
   }
 

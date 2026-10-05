@@ -18,10 +18,10 @@ export class TabController {
   public readonly directory: DirViewController;
   public readonly fullLocationPreview;
   public readonly locationPreview;
+  private cleanups: Array<() => void> = [];
 
   constructor(
     protected explorer: Explorer,
-    protected cleanups: Array<() => void>,
   ) {
     this.history = new ExplorerTabHistory();
     this.location = this.history["location"];
@@ -70,6 +70,14 @@ export class TabController {
         popHandler,
       );
     });
+  }
+
+  /** Safe to call on an already disposed tab. */
+  dispose() {
+    for (const cleanup of this.cleanups) {
+      cleanup();
+    }
+    this.cleanups = [];
   }
 
   async updateFiles(

@@ -9,31 +9,33 @@ export function TabsBar(props: {
 }) {
   const { explorer } = props;
 
-  const handleScroll = throttle(
-    (e: WheelEvent) => {
-      if (e.deltaX !== 0) {
-        return;
-      }
-
-      if (e.deltaY !== 0) {
-        e.preventDefault();
-        try {
-          barElem.scrollBy({ left: -e.deltaY, behavior: "smooth" });
-        } catch {}
-      }
+  const virtualScroll = throttle(
+    (amount: number) => {
+      barElem.scrollBy({ left: amount, behavior: "smooth" });
     },
     64,
     { leading: true, trailing: true },
   );
 
+  const handleScroll = (e: WheelEvent) => {
+    if (e.deltaX !== 0) {
+      return;
+    }
+
+    if (e.deltaY !== 0) {
+      e.preventDefault();
+      virtualScroll(-e.deltaY);
+    }
+  };
+
   const barElem = (
     <div
+      role="tablist"
       class={{
         "tabs-bar": true,
         "hidden": props.hidden,
       }}
-      // @ts-expect-error
-      onmousewheel={handleScroll}
+      onwheel={handleScroll}
     >
       {explorer.tabGroups.$map(g => {
         const handleTabBtnPress = () => {
@@ -44,15 +46,23 @@ export function TabsBar(props: {
           explorer.closeTabGroup(g.id);
         };
 
+        const selected = sig.eq(explorer.activeTabGroup, g.id);
+
         return (
-          <button
+          <div
+            role="tab"
+            aria-selected={selected}
             class={{
               btn: true,
               "tab-button": true,
-              active: sig.eq(explorer.activeTabGroup, g.id),
+              active: selected,
             }}
             onmousedown={handleTabBtnPress}
-            onauxclick={closeTabGroup}
+            onauxclick={e => {
+              if (e.button === 1) {
+                closeTabGroup();
+              }
+            }}
             title={g.activeTab.derive(t => t.fullLocationPreview)}
           >
             <span>
@@ -68,7 +78,7 @@ export function TabsBar(props: {
             >
               <CloseIcon />
             </button>
-          </button>
+          </div>
         );
       })}
     </div>
