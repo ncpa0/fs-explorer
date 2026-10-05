@@ -39,7 +39,8 @@
     "fix:lint": "oxlint --fix ./src",
     "test:lint": "oxlint ./src",
     "fix:fmt": "dprint fmt",
-    "test:fmt": "dprint check"
+    "test:fmt": "dprint check",
+    "release": "git push && git switch release && git rebase master && git push && git switch master"
   },
   "dependencies": {
     "@ncpa0cpl/vanilla-jsx": "^0.0.1-alpha.53",
