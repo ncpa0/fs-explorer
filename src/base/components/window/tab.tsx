@@ -2,6 +2,7 @@ import { Typography } from "adwavecss";
 import CloseIcon from "../../../assets/main-theme/icons/close.svg";
 import { Explorer } from "../../../explorer";
 import { Path } from "../../../utils/path";
+import { useFileDrop } from "../../../utils/use-file-drop";
 import { TabController } from "../../tab-controller";
 import { TabGroup } from "../../tab-group";
 import { DirView } from "../dir-view/dir-view";
@@ -13,22 +14,11 @@ export type TabProps = {
 };
 
 export function Tab({ explorer, tab, group }: TabProps) {
-  const handleHeaderMouseUp = () => {
-    if (!explorer.drag.isDragging()) return;
-    const files = explorer.drag.getDraggedFiles();
-    explorer.drag.endDrag();
-
-    if (!files || files.length === 0) return;
-
-    const moveTo = tab.directory.stat.get();
-    if (moveTo) {
-      const currentFileLocation = Path.from(files.at(0)!.path).dir();
-      if (currentFileLocation.equals(moveTo.path)) {
-        return;
-      }
-      explorer.fs.move(files, moveTo.path);
-    }
-  };
+  const { onmouseup, onmouseenter, onmouseleave, targetClassName } =
+    useFileDrop(
+      explorer,
+      () => tab.directory.stat.get()?.path,
+    );
 
   const handleSegmentClick = (path: Path, segmentIdx: number) => () => {
     const newPath = path.slice(segmentIdx + 1);
@@ -46,7 +36,12 @@ export function Tab({ explorer, tab, group }: TabProps) {
         group.focusTab(tab.id);
       }}
     >
-      <div class="explorer-tab-header" onmouseup={handleHeaderMouseUp}>
+      <div
+        class={["explorer-tab-header", targetClassName]}
+        onmouseup={onmouseup}
+        onmouseenter={onmouseenter}
+        onmouseleave={onmouseleave}
+      >
         <span class={Typography.subtitle} dir="rtl">
           <span class="invs_placeholder">i</span>
           {tab.location.signal.derive(l => {

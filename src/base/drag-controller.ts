@@ -12,7 +12,12 @@ export class DragController {
   ) {}
 
   isDragging() {
-    return this._dragging;
+    const files = this.draggedFiles.get();
+    if (this._dragging.get() && (files && files.length === 0)) {
+      this.draggedFiles.dispatch(null);
+    }
+
+    return this._dragging.get();
   }
 
   startDrag(files: readonly FStat[]) {

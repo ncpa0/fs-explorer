@@ -1,0 +1,15 @@
+.explorer-window.explorer-window.explorer-window.explorer-window {
+    & .dnd-target-active {
+        position: relative;
+    }
+
+    & .dnd-target-active::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: color-mix(in srgb, var(--clr-primary-100) 50%, transparent
+        50%);
+        border: 1px solid var(--clr-primary-400);
+        border-radius: inherit;
+    }
+}

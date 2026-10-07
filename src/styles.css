@@ -24,6 +24,8 @@
 
 @import "./base/components/bulk-rename/styles.css";
 
+@import "./utils/use-file-drop-styles.css";
+
 .explorer-window.explorer-window.explorer-window.explorer-window {
     box-sizing: border-box;
 

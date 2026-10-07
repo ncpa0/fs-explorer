@@ -67,8 +67,10 @@
                         flex-direction: row;
                         justify-content: space-between;
                         align-items: center;
-                        margin-left: 1em;
+                        padding-left: 1em;
                         height: 2.5em;
+                        border-top-left-radius: inherit;
+                        border-top-right-radius: inherit;
 
                         & .invs_placeholder {
                             opacity: 0;
