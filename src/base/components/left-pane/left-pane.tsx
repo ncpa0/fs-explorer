@@ -1,11 +1,9 @@
 import { Separator } from "adwavecss";
 import DirectoryIcon from "../../../assets/main-theme/icons/directory.svg";
-import MoreIcon from "../../../assets/main-theme/icons/more.svg";
 import { Explorer, Place } from "../../../explorer";
 import { ADW } from "../../../utils/css";
-import { isLmb } from "../../../utils/events";
-import { getRelativePosition } from "../../../utils/get-relative-position";
 import { JobsView } from "../jobs/jobs-view";
+import { DirectoryOptionsButton } from "./explorer-actions-menu";
 import { PlaceContextMenu } from "./place-context-menu";
 
 export type LeftPaneProps = {
@@ -121,150 +119,6 @@ export function LeftPane(props: LeftPaneProps) {
         </div>
       </div>
       <JobsView explorer={explorer} />
-    </div>
-  );
-}
-
-export function DirectoryOptionsButton(props: { explorer: Explorer }) {
-  const { explorer } = props;
-  const { overlay } = explorer;
-
-  const handleOpenOptions = () => {
-    const window = explorer.window!;
-
-    const btnRelPos = getRelativePosition(optionsBtn, window);
-    const btnSize = optionsBtn.getBoundingClientRect();
-
-    overlay.display(
-      {
-        dimBackground: false,
-        position: {
-          top: btnRelPos.top + btnSize.height + 6,
-          left: btnRelPos.left,
-        },
-      },
-      <OptionsMenu explorer={explorer} close={() => overlay.close()} />,
-    );
-  };
-
-  const optionsBtn = (
-    <button
-      class={{
-        "dir-options-btn": true,
-        [ADW.Button.button]: true,
-        [ADW.Button.flat]: true,
-        [ADW.Button.square]: true,
-        [ADW.Button.adaptive]: true,
-      }}
-      onmousedown={handleOpenOptions}
-    >
-      <MoreIcon />
-    </button>
-  );
-
-  return optionsBtn;
-}
-
-function OptionsMenu(props: { explorer: Explorer; close: () => void }) {
-  const { explorer } = props;
-
-  const hanldeShowHiddenClick = (ev: MouseEvent) => {
-    if (isLmb(ev)) {
-      props.explorer.directory.get().showHiddenFilesToggle();
-      props.close();
-    }
-    ev.preventDefault();
-    ev.stopPropagation();
-  };
-
-  const handleGalleryViewClick = (ev: MouseEvent) => {
-    if (isLmb(ev)) {
-      props.explorer.directory.get().galleryView.dispatch(v => !v);
-      props.close();
-    }
-    ev.preventDefault();
-    ev.stopPropagation();
-  };
-
-  const handleNewTabClick = (ev: MouseEvent) => {
-    if (isLmb(ev)) {
-      props.close();
-      explorer.newTab(
-        explorer.location.get().path,
-      );
-    }
-    ev.preventDefault();
-    ev.stopPropagation();
-  };
-
-  return (
-    <div class={{ ["options-menu"]: true }}>
-      <button
-        class={{
-          [ADW.Button.button]: true,
-          [ADW.Button.flat]: true,
-          [ADW.Button.adaptive]: true,
-          "split-view-btn": true,
-        }}
-        onmousedown={handleNewTabClick}
-      >
-        Split View
-      </button>
-      {explorer.options.explorerActions?.map(action => (
-        <button
-          class={{
-            [ADW.Button.button]: true,
-            [ADW.Button.flat]: true,
-            [ADW.Button.adaptive]: true,
-          }}
-          onmousedown={(ev) => {
-            if (isLmb(ev)) {
-              props.close();
-              action.run(explorer);
-            }
-            ev.preventDefault();
-            ev.stopPropagation();
-          }}
-        >
-          {action.label}
-        </button>
-      ))}
-      <button
-        class={{
-          "toggle-btn": true,
-          "gallery-view-btn": true,
-          [ADW.Button.button]: true,
-          [ADW.Button.flat]: true,
-          [ADW.Button.adaptive]: true,
-        }}
-        onmousedown={handleGalleryViewClick}
-      >
-        <span>
-          Gallery view
-        </span>
-        <input
-          type="radio"
-          checked={props.explorer.directory.derive(d => d.galleryView.get())}
-        />
-      </button>
-      <button
-        class={{
-          "toggle-btn": true,
-          "show-hidden-btn": true,
-          [ADW.Button.button]: true,
-          [ADW.Button.flat]: true,
-          [ADW.Button.adaptive]: true,
-        }}
-        onmousedown={hanldeShowHiddenClick}
-      >
-        <span>
-          Show hidden files
-        </span>
-        <input
-          type="radio"
-          checked={props.explorer.directory.derive(d => d.showHidden)}
-        />
-      </button>
     </div>
   );
 }

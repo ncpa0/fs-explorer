@@ -8,7 +8,7 @@ import RefreshIcon from "../../../assets/main-theme/icons/refresh.svg";
 import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 import { Path } from "../../../utils/path";
-import { DirectoryOptionsButton } from "../left-pane/left-pane";
+import { DirectoryOptionsButton } from "../left-pane/explorer-actions-menu";
 
 export type LocationBarProps = {
   explorer: Explorer;
