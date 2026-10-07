@@ -131,6 +131,13 @@ export interface ExplorerOptions {
    * (the drag is cancelled when the pointer leaves the window).
    */
   readonly nativeDragOut?: (files: readonly FStat[]) => boolean;
+  /**
+   * FileViewHeader is the header with "Name", "Size" and "Modified Time" labels above the file list.
+   * This header never shows in Gallery View.
+   *
+   * @default false
+   */
+  readonly showFileViewHeader?: boolean;
   readonly storage?: StorageInterface;
 }
 
@@ -177,6 +184,8 @@ export class Explorer {
   public readonly plainList = sig(false);
   public readonly noPreview = sig(false);
   public readonly actionFilters: ReadonlyArray<ActionFilter> = [];
+
+  public readonly showFileviewHeader;
 
   public readonly cache = new DirCache();
 
@@ -226,6 +235,8 @@ export class Explorer {
     };
     filesystem.onChange(onChange);
     this.cleanups.push(() => filesystem.offChange(onChange));
+
+    this.showFileviewHeader = sig(options.showFileViewHeader ?? false);
 
     // Watcher support: keep the filesystem implementation informed about the
     // set of directories currently open in tabs, so hosts that implement

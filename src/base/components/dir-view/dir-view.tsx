@@ -101,6 +101,12 @@ export function DirView(props: DirViewProps) {
     (loading, err, gallery) => ({ loading, err, gallery }),
   );
 
+  const showHeader = sig.derive(
+    explorer.showFileviewHeader,
+    dir.galleryView,
+    (show, isGallery) => show && !isGallery,
+  );
+
   type SwSig = SignalOf<typeof swSig>;
 
   return (
@@ -118,8 +124,8 @@ export function DirView(props: DirViewProps) {
       ondragleave={handleDragLeave}
       onmouseup={handleMouseUp}
     >
-      {dir.galleryView.derive(galleryView => {
-        if (galleryView) {
+      {showHeader.derive(show => {
+        if (!show) {
           return null;
         }
         return (

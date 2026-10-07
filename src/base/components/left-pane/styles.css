@@ -133,8 +133,8 @@
     & .toggle-btn {
         & .toggle-indicator {
             border-radius: 100px;
-            width: .2em;
-            height: .2em;
+            width: .8em;
+            height: .8em;
             border: 1px solid var(--clr-btn-adaptive);
             background-color: var(--clr-text);
 
