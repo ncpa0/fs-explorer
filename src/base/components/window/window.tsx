@@ -31,7 +31,7 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
       class={{
         [ADW.Box.box]: true,
         "explorer-window": true,
-        "drag-pointer": explorer.drag.isDragging(),
+        "drag-pointer": explorer.drag.dragging,
         "tab-bar-hidden": tabBarHiddden,
       }}
       onmouseleave={() => explorer.drag.mouseLeave()}

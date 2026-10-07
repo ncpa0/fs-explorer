@@ -90,7 +90,7 @@ export function DirView(props: DirViewProps) {
       if (currentFileLocation.equals(moveTo.path)) {
         return;
       }
-      explorer.fs.move(files, moveTo.path);
+      explorer.fs.move(files, moveTo.path, tab.directory);
     }
   };
 

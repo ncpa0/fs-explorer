@@ -246,7 +246,7 @@ export class ContextMenuController {
 
       const to = dir.get().stat.get()!;
       if (to.write) {
-        explorer.fs.clipboardPaste(to.path);
+        explorer.fs.clipboardPaste(to.path, dir.get());
       }
     }
 

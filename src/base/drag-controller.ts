@@ -4,7 +4,7 @@ import { FStat } from "../filesystem-interface";
 
 export class DragController {
   private draggedFiles = sig<readonly FStat[] | null>(null);
-  private _dragging = this.draggedFiles.derive(f => f != null);
+  dragging = this.draggedFiles.derive(f => f != null);
 
   constructor(
     private readonly explorer: Explorer,
@@ -13,11 +13,11 @@ export class DragController {
 
   isDragging() {
     const files = this.draggedFiles.get();
-    if (this._dragging.get() && (files && files.length === 0)) {
+    if (this.dragging.get() && (files && files.length === 0)) {
       this.draggedFiles.dispatch(null);
     }
 
-    return this._dragging.get();
+    return this.dragging.get();
   }
 
   startDrag(files: readonly FStat[]) {

@@ -3,6 +3,7 @@ import { Filesystem, FStat } from "../filesystem-interface";
 import { ActionError } from "../interfaces/action-error";
 import { Resolvable } from "../utils/immediate";
 import { Path } from "../utils/path";
+import { DirViewController } from "./dir-view-controller";
 import { QueuedJob } from "./jobs-controller";
 
 export type FilesMutation = (files: readonly FStat[]) => readonly FStat[];
@@ -89,7 +90,11 @@ export class FsController {
     });
   }
 
-  private _copy(from: FStat, to: string | Path) {
+  private _copy(
+    from: FStat,
+    to: string | Path,
+    owner: undefined | DirViewController,
+  ) {
     to = Path.from(to);
 
     if (to.equals(from.path)) {
@@ -100,6 +105,7 @@ export class FsController {
       return this.filesystem.copy(from.path, to.toString())
         .then(() => {
           this.updateTabFiles(to.dir(), this.actionAddFile(from, to));
+          owner?.addSelectFile(to.joinSegment(from.name).toString());
         })
         .catch(err => {
           this.explorer.actionError.dispatch(
@@ -111,7 +117,11 @@ export class FsController {
     return job;
   }
 
-  private _move(file: FStat, to: string | Path) {
+  private _move(
+    file: FStat,
+    to: string | Path,
+    owner: undefined | DirViewController,
+  ) {
     const filePath = Path.from(file.path);
     to = Path.from(to);
 
@@ -127,6 +137,7 @@ export class FsController {
 
           this.updateTabFiles(fromDir, this.actionRemoveFile(file));
           this.updateTabFiles(toDir, this.actionAddFile(file, toDir));
+          owner?.addSelectFile(toDir.joinSegment(file.name).toString());
         })
         .catch(err => {
           this.explorer.actionError.dispatch(
@@ -138,7 +149,7 @@ export class FsController {
     return job;
   }
 
-  copy(files: readonly FStat[], to: string | Path) {
+  copy(files: readonly FStat[], to: string | Path, owner?: DirViewController) {
     to = Path.from(to);
     return this.filesystem.readdir(to.toString()).then(
       async (existingFiles) => {
@@ -155,7 +166,7 @@ export class FsController {
             }
 
             const dest = to.joinSegment(f.name);
-            const job = this._copy(f, dest);
+            const job = this._copy(f, dest, owner);
             return job ? [job] : [];
           }),
         ).then((jobs) => jobs.flat());
@@ -167,9 +178,21 @@ export class FsController {
     );
   }
 
-  move(file: FStat, to: string | Path): Resolvable<any>;
-  move(files: readonly FStat[], to: string | Path): Resolvable<any>;
-  move(files: FStat | readonly FStat[], to: string | Path): Resolvable<any> {
+  move(
+    file: FStat,
+    to: string | Path,
+    owner?: DirViewController,
+  ): Resolvable<any>;
+  move(
+    files: readonly FStat[],
+    to: string | Path,
+    owner?: DirViewController,
+  ): Resolvable<any>;
+  move(
+    files: FStat | readonly FStat[],
+    to: string | Path,
+    owner?: DirViewController,
+  ): Resolvable<any> {
     to = Path.from(to);
 
     if (Array.isArray(files)) {
@@ -188,7 +211,7 @@ export class FsController {
               }
 
               const dest = to.joinSegment(f.name);
-              const job = this._move(f, dest);
+              const job = this._move(f, dest, owner);
               return job ? [job] : [];
             }),
           ).then((jobs) => jobs.flat());
@@ -232,7 +255,7 @@ export class FsController {
             }
 
             const dest = targetDir.joinSegment(filename);
-            const job = this._move(file, dest);
+            const job = this._move(file, dest, owner);
             return job?.start();
           },
         );
@@ -288,7 +311,7 @@ export class FsController {
       });
   }
 
-  clipboardPaste(to: string | Path) {
+  clipboardPaste(to: string | Path, owner?: DirViewController) {
     to = Path.from(to);
     const { files, mode } = this.explorer.clipboard.data.get();
     if (files) {
@@ -308,10 +331,10 @@ export class FsController {
 
             const dest = to.joinSegment(f.name);
             if (mode === "move") {
-              const job = this._move(f, dest);
+              const job = this._move(f, dest, owner);
               return job ? [job] : [];
             } else {
-              const job = this._copy(f, dest);
+              const job = this._copy(f, dest, owner);
               return job ? [job] : [];
             }
           }),

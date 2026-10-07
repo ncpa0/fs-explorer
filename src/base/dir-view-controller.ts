@@ -39,6 +39,7 @@ export class DirViewController {
   public readonly directoryInfo = this.deriveDirectoryInfo();
 
   public onContentChange?: (scrollPosition: number) => void;
+  public scrollToFile?: (file: string | Path) => void;
 
   private scheduler = new Scheduler(250);
 
@@ -253,6 +254,24 @@ export class DirViewController {
         return [...selected, file];
       }
     });
+  }
+
+  addSelectFile(filepath: string | Path) {
+    filepath = Path.from(filepath);
+
+    const fstat = this.files.get().find(f => filepath.equals(f.path));
+
+    if (fstat) {
+      this.selection.dispatch(selected => {
+        const idx = selected.findIndex(f => filepath.equals(f.path));
+        if (idx !== -1) {
+          return selected;
+        } else {
+          return [...selected, fstat];
+        }
+      });
+      this.scrollToFile?.(filepath);
+    }
   }
 
   toggleSorting(sortBy: "name" | "date" | "size") {

@@ -18,6 +18,7 @@ export function Tab({ explorer, tab, group }: TabProps) {
     useFileDrop(
       explorer,
       () => tab.directory.stat.get()?.path,
+      tab.directory,
     );
 
   const handleSegmentClick = (path: Path, segmentIdx: number) => () => {

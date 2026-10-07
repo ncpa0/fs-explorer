@@ -6,6 +6,7 @@
         align-items: center;
         gap: .4em;
         margin-inline: .4em;
+        padding-bottom: .5em;
 
         &.hidden {
             display: none;

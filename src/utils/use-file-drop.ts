@@ -1,10 +1,12 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
+import { DirViewController } from "../base/dir-view-controller";
 import { Explorer } from "../explorer";
 import { Path } from "./path";
 
 export function useFileDrop(
   explorer: Explorer,
   getDestination: () => Path | string | undefined,
+  getOwner?: DirViewController | (() => DirViewController),
 ) {
   const classNames = sig("");
 
@@ -44,7 +46,11 @@ export function useFileDrop(
       if (currentFileLocation.equals(moveTo)) {
         return;
       }
-      explorer.fs.move(files, moveTo);
+      explorer.fs.move(
+        files,
+        moveTo,
+        typeof getOwner === "function" ? getOwner() : getOwner,
+      );
     }
 
     classNames.dispatch("");

@@ -91,7 +91,7 @@ export function useFileEntry(props: FileEntryProps): FileEntry {
     explorer.drag.endDrag();
 
     if (!files || !files.length) return;
-    explorer.fs.move(files, file.get().path);
+    explorer.fs.move(files, file.get().path, dir);
   };
 
   const handleContextMenu = (event: MouseEvent) => {

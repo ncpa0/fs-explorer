@@ -58,6 +58,7 @@ function TabButton(props: {
     useFileDrop(
       explorer,
       () => g.activeTab.get().directory.stat.get()?.path,
+      () => g.activeTab.get().directory,
     );
 
   const handleTabBtnPress = () => {

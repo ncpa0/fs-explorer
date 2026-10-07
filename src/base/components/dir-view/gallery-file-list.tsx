@@ -5,9 +5,14 @@ import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { chunks } from "../../../utils/chunks";
 import { ADW } from "../../../utils/css";
+import { Path } from "../../../utils/path";
 import { TabController } from "../../tab-controller";
 import { Memo } from "../_common/memo";
 import { GalleryFileListEntry } from "./gallery-file-list-entry";
+
+export type VirtualListElement<T> = HTMLDivElement & {
+  VirtualList: VirtualList<T>;
+};
 
 /**
  * Width taken up by a single gallery entry, in em units. This includes the
@@ -94,7 +99,7 @@ export const GalleryFileList = $component(function GalleryFileList(
         );
       }}
     />
-  );
+  ) as VirtualListElement<FStat>;
 
   const updateItemsPerRow = () => {
     const fontSize = parseFloat(getComputedStyle(list).fontSize);
@@ -141,6 +146,16 @@ export const GalleryFileList = $component(function GalleryFileList(
 
   dir.onContentChange = scrollPos => {
     list.scrollTo({ top: scrollPos, behavior: "instant" });
+  };
+
+  dir.scrollToFile = (filepath) => {
+    filepath = Path.from(filepath);
+
+    const idx = dir.filesView.get().findIndex(f => filepath.equals(f.path));
+
+    if (idx >= 0) {
+      list.VirtualList.scrollToItem(idx, { behavior: "instant" });
+    }
   };
 
   return list;

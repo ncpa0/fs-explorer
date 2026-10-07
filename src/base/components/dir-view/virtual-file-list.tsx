@@ -1,13 +1,19 @@
 import { VirtualList } from "@ncpa0cpl/vanilla-jsx";
 import { Typography } from "adwavecss";
 import { Explorer } from "../../../explorer";
+import { FStat } from "../../../filesystem-interface";
 import { ADW } from "../../../utils/css";
+import { Path } from "../../../utils/path";
 import { TabController } from "../../tab-controller";
 import { FileListEntry } from "./files-list-entry";
 
 export type VirtualFileListProps = {
   explorer: Explorer;
   tab: TabController;
+};
+
+export type VirtualListElement<T> = HTMLDivElement & {
+  VirtualList: VirtualList<T>;
 };
 
 export function VirtualFileList(
@@ -62,10 +68,20 @@ export function VirtualFileList(
         );
       }}
     />
-  );
+  ) as VirtualListElement<FStat>;
 
   dir.onContentChange = scrollPos => {
     list.scrollTo({ top: scrollPos, behavior: "instant" });
+  };
+
+  dir.scrollToFile = (filepath) => {
+    filepath = Path.from(filepath);
+
+    const idx = dir.filesView.get().findIndex(f => filepath.equals(f.path));
+
+    if (idx >= 0) {
+      list.VirtualList.scrollToItem(idx, { behavior: "instant" });
+    }
   };
 
   return list;
