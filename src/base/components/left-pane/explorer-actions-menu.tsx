@@ -3,6 +3,7 @@ import {
   sig,
   Signal,
 } from "@ncpa0cpl/vanilla-jsx/signals";
+import { Separator } from "adwavecss";
 import MoreIcon from "../../../assets/main-theme/icons/more.svg";
 import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
@@ -167,9 +168,11 @@ function ToggleBtn(props: {
       <span>
         {props.label}
       </span>
-      <input
-        type="radio"
-        checked={props.active}
+      <span
+        class={{
+          "toggle-indicator": true,
+          active: props.active,
+        }}
       />
     </button>
   );
@@ -184,6 +187,11 @@ function SortSubmenuBtn(props: {
   const toggleSubmenu = (
     ev: MouseEvent & { target: HTMLButtonElement },
   ) => {
+    if (submenuVisible.get()) {
+      submenuVisible.dispatch(false);
+      return;
+    }
+
     const btnRect = ev.target.getBoundingClientRect();
     const optMenu = ev.target.closest(".options-menu");
     if (optMenu == null) return;
@@ -198,21 +206,32 @@ function SortSubmenuBtn(props: {
     submenuVisible.dispatch(true);
   };
 
-  const isNameSort = explorer.currentTab.get().directory.sorting.derive((
-    { mode },
-  ) => mode === SortMode.Alpha);
-  const isSizeSort = explorer.currentTab.get().directory.sorting.derive((
-    { mode },
-  ) => mode === SortMode.Size);
-  const isDateSort = explorer.currentTab.get().directory.sorting.derive((
-    { mode },
-  ) => mode === SortMode.Date);
-  const isTypeSort = explorer.currentTab.get().directory.sorting.derive((
-    { mode },
-  ) => mode === SortMode.Type);
+  const isNameSort = explorer.currentTab.derive(t =>
+    t.directory.sorting.derive(({ mode }) => mode === SortMode.Alpha)
+  );
+  const isSizeSort = explorer.currentTab.derive(t =>
+    t.directory.sorting.derive(({ mode }) => mode === SortMode.Size)
+  );
+  const isDateSort = explorer.currentTab.derive(t =>
+    t.directory.sorting.derive(({ mode }) => mode === SortMode.Date)
+  );
+  const isTypeSort = explorer.currentTab.derive(t =>
+    t.directory.sorting.derive(({ mode }) => mode === SortMode.Type)
+  );
+
+  const isDescending = explorer.currentTab.derive(t =>
+    t.directory.sorting.derive(({ reverse }) => reverse)
+  );
 
   const sortBy = (mode: SortMode) => () => {
     explorer.currentTab.get().directory.sorting.dispatch(({ reverse }) => ({
+      mode,
+      reverse,
+    }));
+  };
+
+  const setReverse = (reverse: boolean) => () => {
+    explorer.currentTab.get().directory.sorting.dispatch(({ mode }) => ({
       mode,
       reverse,
     }));
@@ -243,6 +262,21 @@ function SortSubmenuBtn(props: {
         onClick={sortBy(SortMode.Size)}
         active={isSizeSort}
         class="sort-select-btn"
+      />
+
+      <span class={Separator.separator} />
+
+      <ToggleBtn
+        label="Ascending"
+        onClick={setReverse(false)}
+        active={sig.not(isDescending)}
+        class="sort-direction-select-btn"
+      />
+      <ToggleBtn
+        label="Descending"
+        onClick={setReverse(true)}
+        active={isDescending}
+        class="sort-direction-select-btn"
       />
     </div>
   ) as HTMLDivElement;
