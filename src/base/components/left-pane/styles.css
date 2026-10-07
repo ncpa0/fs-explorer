@@ -137,6 +137,7 @@
         border-radius: var(--border-radius);
         padding: .3em;
         max-height: unset;
+        position: relative;
 
         & button {
             min-width: 12em;
@@ -164,5 +165,21 @@
         justify-content: stretch;
         padding: .3em;
         transition: height .2s ease-in-out, width .2s ease-in-out;
+    }
+
+    & .sort-submenu-btn {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    & .sort-submenu {
+        display: flex;
+        flex-direction: column;
+        background-color: var(--clr-bg-5);
+        border-radius: var(--border-radius);
+        padding: .3em;
+        margin-left: .1em;
+        max-height: unset;
+        position: absolute;
     }
 }

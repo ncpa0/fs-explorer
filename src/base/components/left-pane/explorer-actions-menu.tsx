@@ -1,13 +1,20 @@
-import { MaybeReadonlySignal } from "@ncpa0cpl/vanilla-jsx/signals";
+import {
+  MaybeReadonlySignal,
+  sig,
+  Signal,
+} from "@ncpa0cpl/vanilla-jsx/signals";
 import MoreIcon from "../../../assets/main-theme/icons/more.svg";
 import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
 import { isLmb } from "../../../utils/events";
 import { getRelativePosition } from "../../../utils/get-relative-position";
+import { SortMode } from "../dir-view/sort-files";
 
 export function DirectoryOptionsButton(props: { explorer: Explorer }) {
   const { explorer } = props;
   const { overlay } = explorer;
+
+  const sortSubmenuVisible = sig(false);
 
   const handleOpenOptions = () => {
     const window = explorer.window!;
@@ -22,8 +29,15 @@ export function DirectoryOptionsButton(props: { explorer: Explorer }) {
           top: btnRelPos.top + btnSize.height + 6,
           left: btnRelPos.left,
         },
+        onClose() {
+          sortSubmenuVisible.dispatch(false);
+        },
       },
-      <OptionsMenu explorer={explorer} close={() => overlay.close()} />,
+      <OptionsMenu
+        explorer={explorer}
+        close={() => overlay.close()}
+        sortSubmenuVisible={sortSubmenuVisible}
+      />,
     );
   };
 
@@ -45,7 +59,11 @@ export function DirectoryOptionsButton(props: { explorer: Explorer }) {
   return optionsBtn;
 }
 
-function OptionsMenu(props: { explorer: Explorer; close: () => void }) {
+function OptionsMenu(props: {
+  sortSubmenuVisible: Signal<boolean>;
+  explorer: Explorer;
+  close: () => void;
+}) {
   const { explorer } = props;
 
   const hanldeShowHiddenClick = (ev: MouseEvent) => {
@@ -121,6 +139,10 @@ function OptionsMenu(props: { explorer: Explorer; close: () => void }) {
         active={props.explorer.directory.derive(d => d.showHidden)}
         class="show-hidden-btn"
       />
+      <SortSubmenuBtn
+        explorer={explorer}
+        submenuVisible={props.sortSubmenuVisible}
+      />
     </div>
   );
 }
@@ -150,5 +172,100 @@ function ToggleBtn(props: {
         checked={props.active}
       />
     </button>
+  );
+}
+
+function SortSubmenuBtn(props: {
+  explorer: Explorer;
+  submenuVisible: Signal<boolean>;
+}) {
+  const { explorer, submenuVisible } = props;
+
+  const toggleSubmenu = (
+    ev: MouseEvent & { target: HTMLButtonElement },
+  ) => {
+    const btnRect = ev.target.getBoundingClientRect();
+    const optMenu = ev.target.closest(".options-menu");
+    if (optMenu == null) return;
+    const menuRect = optMenu.getBoundingClientRect();
+
+    const leftPos = menuRect.width;
+    const topPos = btnRect.top - menuRect.top;
+
+    submenu.style.top = topPos + "px";
+    submenu.style.left = leftPos + "px";
+
+    submenuVisible.dispatch(true);
+  };
+
+  const isNameSort = explorer.currentTab.get().directory.sorting.derive((
+    { mode },
+  ) => mode === SortMode.Alpha);
+  const isSizeSort = explorer.currentTab.get().directory.sorting.derive((
+    { mode },
+  ) => mode === SortMode.Size);
+  const isDateSort = explorer.currentTab.get().directory.sorting.derive((
+    { mode },
+  ) => mode === SortMode.Date);
+  const isTypeSort = explorer.currentTab.get().directory.sorting.derive((
+    { mode },
+  ) => mode === SortMode.Type);
+
+  const sortBy = (mode: SortMode) => () => {
+    explorer.currentTab.get().directory.sorting.dispatch(({ reverse }) => ({
+      mode,
+      reverse,
+    }));
+  };
+
+  const submenu = (
+    <div class={{ "sort-submenu": true, "visible": submenuVisible }}>
+      <ToggleBtn
+        label="Name"
+        onClick={sortBy(SortMode.Alpha)}
+        active={isNameSort}
+        class="sort-select-btn"
+      />
+      <ToggleBtn
+        label="Date"
+        onClick={sortBy(SortMode.Date)}
+        active={isDateSort}
+        class="sort-select-btn"
+      />
+      <ToggleBtn
+        label="Type"
+        onClick={sortBy(SortMode.Type)}
+        active={isTypeSort}
+        class="sort-select-btn"
+      />
+      <ToggleBtn
+        label="Size"
+        onClick={sortBy(SortMode.Size)}
+        active={isSizeSort}
+        class="sort-select-btn"
+      />
+    </div>
+  ) as HTMLDivElement;
+
+  return (
+    <div>
+      <button
+        class={{
+          [ADW.Button.button]: true,
+          [ADW.Button.flat]: true,
+          [ADW.Button.adaptive]: true,
+          "sort-submenu-btn": true,
+        }}
+        onmousedown={toggleSubmenu}
+      >
+        <span>
+          Sort by
+        </span>
+        <span>
+          {"▸"}
+        </span>
+      </button>
+      {submenu}
+    </div>
   );
 }

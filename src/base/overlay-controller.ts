@@ -13,7 +13,7 @@ export class OverlayController {
   private position = sig<ElementPosition | undefined>();
   private dimBackground = sig<boolean>(true);
   private closeOnBackgroundClick = true;
-  private onClose?: () => void;
+  private onClose: Array<() => void> = [];
 
   display(pos: OverlayOptions, content: JSX.Element): void;
   display(content: JSX.Element): void;
@@ -36,21 +36,21 @@ export class OverlayController {
         this.closeOnBackgroundClick = args[0].closeOnBackgroundClick;
       }
       if (args[0].onClose) {
-        this.onClose = args[0].onClose;
+        this.onClose.push(args[0].onClose);
       }
     }
   }
 
   close(): void {
-    if (this.onClose) {
-      this.onClose();
+    for (const onclose of this.onClose) {
+      onclose();
     }
 
     this.content.dispatch(undefined);
     this.position.dispatch(undefined);
     this.dimBackground.dispatch(true);
     this.closeOnBackgroundClick = true;
-    this.onClose = undefined;
+    this.onClose.splice(0, this.onClose.length);
   }
 
   hasContent(): ReadonlySignal<boolean> {

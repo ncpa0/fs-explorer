@@ -37,6 +37,24 @@ export class Path {
     return Path.from(p1).equals(p2);
   }
 
+  static ext(p: Path | string) {
+    if (p instanceof Path) {
+      return p.ext();
+    }
+    const lastSep = p.lastIndexOf("/");
+
+    let basename = p;
+    if (lastSep >= 0) {
+      basename = p.substring(lastSep + 1);
+    }
+
+    const lastDot = basename.lastIndexOf(".");
+    if (lastDot >= 0) {
+      return basename.substring(lastDot + 1);
+    }
+    return undefined;
+  }
+
   private _segments: string[] = [];
   private _type: "absolute" | "relative" = "absolute";
   /**
