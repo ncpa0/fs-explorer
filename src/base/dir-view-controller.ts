@@ -5,7 +5,6 @@ import { FStat } from "../filesystem-interface";
 import { Fmt } from "../utils/formatters";
 import { Immediate } from "../utils/immediate";
 import { Path } from "../utils/path";
-import { Scheduler } from "../utils/scheduler";
 import { sortFiles, SortMode } from "./components/dir-view/sort-files";
 import { FilesMutation } from "./fs-controller";
 import { HistoryEntry } from "./history";
@@ -40,8 +39,6 @@ export class DirViewController {
 
   public onContentChange?: (scrollPosition: number) => void;
   public scrollToFile?: (file: string | Path) => void;
-
-  private scheduler = new Scheduler(250);
 
   constructor(
     protected explorer: Explorer,
@@ -129,19 +126,7 @@ export class DirViewController {
     dir = Path.from(dir);
 
     if (!skipFetch) {
-      const s = this.scheduler.byKey(dir.toString());
-      s.cancelNext();
-      s.schedule(() => {
-        this.explorer.filesystem.readdirStat(dir.toString())
-          .then((files) => {
-            this.explorer.cache.add(dir.toString(), files);
-
-            const current = this.stat.get();
-            if (current && dir.equals(current.path)) {
-              this.files.dispatch(files);
-            }
-          });
-      });
+      this.explorer.scheduleRefresh(dir);
     }
 
     const current = this.stat.get();
@@ -171,12 +156,14 @@ export class DirViewController {
     }
 
     const locationPath = entry.path.toString();
-    this.scheduler.byKey(locationPath).cancelNext();
+    this.explorer.scheduleRefresh(locationPath, false);
+  }
 
-    return this.explorer.filesystem.readdirStat(locationPath)
-      .then((files) => {
-        this.explorer.cache.add(entry.path.toString(), files);
-      });
+  notifyScheduledRefreshCompleted(dir: Path, files: readonly FStat[]) {
+    const stat = this.stat.get();
+    if (stat && dir.equals(stat.path)) {
+      this.files.dispatch(files);
+    }
   }
 
   changeDirectory(
@@ -188,7 +175,6 @@ export class DirViewController {
     this.cdQueue.run(async () => {
       const isSameDir = dirpath.equals(this.stat.get()?.path ?? "");
       const locationPath = Path.from(dirpath).toString();
-      this.scheduler.byKey(locationPath).cancelNext();
 
       const cached = this.explorer.cache.get(dirpath.toString());
       if (cached) {

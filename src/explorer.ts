@@ -20,6 +20,7 @@ import "adwaveui/dist/esm/components/selector/selector";
 import { DirCache } from "./base/dir-cache";
 import { TabController } from "./base/tab-controller";
 import { TabGroup } from "./base/tab-group";
+import { Scheduler } from "./utils/scheduler";
 
 export interface StorageInterface {
   getItem(key: string): string | null;
@@ -202,6 +203,8 @@ export class Explorer {
   location = this.currentTab.derive(t => t.location);
   directory = this.currentTab.derive(t => t.directory);
 
+  private refreshScheduler = new Scheduler(250);
+
   constructor(
     public readonly filesystem: Filesystem,
     public readonly options: ExplorerOptions = {},
@@ -229,8 +232,10 @@ export class Explorer {
     }
 
     const onChange = (dirPath?: string) => {
-      for (const g of this.tabGroups.get()) {
-        g.refresh(dirPath);
+      if (dirPath) {
+        this.scheduleRefresh(dirPath);
+      } else {
+        this.refresh();
       }
     };
     filesystem.onChange(onChange);
@@ -440,6 +445,24 @@ export class Explorer {
     for (const g of this.tabGroups.get()) {
       g.refresh(dir);
     }
+  }
+
+  scheduleRefresh(dir: string | Path, tail = true) {
+    dir = Path.from(dir).normalize();
+
+    const s = this.refreshScheduler.byKey(dir.toString());
+    if (tail) {
+      s.cancelNext();
+    }
+    s.schedule(() => {
+      this.filesystem.readdirStat(dir.toString()).then((files) => {
+        this.cache.add(dir.toString(), files);
+
+        this.forEachTab(tab => {
+          tab.directory.notifyScheduledRefreshCompleted(dir, files);
+        });
+      });
+    });
   }
 
   open(path: string | Path) {

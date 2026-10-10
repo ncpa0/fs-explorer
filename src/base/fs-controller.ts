@@ -32,7 +32,7 @@ export class FsController {
       hidden: filepath.basename().startsWith("."),
       read: true,
       write: true,
-      mtime: Date.now(),
+      mtime: Date.now() / 1000,
     };
   }
 
@@ -47,7 +47,7 @@ export class FsController {
       hidden: filepath.basename().startsWith("."),
       read: true,
       write: true,
-      mtime: Date.now(),
+      mtime: Date.now() / 1000,
     };
   }
 
