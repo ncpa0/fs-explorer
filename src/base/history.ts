@@ -177,6 +177,32 @@ export class ExplorerTabHistory extends EventTarget {
     }
   }
 
+  /**
+   * Inserts a history entry at a delta relative to the current active entry.
+   *
+   * Delta must be a non-zero value. Passing a zero is a no-op.
+   *
+   * @example
+   * // add an entry before the current entry
+   * history.insertEntry(-1, {path: "/",scrollPosition:0})
+   *
+   * // add an entry after the current entry
+   * history.insertEntry(1, {path: "/",scrollPosition:0})
+   */
+  insertEntry(delta: number, entry: HistoryEntry) {
+    if (delta === 0) return;
+    if (delta >= 1) {
+      delta -= 1;
+    }
+
+    const pos = Math.max(0, this.stackPosition + delta);
+    this.stack.splice(pos, 0, entry);
+
+    if (delta < 0) {
+      this.stackPosition += 1;
+    }
+  }
+
   get length(): number {
     return this.stack.length;
   }
