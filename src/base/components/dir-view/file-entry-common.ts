@@ -109,7 +109,7 @@ export function useFileEntry(props: FileEntryProps): FileEntry {
     if (
       parent
       && (selected.length === 0
-        || !Path.from(selected[0]!.path).dir().equals(parent.path))
+        || Path.from(selected[0]!.path).dir().equals(parent.path))
     ) {
       menu.open({
         tab: tab,
