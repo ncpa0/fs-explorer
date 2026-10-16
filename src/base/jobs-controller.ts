@@ -3,11 +3,12 @@ import { FStat } from "../filesystem-interface";
 import { byID } from "../utils/dispatch-by-id";
 import { Resolvable } from "../utils/immediate";
 
-export type JobType = "copy" | "move";
+export type JobType = "copy" | "move" | "custom";
 
 export interface JobEntry {
   id: symbol;
   type: JobType;
+  label?: string;
   status: "queued" | "pending" | "complete";
   progress?: number;
   file: FStat;
@@ -25,6 +26,9 @@ export class JobsController {
     type: JobType,
     file: FStat,
     perform: () => R,
+    customJobOptions?: {
+      label: string;
+    },
   ): QueuedJob<R> {
     const job: JobEntry = {
       id: Symbol(),
@@ -32,6 +36,11 @@ export class JobsController {
       status: "queued",
       file,
     };
+
+    if (type === "custom") {
+      job.label = customJobOptions?.label;
+    }
+
     this.jobs.dispatch(jobs => [...jobs, job]);
     return {
       start: () => {

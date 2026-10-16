@@ -20,10 +20,20 @@ export function JobsView({ explorer }: { explorer: Explorer }) {
           if (!topJob) {
             return;
           }
+
+          let label = "";
+          if (topJob.label) {
+            label = topJob.label;
+          } else if (topJob.type === "copy") {
+            label = "Copying";
+          } else if (topJob.type === "move") {
+            label = "Moving";
+          }
+
           return (
             <span class="job-title">
               <span>
-                {topJob.type === "copy" ? "Copying" : "Moving"} file:{" "}
+                {label} file:{" "}
               </span>
               <span class={[Typography.subtitle, "filename"]}>
                 {topJob.file.name}
