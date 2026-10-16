@@ -104,7 +104,15 @@ export function useFileEntry(props: FileEntryProps): FileEntry {
     const isBelowHalf = top > halfPoint;
 
     const selected = selectedFiles.get();
+    const parent = props.tab.directory.stat.get();
+
+    if (!parent || !Path.from(selected[0]!.path).dir().equals(parent.path)) {
+      return;
+    }
+
     menu.open({
+      tab: tab,
+      parentDir: parent,
       triggerFile: file.get(),
       relatedFiles: selected,
       position: {

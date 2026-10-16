@@ -32,8 +32,12 @@ export function DirView(props: DirViewProps) {
     const isBelowHalf = top > halfPoint;
 
     const selected = dir.selection.get();
+    const parent = dir.stat.get();
+    if (!parent) return;
     menu.open({
       relatedFiles: selected,
+      parentDir: parent,
+      tab: tab,
       position: {
         left: `min(${left}px, calc(${windowRect.width}px - 13em))`,
         top: isBelowHalf ? undefined : `${top}px`,

@@ -5,9 +5,12 @@ import { FStat } from "../../../filesystem-interface";
 import { ADW } from "../../../utils/css";
 import { isLmb } from "../../../utils/events";
 import { trimTo } from "../../../utils/trim-to";
+import { TabController } from "../../tab-controller";
 
 export type ContextMenuProps = {
   explorer: Explorer;
+  tab: TabController;
+  parentDir: FStat;
 };
 
 export function ContextMenu(props: ContextMenuProps) {
@@ -24,7 +27,9 @@ export function ContextMenu(props: ContextMenuProps) {
     if (files.length > 0) {
       return (
         <FileMenuButtons
+          tab={props.tab}
           explorer={props.explorer}
+          parentDir={props.parentDir}
           files={files}
         />
       );
@@ -33,7 +38,9 @@ export function ContextMenu(props: ContextMenuProps) {
     if (target) {
       return (
         <FileMenuButtons
+          tab={props.tab}
           explorer={props.explorer}
+          parentDir={props.parentDir}
           files={[target]}
         />
       );
@@ -42,6 +49,8 @@ export function ContextMenu(props: ContextMenuProps) {
     return (
       <DirMenuButtons
         explorer={props.explorer}
+        parentDir={props.parentDir}
+        tab={props.tab}
       />
     );
   };
@@ -59,7 +68,9 @@ export function ContextMenu(props: ContextMenuProps) {
 
 const FileMenuButtons = $component(function FileMenuButtons(props: {
   explorer: Explorer;
+  tab: TabController;
   files: readonly FStat[];
+  parentDir: FStat;
 }, api) {
   const { explorer } = props;
   const menu = explorer.contextMenu;
@@ -116,7 +127,12 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
 
         const handler = (action: FileAction) => () => {
           menu.close();
-          action.run(f, explorer);
+          action.run(f, {
+            explorer,
+            parent: props.parentDir,
+            isCurrentDir: false,
+            tab: props.tab,
+          });
         };
 
         const topSeparator = hideOpenBtn && hideNewFileBtn
@@ -234,6 +250,8 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
 
 const DirMenuButtons = $component((props: {
   explorer: Explorer;
+  tab: TabController;
+  parentDir: FStat;
 }, api) => {
   const { explorer } = props;
   const dirStat = explorer.directory.get().stat.get();
@@ -280,7 +298,12 @@ const DirMenuButtons = $component((props: {
 
         const handler = (action: FileAction) => () => {
           menu.close();
-          action.run([dirStat], explorer);
+          action.run([dirStat], {
+            explorer,
+            isCurrentDir: true,
+            parent: props.parentDir,
+            tab: props.tab,
+          });
         };
 
         const topSeparator = hideCreateFileBtn

@@ -5,6 +5,7 @@ import { FileActionContext } from "../interfaces/file-action";
 import { Path } from "../utils/path";
 import { BulkRename } from "./components/bulk-rename/bulk-rename";
 import { ContextMenu } from "./components/context-menu/context-menu";
+import { TabController } from "./tab-controller";
 
 export interface ElementPosition {
   top?: string | number;
@@ -16,7 +17,9 @@ export interface ElementPosition {
 export interface OpenMenuParams {
   position: ElementPosition;
   relatedFiles: readonly FStat[];
+  parentDir: FStat;
   triggerFile?: FStat;
+  tab: TabController;
 }
 
 class BtnAccessController {
@@ -553,6 +556,8 @@ export class ContextMenuController {
       },
       <ContextMenu
         explorer={this.explorer}
+        parentDir={params.parentDir}
+        tab={params.tab}
       />,
     );
   }

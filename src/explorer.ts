@@ -59,7 +59,15 @@ export interface FileAction {
     file: readonly FStat[],
     info: { isCurrentDir: boolean },
   ) => boolean;
-  readonly run: (file: readonly FStat[], explorer: Explorer) => void;
+  readonly run: (files: readonly FStat[], context: {
+    explorer: Explorer;
+    /** Stat object of the parent directory of the actionable the files. */
+    parent: FStat;
+    /** Tab from which the action is being invoked. */
+    tab: TabController;
+    /** Flag informing of wether the action is being performed via a context menu on the currently opened directory (as opposed to action in a context menu on one of the files in it) */
+    isCurrentDir: boolean;
+  }) => void;
 }
 
 export interface ExplorerAction {
