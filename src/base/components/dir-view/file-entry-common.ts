@@ -106,21 +106,23 @@ export function useFileEntry(props: FileEntryProps): FileEntry {
     const selected = selectedFiles.get();
     const parent = props.tab.directory.stat.get();
 
-    if (!parent || !Path.from(selected[0]!.path).dir().equals(parent.path)) {
-      return;
+    if (
+      parent
+      && (selected.length === 0
+        || !Path.from(selected[0]!.path).dir().equals(parent.path))
+    ) {
+      menu.open({
+        tab: tab,
+        parentDir: parent,
+        triggerFile: file.get(),
+        relatedFiles: selected,
+        position: {
+          left: `min(${left}px, calc(${windowRect.width}px - 13em))`,
+          top: isBelowHalf ? undefined : `${top}px`,
+          bottom: isBelowHalf ? `${bottom}px` : undefined,
+        },
+      });
     }
-
-    menu.open({
-      tab: tab,
-      parentDir: parent,
-      triggerFile: file.get(),
-      relatedFiles: selected,
-      position: {
-        left: `min(${left}px, calc(${windowRect.width}px - 13em))`,
-        top: isBelowHalf ? undefined : `${top}px`,
-        bottom: isBelowHalf ? `${bottom}px` : undefined,
-      },
-    });
     event.stopPropagation();
     event.preventDefault();
   };
