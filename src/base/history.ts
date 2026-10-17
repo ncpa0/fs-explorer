@@ -20,6 +20,7 @@ export class ExplorerPopEvent extends Event {
     public readonly path: Path,
     public readonly historyEntry: HistoryEntry,
     public readonly trigger: ExplorerPopEventTrigger,
+    public readonly delta?: number,
   ) {
     super("pop");
   }
@@ -61,6 +62,22 @@ export class ExplorerTabHistory extends EventTarget {
 
   currentEntry() {
     return this.stack.at(this.stackPosition - 1);
+  }
+
+  currentStackPosition() {
+    return this.stackPosition;
+  }
+
+  stackSize() {
+    return this.stack.length;
+  }
+
+  unsafe_stack() {
+    return this.stack;
+  }
+
+  unsafe_location() {
+    return this.location;
   }
 
   push(p: string | Path, scrollPos = 0): void {
@@ -147,13 +164,19 @@ export class ExplorerTabHistory extends EventTarget {
       this.stackPosition += delta;
       ExplorerLocation.set(this.location, newState.path);
       const entry = this.stack[this.stackPosition - 1]!;
-      this.dispatchEvent(new ExplorerPopEvent(newState.path, entry, "go"));
+      this.dispatchEvent(
+        new ExplorerPopEvent(newState.path, entry, "go", delta),
+      );
       return entry;
     }
   }
 
   canGoBack(): boolean {
     return this.stackPosition > 1;
+  }
+
+  canGoForward(): boolean {
+    return this.stackPosition < this.stack.length;
   }
 
   setCurrentScrollPosition(scrollPosition: number): void {

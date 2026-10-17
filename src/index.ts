@@ -15,8 +15,9 @@ export type {
 export type { Filesystem, FStat } from "./filesystem-interface";
 export type { Resolvable } from "./utils/immediate";
 
+export { ExplorerLocation } from "./base/history";
+
 export type {
-  ExplorerLocation,
   ExplorerPopEvent,
   ExplorerPopEventTrigger,
   ExplorerTabHistory,
