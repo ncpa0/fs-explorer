@@ -36,6 +36,8 @@
 
             & .grid-container {
                 overflow-y: auto;
+                max-height: stretch;
+                min-height: stretch;
             }
 
             & .settings-grid {

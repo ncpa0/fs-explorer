@@ -279,8 +279,8 @@
                     overflow: hidden;
 
                     & svg {
-                        width: 3.5em;
-                        height: 3.5em;
+                        width: calc(var(--gallery-entry-width, 8em) * .4);
+                        height: calc(var(--gallery-entry-width, 8em) * .4);
                         -webkit-user-drag: none;
                     }
 
@@ -300,8 +300,8 @@
                         pointer-events: none;
 
                         & svg {
-                            width: 3em;
-                            height: 3em;
+                            width: calc(var(--gallery-entry-width, 8em) * .35);
+                            height: calc(var(--gallery-entry-width, 8em) * .35);
                             fill: rgba(255, 255, 255, .75);
                             filter: drop-shadow(0 0 2px rgba(0, 0, 0, .6));
                             -webkit-user-drag: none;

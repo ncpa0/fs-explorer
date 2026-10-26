@@ -160,180 +160,183 @@ function AppearanceSettings(props: {
   };
 
   return (
-    <div class="grid-container">
+    <div class="dcontents">
       <PreferencesWindowHeader explorer={props.explorer} />
-      <div class={["settings-grid", ScrollView.scrollView]}>
-        <SelectionPreferenceRow
-          explorer={explorer}
-          label="Font size"
-          onChange={handleFontSizeChange}
-          options={[
-            {
-              label: "Default",
-              value: "inherit",
-              selected: fontSize.get() === "inherit",
-            },
-            {
-              label: "10px",
-              value: "10",
-              selected: fontSize.get() === "10px",
-            },
-            {
-              label: "11px",
-              value: "11",
-              selected: fontSize.get() === "11px",
-            },
-            {
-              label: "12px",
-              value: "12",
-              selected: fontSize.get() === "12px",
-            },
-            {
-              label: "13px",
-              value: "13",
-              selected: fontSize.get() === "13px",
-            },
-            {
-              label: "14px",
-              value: "14",
-              selected: fontSize.get() === "14px",
-            },
-            {
-              label: "15px",
-              value: "15",
-              selected: fontSize.get() === "15px",
-            },
-            {
-              label: "16px",
-              value: "16",
-              selected: fontSize.get() === "16px",
-            },
-            {
-              label: "17px",
-              value: "17",
-              selected: fontSize.get() === "17px",
-            },
-            {
-              label: "18px",
-              value: "18",
-              selected: fontSize.get() === "18px",
-            },
-            {
-              label: "19px",
-              value: "19",
-              selected: fontSize.get() === "19px",
-            },
-            {
-              label: "20px",
-              value: "20",
-              selected: fontSize.get() === "20px",
-            },
-            {
-              label: "21px",
-              value: "21",
-              selected: fontSize.get() === "21px",
-            },
-            {
-              label: "22px",
-              value: "22",
-              selected: fontSize.get() === "22px",
-            },
-            {
-              label: "23px",
-              value: "23",
-              selected: fontSize.get() === "23px",
-            },
-            {
-              label: "24px",
-              value: "24",
-              selected: fontSize.get() === "24px",
-            },
-          ]}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Show list header"
-          defaultValue={explorer.showFileviewHeader.get()}
-          onChange={handleShowHeaderChange}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Show size column"
-          defaultValue={showSizeColumn.get()}
-          onChange={(v) => showSizeColumn.dispatch(v)}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Show file type column"
-          defaultValue={showTypeColumn.get()}
-          onChange={(v) => showTypeColumn.dispatch(v)}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Show date modified column"
-          defaultValue={showModifiedColumn.get()}
-          onChange={(v) => showModifiedColumn.dispatch(v)}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Show left pane"
-          defaultValue={!explorer.hideLeftPane.get()}
-          onChange={handleShowLeftPaneChange}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Show thumbnail in preview"
-          defaultValue={thumbnailsInPreview.get()}
-          onChange={(v) => thumbnailsInPreview.dispatch(v)}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Always show tab bar"
-          defaultValue={alwaysShowTabBar.get()}
-          onChange={(v) => alwaysShowTabBar.dispatch(v)}
-        />
-        <SelectionPreferenceRow
-          explorer={explorer}
-          label="Date and time format"
-          onChange={handleDateTimeFormatChange}
-          options={[
-            {
-              label: "2026-10-26 13:58:00",
-              value: "yyyy-MM-dd HH:mm:ss",
-              selected: dateTimeFormat.get() === "yyyy-MM-dd HH:mm:ss",
-            },
-            {
-              label: "26/10/2026 13:58",
-              value: "dd/MM/yyyy HH:mm",
-              selected: dateTimeFormat.get() === "dd/MM/yyyy HH:mm",
-            },
-            {
-              label: "10/26/2026 1:58 PM",
-              value: "MM/dd/yyyy h:mm a",
-              selected: dateTimeFormat.get() === "MM/dd/yyyy h:mm a",
-            },
-            {
-              label: "26 Oct 2026, 13:58",
-              value: "dd MMM yyyy, HH:mm",
-              selected: dateTimeFormat.get() === "dd MMM yyyy, HH:mm",
-            },
-          ]}
-        />
-        <SelectionPreferenceRow
-          explorer={explorer}
-          label="Gallery icon size"
-          onChange={handleGalleryThumbnailSizeChange}
-          options={GALLERY_THUMBNAIL_SIZES.map((size) => ({
-            label: GALLERY_SIZE_LABELS[size],
-            value: String(size),
-            selected: galleryThumbnailSize.get() === size,
-          }))}
-        />
-        <CustomPreferences
-          category={PreferencePages.Appearance}
-          explorer={explorer}
-          customPreferences={explorer.options.customPreferences}
-        />
+
+      <div class={["grid-container", ScrollView.scrollView]}>
+        <div class="settings-grid">
+          <SelectionPreferenceRow
+            explorer={explorer}
+            label="Font size"
+            onChange={handleFontSizeChange}
+            options={[
+              {
+                label: "Default",
+                value: "inherit",
+                selected: fontSize.get() === "inherit",
+              },
+              {
+                label: "10px",
+                value: "10",
+                selected: fontSize.get() === "10px",
+              },
+              {
+                label: "11px",
+                value: "11",
+                selected: fontSize.get() === "11px",
+              },
+              {
+                label: "12px",
+                value: "12",
+                selected: fontSize.get() === "12px",
+              },
+              {
+                label: "13px",
+                value: "13",
+                selected: fontSize.get() === "13px",
+              },
+              {
+                label: "14px",
+                value: "14",
+                selected: fontSize.get() === "14px",
+              },
+              {
+                label: "15px",
+                value: "15",
+                selected: fontSize.get() === "15px",
+              },
+              {
+                label: "16px",
+                value: "16",
+                selected: fontSize.get() === "16px",
+              },
+              {
+                label: "17px",
+                value: "17",
+                selected: fontSize.get() === "17px",
+              },
+              {
+                label: "18px",
+                value: "18",
+                selected: fontSize.get() === "18px",
+              },
+              {
+                label: "19px",
+                value: "19",
+                selected: fontSize.get() === "19px",
+              },
+              {
+                label: "20px",
+                value: "20",
+                selected: fontSize.get() === "20px",
+              },
+              {
+                label: "21px",
+                value: "21",
+                selected: fontSize.get() === "21px",
+              },
+              {
+                label: "22px",
+                value: "22",
+                selected: fontSize.get() === "22px",
+              },
+              {
+                label: "23px",
+                value: "23",
+                selected: fontSize.get() === "23px",
+              },
+              {
+                label: "24px",
+                value: "24",
+                selected: fontSize.get() === "24px",
+              },
+            ]}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Show list header"
+            defaultValue={explorer.showFileviewHeader.get()}
+            onChange={handleShowHeaderChange}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Show size column"
+            defaultValue={showSizeColumn.get()}
+            onChange={(v) => showSizeColumn.dispatch(v)}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Show file type column"
+            defaultValue={showTypeColumn.get()}
+            onChange={(v) => showTypeColumn.dispatch(v)}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Show date modified column"
+            defaultValue={showModifiedColumn.get()}
+            onChange={(v) => showModifiedColumn.dispatch(v)}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Show left pane"
+            defaultValue={!explorer.hideLeftPane.get()}
+            onChange={handleShowLeftPaneChange}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Show thumbnail in preview"
+            defaultValue={thumbnailsInPreview.get()}
+            onChange={(v) => thumbnailsInPreview.dispatch(v)}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Always show tab bar"
+            defaultValue={alwaysShowTabBar.get()}
+            onChange={(v) => alwaysShowTabBar.dispatch(v)}
+          />
+          <SelectionPreferenceRow
+            explorer={explorer}
+            label="Date and time format"
+            onChange={handleDateTimeFormatChange}
+            options={[
+              {
+                label: "2026-10-26 13:58:00",
+                value: "yyyy-MM-dd HH:mm:ss",
+                selected: dateTimeFormat.get() === "yyyy-MM-dd HH:mm:ss",
+              },
+              {
+                label: "26/10/2026 13:58",
+                value: "dd/MM/yyyy HH:mm",
+                selected: dateTimeFormat.get() === "dd/MM/yyyy HH:mm",
+              },
+              {
+                label: "10/26/2026 1:58 PM",
+                value: "MM/dd/yyyy h:mm a",
+                selected: dateTimeFormat.get() === "MM/dd/yyyy h:mm a",
+              },
+              {
+                label: "26 Oct 2026, 13:58",
+                value: "dd MMM yyyy, HH:mm",
+                selected: dateTimeFormat.get() === "dd MMM yyyy, HH:mm",
+              },
+            ]}
+          />
+          <SelectionPreferenceRow
+            explorer={explorer}
+            label="Gallery icon size"
+            onChange={handleGalleryThumbnailSizeChange}
+            options={GALLERY_THUMBNAIL_SIZES.map((size) => ({
+              label: GALLERY_SIZE_LABELS[size],
+              value: String(size),
+              selected: galleryThumbnailSize.get() === size,
+            }))}
+          />
+          <CustomPreferences
+            category={PreferencePages.Appearance}
+            explorer={explorer}
+            customPreferences={explorer.options.customPreferences}
+          />
+        </div>
       </div>
     </div>
   );
@@ -362,45 +365,48 @@ function BehaviorSettings(props: {
   };
 
   return (
-    <div class="grid-container">
+    <div class="dcontents">
       <PreferencesWindowHeader explorer={props.explorer} />
-      <div class={["settings-grid", ScrollView.scrollView]}>
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Open on double-click"
-          defaultValue={openOnDoubleClick.get()}
-          onChange={(v) => openOnDoubleClick.dispatch(v)}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Never show preview"
-          defaultValue={noPreview.get()}
-          onChange={(v) => noPreview.dispatch(v)}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Open preview on mouse click"
-          defaultValue={openPreviewOnClick.get()}
-          onChange={(v) => openPreviewOnClick.dispatch(v)}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Confirm before deleting"
-          defaultValue={confirmBeforeDelete.get()}
-          onChange={(v) => confirmBeforeDelete.dispatch(v)}
-        />
-        <InputPreferenceRow
-          explorer={explorer}
-          label="Double-click interval (ms)"
-          defaultValue={String(doubleClickInterval.get())}
-          inputType="number"
-          onChange={handleDoubleClickIntervalChange}
-        />
-        <CustomPreferences
-          category={PreferencePages.Behavior}
-          explorer={explorer}
-          customPreferences={explorer.options.customPreferences}
-        />
+
+      <div class={["grid-container", ScrollView.scrollView]}>
+        <div class="settings-grid">
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Open on double-click"
+            defaultValue={openOnDoubleClick.get()}
+            onChange={(v) => openOnDoubleClick.dispatch(v)}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Never show preview"
+            defaultValue={noPreview.get()}
+            onChange={(v) => noPreview.dispatch(v)}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Open preview on mouse click"
+            defaultValue={openPreviewOnClick.get()}
+            onChange={(v) => openPreviewOnClick.dispatch(v)}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Confirm before deleting"
+            defaultValue={confirmBeforeDelete.get()}
+            onChange={(v) => confirmBeforeDelete.dispatch(v)}
+          />
+          <InputPreferenceRow
+            explorer={explorer}
+            label="Double-click interval (ms)"
+            defaultValue={String(doubleClickInterval.get())}
+            inputType="number"
+            onChange={handleDoubleClickIntervalChange}
+          />
+          <CustomPreferences
+            category={PreferencePages.Behavior}
+            explorer={explorer}
+            customPreferences={explorer.options.customPreferences}
+          />
+        </div>
       </div>
     </div>
   );
@@ -425,39 +431,42 @@ function AdvancedSettings(props: {
   };
 
   return (
-    <div class="grid-container">
+    <div class="dcontents">
       <PreferencesWindowHeader explorer={props.explorer} />
-      <div class={["settings-grid", ScrollView.scrollView]}>
-        <InputPreferenceRow
-          explorer={explorer}
-          label="Startup directory"
-          defaultValue={startupDir.get()}
-          placeholder="/"
-          onChange={handleStartupDirChange}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Ask before overwriting files"
-          defaultValue={askBeforeOverwrite.get()}
-          onChange={(v) => askBeforeOverwrite.dispatch(v)}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Calculate directory sizes in preview"
-          defaultValue={calculateDirSize.get()}
-          onChange={(v) => calculateDirSize.dispatch(v)}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Show directory sizes in file list"
-          defaultValue={showDirSizes.get()}
-          onChange={(v) => showDirSizes.dispatch(v)}
-        />
-        <CustomPreferences
-          category={PreferencePages.Advanced}
-          explorer={explorer}
-          customPreferences={explorer.options.customPreferences}
-        />
+
+      <div class={["grid-container", ScrollView.scrollView]}>
+        <div class="settings-grid">
+          <InputPreferenceRow
+            explorer={explorer}
+            label="Startup directory"
+            defaultValue={startupDir.get()}
+            placeholder="/"
+            onChange={handleStartupDirChange}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Ask before overwriting files"
+            defaultValue={askBeforeOverwrite.get()}
+            onChange={(v) => askBeforeOverwrite.dispatch(v)}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Calculate directory sizes in preview"
+            defaultValue={calculateDirSize.get()}
+            onChange={(v) => calculateDirSize.dispatch(v)}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Show directory sizes in file list"
+            defaultValue={showDirSizes.get()}
+            onChange={(v) => showDirSizes.dispatch(v)}
+          />
+          <CustomPreferences
+            category={PreferencePages.Advanced}
+            explorer={explorer}
+            customPreferences={explorer.options.customPreferences}
+          />
+        </div>
       </div>
     </div>
   );

@@ -166,7 +166,7 @@ export function nameByExt(ext: string): string | undefined {
     case "plist":
       return "Configuration";
     case "env":
-      return "Environment Configuration";
+      return "Environment Config";
     case "gitignore":
     case "gitattributes":
     case "gitmodules":
