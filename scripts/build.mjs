@@ -30,6 +30,7 @@ async function main() {
       jsxImportSource: "@ncpa0cpl/vanilla-jsx",
       plugins: [cssPlugin(), svgLoaderPlugin()],
     },
+    esDecorators: true,
   };
   /**
    * @type {import("@ncpa0cpl/nodepack").BuildConfig}

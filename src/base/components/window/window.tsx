@@ -34,6 +34,7 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
         "drag-pointer": explorer.drag.dragging,
         "tab-bar-hidden": tabBarHiddden,
       }}
+      style={explorer.windowStyles}
       onmouseleave={() => explorer.drag.mouseLeave()}
       onmouseup={() => explorer.drag.endDrag()}
     >

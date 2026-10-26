@@ -17,9 +17,11 @@ import { Immediate } from "./utils/immediate";
 import { Path } from "./utils/path";
 import "adwaveui/dist/esm/components/switch/switch";
 import "adwaveui/dist/esm/components/selector/selector";
+import { PreferencePages } from "./base/components/preferences/preferences";
 import { DirCache } from "./base/dir-cache";
 import { TabController } from "./base/tab-controller";
 import { TabGroup } from "./base/tab-group";
+import { localSig } from "./utils/persisted-signal";
 import { Scheduler } from "./utils/scheduler";
 
 export interface StorageInterface {
@@ -148,7 +150,45 @@ export interface ExplorerOptions {
    */
   readonly showFileViewHeader?: boolean;
   readonly storage?: StorageInterface;
+
+  readonly customPreferences?: Array<
+    InputPreference | SwitchPreference | SelectionPreference
+  >;
 }
+
+export type PreferenceContext = {
+  explorer: Explorer;
+  storage: StorageInterface;
+};
+
+export type InputPreference = {
+  type: "input";
+  label: string;
+  defaultValue?: string;
+  inputType?: string;
+  placeholder?: string;
+  onChange(newValue: string, ctx: PreferenceContext): void;
+  category: PreferencePages;
+  autocomplete?: AutoFill;
+};
+
+export type SwitchPreference = {
+  type: "switch";
+  label: string;
+  defaultValue?: boolean;
+  onChange(newValue: boolean, ctx: PreferenceContext): void;
+  category: PreferencePages;
+};
+
+export type SelectionPreference = {
+  type: "select";
+  label: string;
+  options: Array<{ label: string; value: string; selected: boolean }>;
+  onChange(newValue: string | null, ctx: PreferenceContext): void;
+  showNullOption?: boolean;
+  nullOptionLabel?: string;
+  category: PreferencePages;
+};
 
 export interface PromptModal {
   open: boolean;
@@ -189,14 +229,17 @@ export class Explorer {
   public readonly staticPlaces = sig<ReadonlyArray<Place>>([]);
 
   public readonly actionError = sig<ActionError | undefined>(undefined);
-  public readonly hideLeftPane = sig(false);
+  public readonly hideLeftPane;
   public readonly plainList = sig(false);
-  public readonly noPreview = sig(false);
+  public readonly noPreview;
   public readonly actionFilters: ReadonlyArray<ActionFilter> = [];
 
   public readonly showFileviewHeader;
 
   public readonly cache = new DirCache();
+
+  public readonly windowStyles;
+  public readonly userSettings;
 
   currentTabGroup = sig.derive(
     this.activeTabGroup,
@@ -217,24 +260,51 @@ export class Explorer {
     public readonly filesystem: Filesystem,
     public readonly options: ExplorerOptions = {},
   ) {
+    const storage = options.storage ?? localStorage;
+
     this.fs = new FsController(this, filesystem);
     this.places = new PlacesStorage(
-      options.storage ?? localStorage,
+      storage,
       options.places,
+    );
+
+    this.windowStyles = {
+      fontSize: localSig<"inherit" | `${number}px`>(
+        storage,
+        "fsexp-win-font-size",
+        "inherit",
+      ),
+    };
+
+    this.userSettings = {
+      openOnDoubleClick: localSig(storage, "fsexp-double-click", false),
+      openPreviewOnClick: localSig(storage, "fsexp-preview-on-click", true),
+      thumbnailsInPreview: localSig(
+        storage,
+        "fsexp-thumbnails-in-preview",
+        true,
+      ),
+    };
+
+    this.hideLeftPane = localSig(
+      storage,
+      "fsexp-hide-left-pane",
+      options.hideLeftPane ?? false,
+    );
+
+    this.noPreview = localSig(
+      storage,
+      "fsexp-no-preview",
+      options.noPreview ?? false,
     );
 
     if (options.staticPlaces) {
       this.staticPlaces.dispatch(options.staticPlaces.slice());
     }
-    if ("hideLeftPane" in options) {
-      this.hideLeftPane.dispatch(!!options.hideLeftPane);
-    }
     if ("plainList" in options) {
       this.plainList.dispatch(!!options.plainList);
     }
-    if ("noPreview" in options) {
-      this.noPreview.dispatch(!!options.noPreview);
-    }
+
     if (options.actionFilters) {
       this.actionFilters = options.actionFilters;
     }
@@ -249,7 +319,11 @@ export class Explorer {
     filesystem.onChange(onChange);
     this.cleanups.push(() => filesystem.offChange(onChange));
 
-    this.showFileviewHeader = sig(options.showFileViewHeader ?? false);
+    this.showFileviewHeader = localSig(
+      storage,
+      "fsexp-show-file-view-header",
+      options.showFileViewHeader ?? false,
+    );
 
     // Watcher support: keep the filesystem implementation informed about the
     // set of directories currently open in tabs, so hosts that implement

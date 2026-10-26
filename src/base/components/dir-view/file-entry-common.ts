@@ -127,6 +127,51 @@ export function useFileEntry(props: FileEntryProps): FileEntry {
     event.preventDefault();
   };
 
+  const openHandler = (f: FStat): boolean => {
+    if (explorer.userSettings.openOnDoubleClick.get()) {
+      return openHandlerDoubleClick(f);
+    } else {
+      return openHandlerSingleClick(f);
+    }
+  };
+
+  const openHandlerSingleClick = (f: FStat): boolean => {
+    if (f.directory) {
+      tab.open(new Path(f.path));
+      return true;
+    } else {
+      const actionCtx = new FileActionContext(
+        explorer,
+        f,
+      );
+      const action = explorer.options?.openAction?.(f);
+      if (action) {
+        action(f, actionCtx);
+        return true;
+      }
+      return false;
+    }
+  };
+
+  let lastFilePressed: FStat | undefined;
+  let lastPressTs = 0;
+  const openHandlerDoubleClick = (f: FStat): boolean => {
+    const now = Date.now();
+
+    if (
+      lastFilePressed && Path.equal(lastFilePressed.path, f.path)
+      && now - lastPressTs < 500
+    ) {
+      lastPressTs = 0;
+      lastFilePressed = undefined;
+      return openHandlerSingleClick(f);
+    }
+
+    lastPressTs = now;
+    lastFilePressed = f;
+    return false;
+  };
+
   const handleMouseUp = (event: MouseEvent) => {
     explorer.focusTab(
       tab.id,
@@ -155,18 +200,13 @@ export function useFileEntry(props: FileEntryProps): FileEntry {
 
     const f = file.get();
 
-    if (f.directory) {
-      tab.open(new Path(f.path));
-    } else {
-      const actionCtx = new FileActionContext(
-        explorer,
-        f,
-      );
-      const action = explorer.options?.openAction?.(f);
-      if (action) {
-        action(f, actionCtx);
-      } else if (explorer.noPreview.get() === false) {
-        actionCtx.openPreview();
+    const actionExecuted = openHandler(f);
+    if (!actionExecuted) {
+      if (
+        explorer.noPreview.get() === false && !f.directory
+        && explorer.userSettings.openPreviewOnClick.get()
+      ) {
+        explorer.previewPane.open(f);
       }
     }
 

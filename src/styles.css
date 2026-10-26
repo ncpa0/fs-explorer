@@ -2,6 +2,8 @@
 
 @import "./base/components/overlay/styles.css";
 
+@import "./base/components/preferences/styles.css";
+
 @import "./base/components/dir-view/styles.css";
 
 @import "./base/components/left-pane/styles.css";

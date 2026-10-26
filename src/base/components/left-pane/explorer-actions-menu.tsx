@@ -10,6 +10,7 @@ import { ADW } from "../../../utils/css";
 import { isLmb } from "../../../utils/events";
 import { getRelativePosition } from "../../../utils/get-relative-position";
 import { SortMode } from "../dir-view/sort-files";
+import { PreferencesWindow } from "../preferences/preferences";
 
 export function DirectoryOptionsButton(props: { explorer: Explorer }) {
   const { explorer } = props;
@@ -96,6 +97,15 @@ function OptionsMenu(props: {
     ev.stopPropagation();
   };
 
+  const showPreferencesWindow = (ev: MouseEvent) => {
+    if (isLmb(ev)) {
+      props.close();
+      explorer.overlay.display(<PreferencesWindow explorer={explorer} />);
+    }
+    ev.preventDefault();
+    ev.stopPropagation();
+  };
+
   return (
     <div class={{ ["options-menu"]: true }}>
       <button
@@ -144,6 +154,16 @@ function OptionsMenu(props: {
         explorer={explorer}
         submenuVisible={props.sortSubmenuVisible}
       />
+      <button
+        class={{
+          [ADW.Button.button]: true,
+          [ADW.Button.flat]: true,
+          [ADW.Button.adaptive]: true,
+        }}
+        onmousedown={showPreferencesWindow}
+      >
+        Preferences
+      </button>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+export { PreferencePages } from "./base/components/preferences/preferences";
 export { Explorer } from "./explorer";
 export { Immediate } from "./utils/immediate";
 export { Path } from "./utils/path";
@@ -9,8 +10,13 @@ export type {
   ExplorerOptions,
   FileAction,
   FileActionApi,
+  InputPreference,
   Place,
+  PreferenceContext,
+  PromptModal,
+  SelectionPreference,
   StorageInterface,
+  SwitchPreference,
 } from "./explorer";
 export type { Filesystem, FStat } from "./filesystem-interface";
 export type { Resolvable } from "./utils/immediate";

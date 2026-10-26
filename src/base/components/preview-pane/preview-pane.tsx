@@ -14,6 +14,7 @@ export type PreviewPaneProps = {
 export function PreviewPane(props: PreviewPaneProps) {
   const explorer = props.explorer;
   const preview = explorer.previewPane;
+  const { thumbnailsInPreview } = explorer.userSettings;
 
   const handleCloseClick = () => {
     preview.close();
@@ -37,8 +38,10 @@ export function PreviewPane(props: PreviewPaneProps) {
         </button>
       </div>
       <div class={[ScrollView.scrollView, "preview-pane-scrollable"]}>
-        {preview.file.derive(file => {
-          if (file) return <FileThumbnail file={file} explorer={explorer} />;
+        {sig.derive(preview.file, thumbnailsInPreview, (file, allow) => {
+          if (file && allow) {
+            return <FileThumbnail file={file} explorer={explorer} />;
+          }
           return <div />;
         })}
         {preview.file.derive(file => {
