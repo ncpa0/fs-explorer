@@ -4,7 +4,8 @@ import { Prompt } from "./components/prompt/prompt";
 export type PromptType = "question" | "input";
 export type InputPromptValidator = (value: string) => "ok" | { msg: string };
 export type QuestionResult = {
-  answer: boolean;
+  confirmed: boolean;
+  secondaryChoice?: boolean;
 };
 
 export class PromptController {
@@ -25,15 +26,16 @@ export class PromptController {
     message: string;
     confirmBtnLabel?: string;
     cancelBtnLabel?: string;
+    secondaryBtnLabel?: string;
   }) {
     return new Promise<QuestionResult>((res, rej) => {
       const onConfirm = () => {
         this.close();
-        res({ answer: true });
+        res({ confirmed: true });
       };
       const onUserCancel = () => {
         this.close();
-        res({ answer: false });
+        res({ confirmed: false });
       };
       this._cancel = (reason?: any) => {
         this.close();
@@ -51,6 +53,13 @@ export class PromptController {
           cancelBtnLabel={params.cancelBtnLabel ?? "No"}
           onConfirm={onConfirm}
           onCancel={onUserCancel}
+          secondaryBtnLabel={params.secondaryBtnLabel}
+          onSecondaryBtnClick={params.secondaryBtnLabel
+            ? () => {
+              this.close();
+              res({ confirmed: false, secondaryChoice: true });
+            }
+            : undefined}
         />,
       );
 
@@ -67,6 +76,8 @@ export class PromptController {
       initialValue?: string;
       placeholder?: string;
       validate?: InputPromptValidator;
+      secondaryBtnLabel?: string;
+      onSecondaryBtnClick?: () => void;
     },
   ) {
     return new Promise<string | undefined>((res, rej) => {
@@ -96,6 +107,13 @@ export class PromptController {
           validate={params.validate}
           onConfirm={onConfirm}
           onCancel={onUserCancel}
+          secondaryBtnLabel={params.secondaryBtnLabel}
+          onSecondaryBtnClick={params.onSecondaryBtnClick
+            ? () => {
+              this.close();
+              params.onSecondaryBtnClick!();
+            }
+            : undefined}
         />,
       );
 

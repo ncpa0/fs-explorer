@@ -8,13 +8,6 @@ import { QueuedJob } from "./jobs-controller";
 
 export type FilesMutation = (files: readonly FStat[]) => readonly FStat[];
 
-const overwritePrompt = (filename: string) => ({
-  title: "File already exist",
-  message: `File "${filename}" already exists, do you want to overwrite it?`,
-  cancelBtnLabel: "Skip",
-  confirmBtnLabel: "Overwrite",
-});
-
 export class FsController {
   constructor(
     protected explorer: Explorer,
@@ -65,8 +58,6 @@ export class FsController {
     file: FStat,
     newParentDir?: string | Path,
   ): FilesMutation {
-    const filepath = Path.from(file.path);
-
     if (newParentDir) {
       const newFullPath = Path.from(newParentDir).joinSegment(file.name);
       file = {
@@ -76,9 +67,14 @@ export class FsController {
       };
     }
 
+    const filepath = Path.from(file.path);
+
     return (files) => {
       if (files.some(f => filepath.equals(f.path))) {
-        return files;
+        // A same-path entry can already be in the listing: an overwrite's
+        // optimistic update, or a "keep both" copy onto the file's own
+        // directory.
+        return files.map(f => filepath.equals(f.path) ? { ...file } : f);
       }
       return [...files, { ...file }];
     };
@@ -91,17 +87,106 @@ export class FsController {
   }
 
   /**
-   * Resolves to true when the operation may proceed, either because the user
-   * confirmed the overwrite or because the confirmation is switched off.
+   * Destination paths reserved by in-flight copy/move operations. A "keep
+   * both" destination is resolved from a readdir snapshot that cannot see
+   * files other in-flight operations are about to create — unioning this set
+   * into the resolution closes that gap.
    */
-  private async askOverwrite(filename: string): Promise<boolean> {
+  private readonly inFlightDests = new Set<string>();
+
+  private claimDest(dest: Path): void {
+    this.inFlightDests.add(dest.toString());
+  }
+
+  private releaseDest(dest: Path): void {
+    this.inFlightDests.delete(dest.toString());
+  }
+
+  /**
+   * Colliding names get suffixed: `name (1).ext`, `name (2).ext`, ... An
+   * existing ` (N)` suffix is stripped first so a suffixed copy continues
+   * the sequence instead of nesting.
+   */
+  private createUniqueName(name: string, taken: ReadonlySet<string>): string {
+    const path = Path.from(name);
+    let ext = path.ext();
+    let stem = path.basename(false);
+    if (stem === "") {
+      // dotfiles (e.g. ".gitignore") have no extension to keep
+      stem = name;
+      ext = undefined;
+    }
+    while (/ \(\d+\)$/.test(stem)) {
+      stem = stem.replace(/ \(\d+\)$/, "");
+    }
+    if (stem === "") {
+      // the whole stem was a ` (N)` suffix (e.g. name "(1).pdf")
+      stem = name;
+    }
+    for (let i = 1;; i++) {
+      const candidate = ext !== undefined
+        ? `${stem} (${i}).${ext}`
+        : `${stem} (${i})`;
+      if (!taken.has(candidate)) {
+        return candidate;
+      }
+    }
+  }
+
+  /**
+   * Resolves the destination for a "keep both" operation at execution time:
+   * the original path if the conflict is gone by then, otherwise the first
+   * free `name (N).ext` variant. Claims the result synchronously with the
+   * resolution — deferring the claim past the awaiting caller reopens a
+   * window for another operation to pick the same name.
+   */
+  private async resolveUniqueDest(dest: Path): Promise<Path> {
+    const dir = dest.dir();
+    const name = dest.basename();
+    const existingFiles = await this.filesystem.readdir(dir.toString());
+    const taken = new Set(existingFiles);
+    // readdir is a snapshot; also exclude names claimed by in-flight
+    // operations that haven't created their files yet.
+    for (const claimed of this.inFlightDests) {
+      const claimedPath = Path.from(claimed);
+      if (claimedPath.dir().equals(dir)) {
+        taken.add(claimedPath.basename());
+      }
+    }
+    const finalName = taken.has(name)
+      ? this.createUniqueName(name, taken)
+      : name;
+    const finalPath = dir.joinSegment(finalName);
+    this.claimDest(finalPath);
+    return finalPath;
+  }
+
+  /**
+   * Asks how to resolve a destination-name conflict. "cancel" means skip the
+   * file, not abort the batch. Never prompts when the ask-before-overwrite
+   * setting is off, returning "keepBoth".
+   */
+  private async askOverwrite(
+    filename: string,
+  ): Promise<"overwrite" | "keepBoth" | "cancel"> {
     if (!this.explorer.userSettings.askBeforeOverwrite.get()) {
-      return true;
+      return "keepBoth";
     }
     const res = await this.explorer.prompt.ask(
-      overwritePrompt(filename),
+      {
+        title: "File already exist",
+        message:
+          `File "${filename}" already exists, do you want to overwrite it?`,
+        cancelBtnLabel: "Skip",
+        confirmBtnLabel: "Overwrite",
+        secondaryBtnLabel: "Keep both",
+      },
     );
-    return res.answer;
+    return res.confirmed
+      ? "overwrite"
+      : res.secondaryChoice
+      ? "keepBoth"
+      : "cancel";
   }
 
   /**
@@ -121,7 +206,7 @@ export class FsController {
           confirmBtnLabel: "Delete",
           cancelBtnLabel: "Cancel",
         });
-        if (!res.answer) {
+        if (!res.confirmed) {
           return;
         }
       } catch {
@@ -136,25 +221,34 @@ export class FsController {
     from: FStat,
     to: string | Path,
     owner: undefined | DirViewController,
+    keepBoth = false,
   ) {
     to = Path.from(to);
 
-    if (to.equals(from.path)) {
+    if (to.equals(from.path) && !keepBoth) {
       return;
     }
 
-    const job = this.explorer.jobs.createJob("copy", from, () => {
-      return this.filesystem.copy(from.path, to.toString())
-        .then(() => {
-          this.updateTabFiles(to.dir(), this.actionAddFile(from, to));
-          this.explorer.cache.invalidateDirSize(to.dir());
-          owner?.addSelectFile(to.joinSegment(from.name).toString());
-        })
-        .catch(err => {
-          this.explorer.actionError.dispatch(
-            ActionError.copy(err, from.path, to.toString()),
-          );
-        });
+    const job = this.explorer.jobs.createJob("copy", from, async () => {
+      const dest = keepBoth ? await this.resolveUniqueDest(to) : to;
+      if (!keepBoth) {
+        this.claimDest(dest);
+      }
+      try {
+        await this.filesystem.copy(from.path, dest.toString());
+        this.updateTabFiles(
+          dest.dir(),
+          this.actionAddFile({ ...from, name: dest.basename() }, dest.dir()),
+        );
+        this.explorer.cache.invalidateDirSize(dest.dir());
+        owner?.addSelectFile(dest.toString());
+      } catch (err) {
+        this.explorer.actionError.dispatch(
+          ActionError.copy(err, from.path, to.toString()),
+        );
+      } finally {
+        this.releaseDest(dest);
+      }
     });
 
     return job;
@@ -164,31 +258,40 @@ export class FsController {
     file: FStat,
     to: string | Path,
     owner: undefined | DirViewController,
+    keepBoth = false,
   ) {
     const filePath = Path.from(file.path);
     to = Path.from(to);
 
-    if (to.equals(filePath)) {
+    if (to.equals(filePath) && !keepBoth) {
       return;
     }
 
-    const job = this.explorer.jobs.createJob("move", file, () => {
-      return this.filesystem.move(filePath.toString(), to.toString())
-        .then(() => {
-          const fromDir = filePath.dir();
-          const toDir = to.dir();
+    const job = this.explorer.jobs.createJob("move", file, async () => {
+      const dest = keepBoth ? await this.resolveUniqueDest(to) : to;
+      if (!keepBoth) {
+        this.claimDest(dest);
+      }
+      try {
+        await this.filesystem.move(filePath.toString(), dest.toString());
+        const fromDir = filePath.dir();
+        const toDir = dest.dir();
 
-          this.updateTabFiles(fromDir, this.actionRemoveFile(file));
-          this.updateTabFiles(toDir, this.actionAddFile(file, toDir));
-          this.explorer.cache.invalidateDirSize(fromDir);
-          this.explorer.cache.invalidateDirSize(toDir);
-          owner?.addSelectFile(toDir.joinSegment(file.name).toString());
-        })
-        .catch(err => {
-          this.explorer.actionError.dispatch(
-            ActionError.move(err, filePath.toString(), to.toString()),
-          );
-        });
+        this.updateTabFiles(fromDir, this.actionRemoveFile(file));
+        this.updateTabFiles(
+          toDir,
+          this.actionAddFile({ ...file, name: dest.basename() }, toDir),
+        );
+        this.explorer.cache.invalidateDirSize(fromDir);
+        this.explorer.cache.invalidateDirSize(toDir);
+        owner?.addSelectFile(dest.toString());
+      } catch (err) {
+        this.explorer.actionError.dispatch(
+          ActionError.move(err, filePath.toString(), to.toString()),
+        );
+      } finally {
+        this.releaseDest(dest);
+      }
     });
 
     return job;
@@ -200,15 +303,17 @@ export class FsController {
       async (existingFiles) => {
         const copyJobs = await Promise.all(
           files.map(async (f): Promise<QueuedJob<any>[]> => {
-            if (
-              existingFiles.some((efname) => efname === f.name)
-              && !(await this.askOverwrite(f.name))
-            ) {
-              return [];
+            let keepBoth = false;
+            if (existingFiles.some((efname) => efname === f.name)) {
+              const strategy = await this.askOverwrite(f.name);
+              if (strategy === "cancel") {
+                return [];
+              }
+              keepBoth = strategy === "keepBoth";
             }
 
             const dest = to.joinSegment(f.name);
-            const job = this._copy(f, dest, owner);
+            const job = this._copy(f, dest, owner, keepBoth);
             return job ? [job] : [];
           }),
         ).then((jobs) => jobs.flat());
@@ -242,15 +347,17 @@ export class FsController {
         async (existingFiles) => {
           const copyJobs = await Promise.all(
             files.map(async (f): Promise<QueuedJob<any>[]> => {
-              if (
-                existingFiles.some((efname) => efname === f.name)
-                && !(await this.askOverwrite(f.name))
-              ) {
-                return [];
+              let keepBoth = false;
+              if (existingFiles.some((efname) => efname === f.name)) {
+                const strategy = await this.askOverwrite(f.name);
+                if (strategy === "cancel") {
+                  return [];
+                }
+                keepBoth = strategy === "keepBoth";
               }
 
               const dest = to.joinSegment(f.name);
-              const job = this._move(f, dest, owner);
+              const job = this._move(f, dest, owner, keepBoth);
               return job ? [job] : [];
             }),
           ).then((jobs) => jobs.flat());
@@ -283,15 +390,17 @@ export class FsController {
 
         return this.filesystem.readdir(targetDir.toString()).then(
           async existingFiles => {
-            if (
-              existingFiles.some((efname) => efname === filename)
-              && !(await this.askOverwrite(filename))
-            ) {
-              return;
+            let keepBoth = false;
+            if (existingFiles.some((efname) => efname === filename)) {
+              const strategy = await this.askOverwrite(filename);
+              if (strategy === "cancel") {
+                return [];
+              }
+              keepBoth = strategy === "keepBoth";
             }
 
             const dest = targetDir.joinSegment(filename);
-            const job = this._move(file, dest, owner);
+            const job = this._move(file, dest, owner, keepBoth);
             return job?.start();
           },
         );
@@ -356,19 +465,21 @@ export class FsController {
       this.filesystem.readdir(to.toString()).then(async (existingFiles) => {
         const copyJobs = await Promise.all(
           files.map(async (f): Promise<QueuedJob<any>[]> => {
-            if (
-              existingFiles.some((efname) => efname === f.name)
-              && !(await this.askOverwrite(f.name))
-            ) {
-              return [];
+            let keepBoth = false;
+            if (existingFiles.some((efname) => efname === f.name)) {
+              const strategy = await this.askOverwrite(f.name);
+              if (strategy === "cancel") {
+                return [];
+              }
+              keepBoth = strategy === "keepBoth";
             }
 
             const dest = to.joinSegment(f.name);
             if (mode === "move") {
-              const job = this._move(f, dest, owner);
+              const job = this._move(f, dest, owner, keepBoth);
               return job ? [job] : [];
             } else {
-              const job = this._copy(f, dest, owner);
+              const job = this._copy(f, dest, owner, keepBoth);
               return job ? [job] : [];
             }
           }),
