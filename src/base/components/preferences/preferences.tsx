@@ -25,7 +25,12 @@ export enum PreferencePages {
   Advanced,
 }
 
-const GALLERY_SIZE_LABELS = { 6: "Small", 8: "Medium", 12: "Large" } as const;
+const GALLERY_SIZE_LABELS = {
+  6: "Small",
+  8: "Medium",
+  12: "Large",
+  16: "Extra Large",
+} as const;
 
 export function PreferencesWindow(props: {
   explorer: Explorer;
@@ -118,6 +123,7 @@ function AppearanceSettings(props: {
     showSizeColumn,
     showTypeColumn,
     showModifiedColumn,
+    alwaysShowTabBar,
   } = userSettings;
 
   const handleFontSizeChange = (newValue: string | null) => {
@@ -280,6 +286,12 @@ function AppearanceSettings(props: {
           defaultValue={thumbnailsInPreview.get()}
           onChange={(v) => thumbnailsInPreview.dispatch(v)}
         />
+        <SwitchPreferenceRow
+          explorer={explorer}
+          label="Always show tab bar"
+          defaultValue={alwaysShowTabBar.get()}
+          onChange={(v) => alwaysShowTabBar.dispatch(v)}
+        />
         <SelectionPreferenceRow
           explorer={explorer}
           label="Date and time format"
@@ -337,7 +349,6 @@ function BehaviorSettings(props: {
     openPreviewOnClick,
     confirmBeforeDelete,
     doubleClickInterval,
-    alwaysShowTabBar,
   } = userSettings;
 
   const handleDoubleClickIntervalChange = (newValue: string): string => {
@@ -351,7 +362,7 @@ function BehaviorSettings(props: {
   };
 
   return (
-    <div class="dcontents">
+    <div class="grid-container">
       <PreferencesWindowHeader explorer={props.explorer} />
       <div class={["settings-grid", ScrollView.scrollView]}>
         <SwitchPreferenceRow
@@ -377,12 +388,6 @@ function BehaviorSettings(props: {
           label="Confirm before deleting"
           defaultValue={confirmBeforeDelete.get()}
           onChange={(v) => confirmBeforeDelete.dispatch(v)}
-        />
-        <SwitchPreferenceRow
-          explorer={explorer}
-          label="Always show tab bar"
-          defaultValue={alwaysShowTabBar.get()}
-          onChange={(v) => alwaysShowTabBar.dispatch(v)}
         />
         <InputPreferenceRow
           explorer={explorer}
@@ -552,6 +557,7 @@ function SelectionPreferenceRow(
       <adw-selector
         allowUnselect={props.showNullOption}
         unselectLabel={props.nullOptionLabel}
+        orientation="detect"
         onchange={(e) => {
           props.onChange(e.value, ctx(props));
         }}

@@ -305,7 +305,11 @@ export class Explorer {
         "fsexp-date-time-format",
         DEFAULT_DATE_FORMAT,
       ),
-      startupDir: localSig(storage, "fsexp-startup-dir", "/"),
+      startupDir: localSig(
+        storage,
+        "fsexp-startup-dir",
+        options.initDir ?? "/",
+      ),
       askBeforeOverwrite: localSig(storage, "fsexp-ask-overwrite", true),
       calculateDirSize: localSig(storage, "fsexp-calc-dir-size", true),
       showDirSizes: localSig(storage, "fsexp-show-dir-sizes", false),

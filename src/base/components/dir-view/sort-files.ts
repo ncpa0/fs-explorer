@@ -1,5 +1,6 @@
 import { FStat } from "../../../filesystem-interface";
 import { collator } from "../../../utils/collator";
+import { mimeName } from "../../../utils/mime-name";
 import { Path } from "../../../utils/path";
 
 export enum SortMode {
@@ -7,6 +8,20 @@ export enum SortMode {
   Size,
   Date,
   Type,
+}
+
+/**
+ * Shared by the Type column display and the SortMode.Type sort key - the
+ * two must use the same value or the column reads unordered when sorted
+ * by type.
+ */
+export function fileTypeLabel(file: FStat): string {
+  if (file.directory) {
+    return "Directory";
+  }
+  return mimeName(file.mimetype ?? "")
+    ?? Path.ext(file.name)?.toUpperCase()
+    ?? "";
 }
 
 function SortAlhpa(a: FStat, b: FStat): number {
@@ -34,9 +49,8 @@ function SortDateReverse(a: FStat, b: FStat): number {
 }
 
 function SortType(a: FStat, b: FStat): number {
-  const aType = Path.ext(a.name) ?? a.mimetype ?? "";
-  const bType = Path.ext(b.name) ?? b.mimetype ?? "";
-  return collator.compare(aType, bType);
+  const byType = collator.compare(fileTypeLabel(a), fileTypeLabel(b));
+  return byType !== 0 ? byType : collator.compare(a.name, b.name);
 }
 
 function SortTypeReverse(a: FStat, b: FStat): number {

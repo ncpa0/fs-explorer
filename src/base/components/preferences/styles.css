@@ -34,13 +34,16 @@
                 font-size: .6em;
             }
 
+            & .grid-container {
+                overflow-y: auto;
+            }
+
             & .settings-grid {
                 display: grid;
                 grid-template-columns: auto 1fr;
                 align-items: center;
-                gap: .8em;
+                gap: 1.5em;
                 padding-inline: 2em;
-                overflow-y: auto;
 
                 & > * {
                     min-height: 2em;

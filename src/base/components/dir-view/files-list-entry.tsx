@@ -4,24 +4,10 @@ import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { Fmt } from "../../../utils/formatters";
 import { getFileIcon } from "../../../utils/get-file-icon";
-import { mimeName } from "../../../utils/mime-name";
-import { Path } from "../../../utils/path";
 import { TabController } from "../../tab-controller";
 import { useFileEntry } from "./file-entry-common";
 import { LIST_COLUMNS, ListColumn } from "./list-columns";
-
-/**
- * Extension first, matching the SortMode.Type sort key in sort-files.ts, so
- * that the column contents stay in order when sorted by type.
- */
-function fileTypeName(file: FStat): string {
-  if (file.directory) {
-    return "Directory";
-  }
-  return Path.ext(file.name)?.toUpperCase()
-    ?? (file.mimetype ? mimeName(file.mimetype) : undefined)
-    ?? "";
-}
+import { fileTypeLabel } from "./sort-files";
 
 export function FileListEntry(
   props: {
@@ -71,7 +57,7 @@ export function FileListEntry(
       case "type":
         return (
           <div class={col.cellClass}>
-            <span class={Typography.text}>{fileTypeName(f)}</span>
+            <span class={Typography.text}>{fileTypeLabel(f)}</span>
           </div>
         );
       case "modified":

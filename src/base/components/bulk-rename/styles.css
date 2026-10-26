@@ -105,8 +105,4 @@
             row-gap: .4em;
         }
     }
-
-    adw-selector * {
-        max-height: unset !important;
-    }
 }

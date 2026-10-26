@@ -26,7 +26,7 @@ export type GalleryFileListProps = {
  * Width taken up by a single gallery entry at each of the thumbnail size
  * settings, in em units, including the entry's surrounding margins.
  */
-export const GALLERY_THUMBNAIL_SIZES = [6, 8, 12] as const;
+export const GALLERY_THUMBNAIL_SIZES = [6, 8, 12, 16] as const;
 
 export const GalleryFileList = $component(function GalleryFileList(
   props: GalleryFileListProps,
