@@ -17,6 +17,7 @@ import { DEFAULT_DATE_FORMAT } from "./utils/formatters";
 import { Path } from "./utils/path";
 import "adwaveui/dist/esm/components/switch/switch";
 import "adwaveui/dist/esm/components/selector/selector";
+import { GALLERY_THUMBNAIL_SIZES } from "./base/components/dir-view/gallery-file-list";
 import { PreferencePages } from "./base/components/preferences/preferences";
 import { DirCache } from "./base/dir-cache";
 import { TabController } from "./base/tab-controller";
@@ -308,6 +309,14 @@ export class Explorer {
       askBeforeOverwrite: localSig(storage, "fsexp-ask-overwrite", true),
       calculateDirSize: localSig(storage, "fsexp-calc-dir-size", true),
       showDirSizes: localSig(storage, "fsexp-show-dir-sizes", false),
+      galleryThumbnailSize: localSig(
+        storage,
+        "fsexp-gallery-thumb-size",
+        8,
+        (v) =>
+          typeof v === "number"
+          && (GALLERY_THUMBNAIL_SIZES as readonly number[]).includes(v),
+      ),
     };
 
     this.hideLeftPane = localSig(

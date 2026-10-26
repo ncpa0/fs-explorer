@@ -17,12 +17,15 @@ import {
   SwitchPreference,
 } from "../../../explorer";
 import { Path } from "../../../utils/path";
+import { GALLERY_THUMBNAIL_SIZES } from "../dir-view/gallery-file-list";
 
 export enum PreferencePages {
   Appearance,
   Behavior,
   Advanced,
 }
+
+const GALLERY_SIZE_LABELS = { 6: "Small", 8: "Medium", 12: "Large" } as const;
 
 export function PreferencesWindow(props: {
   explorer: Explorer;
@@ -108,7 +111,8 @@ function AppearanceSettings(props: {
   const { explorer } = props;
   const { windowStyles, userSettings } = explorer;
   const { fontSize } = windowStyles;
-  const { thumbnailsInPreview, dateTimeFormat } = userSettings;
+  const { thumbnailsInPreview, dateTimeFormat, galleryThumbnailSize } =
+    userSettings;
 
   const handleFontSizeChange = (newValue: string | null) => {
     const v = Number(newValue);
@@ -122,6 +126,16 @@ function AppearanceSettings(props: {
   const handleDateTimeFormatChange = (newValue: string | null) => {
     if (newValue) {
       dateTimeFormat.dispatch(newValue);
+    }
+  };
+
+  const handleGalleryThumbnailSizeChange = (newValue: string | null) => {
+    const v = Number(newValue);
+    if (
+      newValue != null
+      && (GALLERY_THUMBNAIL_SIZES as readonly number[]).includes(v)
+    ) {
+      galleryThumbnailSize.dispatch(v);
     }
   };
 
@@ -268,6 +282,16 @@ function AppearanceSettings(props: {
               selected: dateTimeFormat.get() === "dd MMM yyyy, HH:mm",
             },
           ]}
+        />
+        <SelectionPreferenceRow
+          explorer={explorer}
+          label="Gallery icon size"
+          onChange={handleGalleryThumbnailSizeChange}
+          options={GALLERY_THUMBNAIL_SIZES.map((size) => ({
+            label: GALLERY_SIZE_LABELS[size],
+            value: String(size),
+            selected: galleryThumbnailSize.get() === size,
+          }))}
         />
         <CustomPreferences
           category={PreferencePages.Appearance}

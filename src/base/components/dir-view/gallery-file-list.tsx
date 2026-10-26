@@ -14,11 +14,6 @@ export type VirtualListElement<T> = HTMLDivElement & {
   VirtualList: VirtualList<T>;
 };
 
-/**
- * Width taken up by a single gallery entry, in em units. This includes the
- * entry itself and its surrounding margins.
- */
-const GALLERY_ITEM_WIDTH_EM = 8;
 const GALLERY_ITEM_MARGIN_EM = 1;
 const GALLERY_INLINE_MARGIN_EM = 1;
 
@@ -26,6 +21,12 @@ export type GalleryFileListProps = {
   explorer: Explorer;
   tab: TabController;
 };
+
+/**
+ * Width taken up by a single gallery entry at each of the thumbnail size
+ * settings, in em units, including the entry's surrounding margins.
+ */
+export const GALLERY_THUMBNAIL_SIZES = [6, 8, 12] as const;
 
 export const GalleryFileList = $component(function GalleryFileList(
   props: GalleryFileListProps,
@@ -36,12 +37,14 @@ export const GalleryFileList = $component(function GalleryFileList(
   const files = dir.filesView.readonly();
   const selectedFiles = dir.selection.readonly();
 
+  const baseItemWidth = explorer.userSettings.galleryThumbnailSize;
+
   /**
    * Amount of entries to place in a single row. Adjusted by the resize
    * observer so that all entries always fit within the container.
    */
   const itemsPerRow = sig(1);
-  const itemWidth = sig(GALLERY_ITEM_WIDTH_EM);
+  const itemWidth = sig(baseItemWidth.get());
   const itemHeight = itemWidth.derive(w => w + 2);
 
   const rows = sig.derive(
@@ -102,13 +105,14 @@ export const GalleryFileList = $component(function GalleryFileList(
   ) as VirtualListElement<FStat>;
 
   const updateItemsPerRow = () => {
+    const baseWidth = baseItemWidth.get();
     const fontSize = parseFloat(getComputedStyle(list).fontSize);
     if (Number.isNaN(fontSize) || fontSize <= 0) return;
 
     const width = list.clientWidth - (GALLERY_INLINE_MARGIN_EM * fontSize);
     if (!width) return;
 
-    const widthInPx = GALLERY_ITEM_WIDTH_EM * fontSize;
+    const widthInPx = baseWidth * fontSize;
     const marginInPx = GALLERY_ITEM_MARGIN_EM * fontSize;
 
     const rowItemCount = Math.max(
@@ -125,22 +129,24 @@ export const GalleryFileList = $component(function GalleryFileList(
     const totalRowItemsWidth = rowItemCount * (widthInPx + marginInPx);
     const unusedSpace = width - totalRowItemsWidth;
     if (unusedSpace <= rowItemCount) {
-      itemWidth.dispatch(GALLERY_ITEM_WIDTH_EM);
+      itemWidth.dispatch(baseWidth);
       return;
     }
 
     const expandItemsBy = unusedSpace - rowItemCount;
     const expandPerItemPx = expandItemsBy / rowItemCount;
     const expandPerItemEm = expandPerItemPx / fontSize;
-    itemWidth.dispatch(expandPerItemEm + GALLERY_ITEM_WIDTH_EM);
+    itemWidth.dispatch(expandPerItemEm + baseWidth);
   };
 
   api.onMount(() => {
     const observer = new ResizeObserver(updateItemsPerRow);
     observer.observe(list);
-    updateItemsPerRow();
+    // sig.add invokes the listener immediately, performing the initial fit
+    const unsub = baseItemWidth.add(updateItemsPerRow);
     return () => {
       observer.disconnect();
+      unsub.detach();
     };
   });
 
