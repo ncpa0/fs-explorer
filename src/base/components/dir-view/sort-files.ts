@@ -1,6 +1,6 @@
 import { FStat } from "../../../filesystem-interface";
 import { collator } from "../../../utils/collator";
-import { mimeName } from "../../../utils/mime-name";
+import { mimeName, nameByExt } from "../../../utils/mime-name";
 import { Path } from "../../../utils/path";
 
 export enum SortMode {
@@ -19,9 +19,8 @@ export function fileTypeLabel(file: FStat): string {
   if (file.directory) {
     return "Directory";
   }
-  return mimeName(file.mimetype ?? "")
-    ?? Path.ext(file.name)?.toUpperCase()
-    ?? "";
+  const ext = Path.ext(file.path);
+  return mimeName(file.mimetype ?? "") ?? (ext && nameByExt(ext)) ?? "Unknown";
 }
 
 function SortAlhpa(a: FStat, b: FStat): number {

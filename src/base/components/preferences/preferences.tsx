@@ -160,7 +160,7 @@ function AppearanceSettings(props: {
   };
 
   return (
-    <div class="dcontents">
+    <div class="grid-container">
       <PreferencesWindowHeader explorer={props.explorer} />
       <div class={["settings-grid", ScrollView.scrollView]}>
         <SelectionPreferenceRow
@@ -425,7 +425,7 @@ function AdvancedSettings(props: {
   };
 
   return (
-    <div class="dcontents">
+    <div class="grid-container">
       <PreferencesWindowHeader explorer={props.explorer} />
       <div class={["settings-grid", ScrollView.scrollView]}>
         <InputPreferenceRow
