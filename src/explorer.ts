@@ -13,7 +13,7 @@ import { PromptController } from "./base/prompt-controller";
 import { Filesystem, FStat } from "./filesystem-interface";
 import { ActionError } from "./interfaces/action-error";
 import { Styles } from "./styles-component";
-import { Immediate } from "./utils/immediate";
+import { DEFAULT_DATE_FORMAT } from "./utils/formatters";
 import { Path } from "./utils/path";
 import "adwaveui/dist/esm/components/switch/switch";
 import "adwaveui/dist/esm/components/selector/selector";
@@ -167,7 +167,11 @@ export type InputPreference = {
   defaultValue?: string;
   inputType?: string;
   placeholder?: string;
-  onChange(newValue: string, ctx: PreferenceContext): void;
+  /**
+   * May return a normalized value, which is then written back into the
+   * input element.
+   */
+  onChange(newValue: string, ctx: PreferenceContext): string | void;
   category: PreferencePages;
   autocomplete?: AutoFill;
 };
@@ -284,6 +288,26 @@ export class Explorer {
         "fsexp-thumbnails-in-preview",
         true,
       ),
+      confirmBeforeDelete: localSig(storage, "fsexp-confirm-delete", false),
+      doubleClickInterval: localSig(
+        storage,
+        "fsexp-dblclick-interval",
+        500,
+      ),
+      alwaysShowTabBar: localSig(
+        storage,
+        "fsexp-always-show-tab-bar",
+        false,
+      ),
+      dateTimeFormat: localSig(
+        storage,
+        "fsexp-date-time-format",
+        DEFAULT_DATE_FORMAT,
+      ),
+      startupDir: localSig(storage, "fsexp-startup-dir", "/"),
+      askBeforeOverwrite: localSig(storage, "fsexp-ask-overwrite", true),
+      calculateDirSize: localSig(storage, "fsexp-calc-dir-size", true),
+      showDirSizes: localSig(storage, "fsexp-show-dir-sizes", false),
     };
 
     this.hideLeftPane = localSig(
@@ -342,8 +366,12 @@ export class Explorer {
       g.initiate();
     }
 
-    if (options.initDir) {
-      this.history.get().replace(options.initDir);
+    const startupDir = this.userSettings.startupDir.get();
+    // an explicit initDir from the host always wins over the stored preference
+    const initDir = options.initDir
+      ?? (startupDir !== "/" ? startupDir : undefined);
+    if (initDir) {
+      this.history.get().replace(initDir);
     }
   }
 
@@ -443,10 +471,14 @@ export class Explorer {
         break;
       }
       case "Delete": {
-        if (!hasFocus() && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+        if (
+          !hasFocus() && !e.ctrlKey && !e.shiftKey && !e.altKey
+          // held-down key auto-repeat would stack deletion confirm prompts
+          && !e.repeat && !this.prompt.isOpen()
+        ) {
           const files = this.directory.get().getActionableFiles();
           if (files) {
-            Immediate.all(...files.map(f => this.fs.remove(f))).then(() => {
+            this.fs.removeWithConfirm(files).then(() => {
               this.refresh();
             });
           }

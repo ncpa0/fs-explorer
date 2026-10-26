@@ -1,7 +1,7 @@
 import { Explorer } from "../explorer";
 import { Filesystem, FStat } from "../filesystem-interface";
 import { ActionError } from "../interfaces/action-error";
-import { Resolvable } from "../utils/immediate";
+import { Immediate, Resolvable } from "../utils/immediate";
 import { Path } from "../utils/path";
 import { DirViewController } from "./dir-view-controller";
 import { QueuedJob } from "./jobs-controller";
@@ -90,6 +90,48 @@ export class FsController {
     });
   }
 
+  /**
+   * Resolves to true when the operation may proceed, either because the user
+   * confirmed the overwrite or because the confirmation is switched off.
+   */
+  private async askOverwrite(filename: string): Promise<boolean> {
+    if (!this.explorer.userSettings.askBeforeOverwrite.get()) {
+      return true;
+    }
+    const res = await this.explorer.prompt.ask(
+      overwritePrompt(filename),
+    );
+    return res.answer;
+  }
+
+  /**
+   * Removes the files after a single batch confirmation, unless the
+   * "confirm before delete" setting is switched off. Rejects only on
+   * filesystem errors, never on the user cancelling the prompt.
+   */
+  async removeWithConfirm(files: readonly FStat[]): Promise<void> {
+    if (this.explorer.userSettings.confirmBeforeDelete.get()) {
+      const message = files.length === 1
+        ? `Delete "${files[0]!.name}"?`
+        : `Delete ${files.length} files?`;
+      try {
+        const res = await this.explorer.prompt.ask({
+          title: "Confirm deletion",
+          message,
+          confirmBtnLabel: "Delete",
+          cancelBtnLabel: "Cancel",
+        });
+        if (!res.answer) {
+          return;
+        }
+      } catch {
+        // prompt cancelled e.g. via the Escape key
+        return;
+      }
+    }
+    await Immediate.all(...files.map(f => this.remove(f)));
+  }
+
   private _copy(
     from: FStat,
     to: string | Path,
@@ -105,6 +147,7 @@ export class FsController {
       return this.filesystem.copy(from.path, to.toString())
         .then(() => {
           this.updateTabFiles(to.dir(), this.actionAddFile(from, to));
+          this.explorer.cache.invalidateDirSize(to.dir());
           owner?.addSelectFile(to.joinSegment(from.name).toString());
         })
         .catch(err => {
@@ -137,6 +180,8 @@ export class FsController {
 
           this.updateTabFiles(fromDir, this.actionRemoveFile(file));
           this.updateTabFiles(toDir, this.actionAddFile(file, toDir));
+          this.explorer.cache.invalidateDirSize(fromDir);
+          this.explorer.cache.invalidateDirSize(toDir);
           owner?.addSelectFile(toDir.joinSegment(file.name).toString());
         })
         .catch(err => {
@@ -155,14 +200,11 @@ export class FsController {
       async (existingFiles) => {
         const copyJobs = await Promise.all(
           files.map(async (f): Promise<QueuedJob<any>[]> => {
-            if (existingFiles.some((efname) => efname === f.name)) {
-              const res = await this.explorer.prompt.ask(
-                overwritePrompt(f.name),
-              );
-
-              if (res.answer === false) {
-                return [];
-              }
+            if (
+              existingFiles.some((efname) => efname === f.name)
+              && !(await this.askOverwrite(f.name))
+            ) {
+              return [];
             }
 
             const dest = to.joinSegment(f.name);
@@ -200,14 +242,11 @@ export class FsController {
         async (existingFiles) => {
           const copyJobs = await Promise.all(
             files.map(async (f): Promise<QueuedJob<any>[]> => {
-              if (existingFiles.some((efname) => efname === f.name)) {
-                const res = await this.explorer.prompt.ask(
-                  overwritePrompt(f.name),
-                );
-
-                if (res.answer === false) {
-                  return [];
-                }
+              if (
+                existingFiles.some((efname) => efname === f.name)
+                && !(await this.askOverwrite(f.name))
+              ) {
+                return [];
               }
 
               const dest = to.joinSegment(f.name);
@@ -244,14 +283,11 @@ export class FsController {
 
         return this.filesystem.readdir(targetDir.toString()).then(
           async existingFiles => {
-            if (existingFiles.some((efname) => efname === filename)) {
-              const res = await this.explorer.prompt.ask(
-                overwritePrompt(filename),
-              );
-
-              if (res.answer === false) {
-                return;
-              }
+            if (
+              existingFiles.some((efname) => efname === filename)
+              && !(await this.askOverwrite(filename))
+            ) {
+              return;
             }
 
             const dest = targetDir.joinSegment(filename);
@@ -269,6 +305,7 @@ export class FsController {
     return this.filesystem.remove(path.toString())
       .then(() => {
         this.updateTabFiles(path.dir(), this.actionRemoveFile(file));
+        this.explorer.cache.invalidateDirSize(path);
       })
       .catch(err => {
         this.explorer.actionError.dispatch(
@@ -319,14 +356,11 @@ export class FsController {
       this.filesystem.readdir(to.toString()).then(async (existingFiles) => {
         const copyJobs = await Promise.all(
           files.map(async (f): Promise<QueuedJob<any>[]> => {
-            if (existingFiles.some((efname) => efname === f.name)) {
-              const res = await this.explorer.prompt.ask(
-                overwritePrompt(f.name),
-              );
-
-              if (res.answer === false) {
-                return [];
-              }
+            if (
+              existingFiles.some((efname) => efname === f.name)
+              && !(await this.askOverwrite(f.name))
+            ) {
+              return [];
             }
 
             const dest = to.joinSegment(f.name);

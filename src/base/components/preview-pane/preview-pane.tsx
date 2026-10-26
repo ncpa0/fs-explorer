@@ -44,10 +44,14 @@ export function PreviewPane(props: PreviewPaneProps) {
           }
           return <div />;
         })}
-        {preview.file.derive(file => {
-          if (file) return <FileInfo file={file} explorer={explorer} />;
-          return <div />;
-        })}
+        {sig.derive(
+          preview.file,
+          explorer.userSettings.calculateDirSize,
+          (file, _calcDirSize) => {
+            if (file) return <FileInfo file={file} explorer={explorer} />;
+            return <div />;
+          },
+        )}
       </div>
     </div>
   );
@@ -78,6 +82,7 @@ function FileThumbnail(props: { file: FStat; explorer: Explorer }) {
 
 function FileInfo(props: { file: FStat; explorer: Explorer }) {
   const { file, explorer } = props;
+  const dateFormat = explorer.userSettings.dateTimeFormat;
 
   const size = sig(file.directory ? "N/A" : Fmt.size(file.size));
   let type = props.file.mimetype && mimeName(props.file.mimetype);
@@ -85,7 +90,10 @@ function FileInfo(props: { file: FStat; explorer: Explorer }) {
     type = "Directory";
   }
 
-  if (file.directory && explorer.filesystem.dirSize) {
+  if (
+    file.directory && explorer.userSettings.calculateDirSize.get()
+    && explorer.filesystem.dirSize
+  ) {
     size.dispatch("...");
     explorer.filesystem.dirSize(file.path).then(dsize => {
       size.dispatch(Fmt.size(dsize));
@@ -117,18 +125,33 @@ function FileInfo(props: { file: FStat; explorer: Explorer }) {
         && (
           <div class={["dcontents", "info-entry", ADW.Typography.text]}>
             <span class="info-label">Created At:</span>
-            <span class="info-value">{Fmt.date(props.file.ctime)}</span>
+            <span class="info-value">
+              {sig.derive(
+                dateFormat,
+                () => Fmt.date(props.file.ctime!, dateFormat.get()),
+              )}
+            </span>
           </div>
         )}
       <div class={["dcontents", "info-entry", ADW.Typography.text]}>
         <span class="info-label">Modified At:</span>
-        <span class="info-value">{Fmt.date(props.file.mtime)}</span>
+        <span class="info-value">
+          {sig.derive(
+            dateFormat,
+            () => Fmt.date(props.file.mtime, dateFormat.get()),
+          )}
+        </span>
       </div>
       {props.file.atime
         && (
           <div class={["dcontents", "info-entry", ADW.Typography.text]}>
             <span class="info-label">Accessed At:</span>
-            <span class="info-value">{Fmt.date(props.file.atime)}</span>
+            <span class="info-value">
+              {sig.derive(
+                dateFormat,
+                () => Fmt.date(props.file.atime!, dateFormat.get()),
+              )}
+            </span>
           </div>
         )}
       <div class="dcontents">

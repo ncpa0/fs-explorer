@@ -160,7 +160,7 @@ export function useFileEntry(props: FileEntryProps): FileEntry {
 
     if (
       lastFilePressed && Path.equal(lastFilePressed.path, f.path)
-      && now - lastPressTs < 500
+      && now - lastPressTs < explorer.userSettings.doubleClickInterval.get()
     ) {
       lastPressTs = 0;
       lastFilePressed = undefined;

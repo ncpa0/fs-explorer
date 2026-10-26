@@ -16,6 +16,7 @@ import {
   SelectionPreference,
   SwitchPreference,
 } from "../../../explorer";
+import { Path } from "../../../utils/path";
 
 export enum PreferencePages {
   Appearance,
@@ -107,7 +108,7 @@ function AppearanceSettings(props: {
   const { explorer } = props;
   const { windowStyles, userSettings } = explorer;
   const { fontSize } = windowStyles;
-  const { thumbnailsInPreview } = userSettings;
+  const { thumbnailsInPreview, dateTimeFormat } = userSettings;
 
   const handleFontSizeChange = (newValue: string | null) => {
     const v = Number(newValue);
@@ -115,6 +116,12 @@ function AppearanceSettings(props: {
       fontSize.dispatch(`${v}px`);
     } else {
       fontSize.dispatch("inherit");
+    }
+  };
+
+  const handleDateTimeFormatChange = (newValue: string | null) => {
+    if (newValue) {
+      dateTimeFormat.dispatch(newValue);
     }
   };
 
@@ -235,6 +242,33 @@ function AppearanceSettings(props: {
           defaultValue={thumbnailsInPreview.get()}
           onChange={(v) => thumbnailsInPreview.dispatch(v)}
         />
+        <SelectionPreferenceRow
+          explorer={explorer}
+          label="Date and time format"
+          onChange={handleDateTimeFormatChange}
+          options={[
+            {
+              label: "2026-10-26 13:58:00",
+              value: "yyyy-MM-dd HH:mm:ss",
+              selected: dateTimeFormat.get() === "yyyy-MM-dd HH:mm:ss",
+            },
+            {
+              label: "26/10/2026 13:58",
+              value: "dd/MM/yyyy HH:mm",
+              selected: dateTimeFormat.get() === "dd/MM/yyyy HH:mm",
+            },
+            {
+              label: "10/26/2026 1:58 PM",
+              value: "MM/dd/yyyy h:mm a",
+              selected: dateTimeFormat.get() === "MM/dd/yyyy h:mm a",
+            },
+            {
+              label: "26 Oct 2026, 13:58",
+              value: "dd MMM yyyy, HH:mm",
+              selected: dateTimeFormat.get() === "dd MMM yyyy, HH:mm",
+            },
+          ]}
+        />
         <CustomPreferences
           category={PreferencePages.Appearance}
           explorer={explorer}
@@ -250,7 +284,23 @@ function BehaviorSettings(props: {
 }) {
   const { explorer } = props;
   const { userSettings, noPreview } = explorer;
-  const { openOnDoubleClick, openPreviewOnClick } = userSettings;
+  const {
+    openOnDoubleClick,
+    openPreviewOnClick,
+    confirmBeforeDelete,
+    doubleClickInterval,
+    alwaysShowTabBar,
+  } = userSettings;
+
+  const handleDoubleClickIntervalChange = (newValue: string): string => {
+    const n = Number(newValue);
+    if (Number.isNaN(n) || n < 20) {
+      return String(doubleClickInterval.get());
+    }
+    const clamped = Math.min(n, 5000);
+    doubleClickInterval.dispatch(clamped);
+    return String(clamped);
+  };
 
   return (
     <div class="dcontents">
@@ -274,6 +324,25 @@ function BehaviorSettings(props: {
           defaultValue={openPreviewOnClick.get()}
           onChange={(v) => openPreviewOnClick.dispatch(v)}
         />
+        <SwitchPreferenceRow
+          explorer={explorer}
+          label="Confirm before deleting"
+          defaultValue={confirmBeforeDelete.get()}
+          onChange={(v) => confirmBeforeDelete.dispatch(v)}
+        />
+        <SwitchPreferenceRow
+          explorer={explorer}
+          label="Always show tab bar"
+          defaultValue={alwaysShowTabBar.get()}
+          onChange={(v) => alwaysShowTabBar.dispatch(v)}
+        />
+        <InputPreferenceRow
+          explorer={explorer}
+          label="Double-click interval (ms)"
+          defaultValue={String(doubleClickInterval.get())}
+          inputType="number"
+          onChange={handleDoubleClickIntervalChange}
+        />
         <CustomPreferences
           category={PreferencePages.Behavior}
           explorer={explorer}
@@ -288,11 +357,49 @@ function AdvancedSettings(props: {
   explorer: Explorer;
 }) {
   const { explorer } = props;
+  const { userSettings } = explorer;
+  const { startupDir, askBeforeOverwrite, calculateDirSize, showDirSizes } =
+    userSettings;
+
+  const handleStartupDirChange = (newValue: string): string => {
+    const trimmed = newValue.trim();
+    if (!trimmed || !trimmed.startsWith("/")) {
+      return startupDir.get();
+    }
+    const normalized = Path.from(trimmed).normalize().toString();
+    startupDir.dispatch(normalized);
+    return normalized;
+  };
 
   return (
     <div class="dcontents">
       <PreferencesWindowHeader explorer={props.explorer} />
       <div class={["settings-grid", ScrollView.scrollView]}>
+        <InputPreferenceRow
+          explorer={explorer}
+          label="Startup directory"
+          defaultValue={startupDir.get()}
+          placeholder="/"
+          onChange={handleStartupDirChange}
+        />
+        <SwitchPreferenceRow
+          explorer={explorer}
+          label="Ask before overwriting files"
+          defaultValue={askBeforeOverwrite.get()}
+          onChange={(v) => askBeforeOverwrite.dispatch(v)}
+        />
+        <SwitchPreferenceRow
+          explorer={explorer}
+          label="Calculate directory sizes in preview"
+          defaultValue={calculateDirSize.get()}
+          onChange={(v) => calculateDirSize.dispatch(v)}
+        />
+        <SwitchPreferenceRow
+          explorer={explorer}
+          label="Show directory sizes in file list"
+          defaultValue={showDirSizes.get()}
+          onChange={(v) => showDirSizes.dispatch(v)}
+        />
         <CustomPreferences
           category={PreferencePages.Advanced}
           explorer={explorer}
@@ -354,7 +461,10 @@ function InputPreferenceRow(
         type={props.inputType}
         autocomplete={props.autocomplete ?? "off"}
         onchange={e => {
-          props.onChange(e.target.value, ctx(props));
+          const normalized = props.onChange(e.target.value, ctx(props));
+          if (typeof normalized === "string") {
+            e.target.value = normalized;
+          }
         }}
       />
     </>

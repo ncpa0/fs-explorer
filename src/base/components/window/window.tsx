@@ -24,7 +24,11 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
     return hide ? "100%" : "calc(100% - 16em)";
   });
 
-  const tabBarHiddden = explorer.tabGroups.derive(g => g.length <= 1);
+  const tabBarHiddden = sig.derive(
+    explorer.tabGroups,
+    explorer.userSettings.alwaysShowTabBar,
+    (groups, alwaysShow) => !alwaysShow && groups.length <= 1,
+  );
 
   return (
     <div

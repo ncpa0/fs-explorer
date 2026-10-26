@@ -1,4 +1,4 @@
-import { ReadonlySignal } from "@ncpa0cpl/vanilla-jsx/signals";
+import { ReadonlySignal, sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Typography } from "adwavecss";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
@@ -17,8 +17,36 @@ export function FileListEntry(
     setActiveEntry: (entry: string | null) => void;
   },
 ) {
+  const { explorer } = props;
   const entry = useFileEntry(props);
   const { file } = entry;
+  const { dateTimeFormat, showDirSizes } = explorer.userSettings;
+
+  const dirSizeRefresh = sig(0);
+
+  const sizeText = sig.derive(
+    file,
+    showDirSizes,
+    dirSizeRefresh,
+    (f, showDirSize) => {
+      if (!f.directory) {
+        return Fmt.size(f.size);
+      }
+      if (!showDirSize || !explorer.filesystem.dirSize) {
+        return "";
+      }
+      const cached = explorer.cache.getDirSize(f.path);
+      if (cached != null) {
+        return Fmt.size(cached);
+      }
+      explorer.cache
+        .fetchDirSize(f.path, () => explorer.filesystem.dirSize!(f.path))
+        .then(() => dirSizeRefresh.dispatch(v => v + 1))
+        // failed fetches leave the cell blank instead of caching a value
+        .catch(() => {});
+      return "";
+    },
+  );
 
   return (
     <div
@@ -43,12 +71,16 @@ export function FileListEntry(
       </div>
       <div class="file-size">
         <span class={Typography.text}>
-          {file.derive(file => file.directory ? "" : Fmt.size(file.size))}
+          {sizeText}
         </span>
       </div>
       <div class="file-modified">
         <span class={Typography.text}>
-          {file.derive(file => Fmt.date(file.mtime))}
+          {sig.derive(
+            file,
+            dateTimeFormat,
+            (f, format) => Fmt.date(f.mtime, format),
+          )}
         </span>
       </div>
     </div>

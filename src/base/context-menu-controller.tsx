@@ -293,13 +293,8 @@ export class ContextMenuController {
       const selectedFiles = this.menu.selectedFiles.get();
       this.menu.close();
 
-      if (file) {
-        explorer.fs.remove(file);
-      } else {
-        for (const file of selectedFiles) {
-          explorer.fs.remove(file);
-        }
-      }
+      const files = file ? [file] : selectedFiles;
+      explorer.fs.removeWithConfirm(files);
     }
 
     rename() {
