@@ -4,8 +4,24 @@ import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { Fmt } from "../../../utils/formatters";
 import { getFileIcon } from "../../../utils/get-file-icon";
+import { mimeName } from "../../../utils/mime-name";
+import { Path } from "../../../utils/path";
 import { TabController } from "../../tab-controller";
 import { useFileEntry } from "./file-entry-common";
+import { LIST_COLUMNS, ListColumn } from "./list-columns";
+
+/**
+ * Extension first, matching the SortMode.Type sort key in sort-files.ts, so
+ * that the column contents stay in order when sorted by type.
+ */
+function fileTypeName(file: FStat): string {
+  if (file.directory) {
+    return "Directory";
+  }
+  return Path.ext(file.name)?.toUpperCase()
+    ?? (file.mimetype ? mimeName(file.mimetype) : undefined)
+    ?? "";
+}
 
 export function FileListEntry(
   props: {
@@ -22,31 +38,53 @@ export function FileListEntry(
   const { file } = entry;
   const { dateTimeFormat, showDirSizes } = explorer.userSettings;
 
-  const dirSizeRefresh = sig(0);
-
-  const sizeText = sig.derive(
-    file,
-    showDirSizes,
-    dirSizeRefresh,
-    (f, showDirSize) => {
-      if (!f.directory) {
-        return Fmt.size(f.size);
+  const renderCell = (col: ListColumn, f: FStat): unknown => {
+    switch (col.id) {
+      case "size": {
+        const dirSizeRefresh = sig(0);
+        return sig.derive(showDirSizes, dirSizeRefresh, (showDirSize) => {
+          let text = "";
+          if (!f.directory) {
+            text = Fmt.size(f.size);
+          } else if (showDirSize && explorer.filesystem.dirSize) {
+            const cached = explorer.cache.getDirSize(f.path);
+            if (cached != null) {
+              text = Fmt.size(cached);
+            } else {
+              explorer.cache
+                .fetchDirSize(
+                  f.path,
+                  () => explorer.filesystem.dirSize!(f.path),
+                )
+                .then(() => dirSizeRefresh.dispatch(v => v + 1))
+                // failed fetches leave the cell blank instead of caching a value
+                .catch(() => {});
+            }
+          }
+          return (
+            <div class={col.cellClass}>
+              <span class={Typography.text}>{text}</span>
+            </div>
+          );
+        });
       }
-      if (!showDirSize || !explorer.filesystem.dirSize) {
-        return "";
-      }
-      const cached = explorer.cache.getDirSize(f.path);
-      if (cached != null) {
-        return Fmt.size(cached);
-      }
-      explorer.cache
-        .fetchDirSize(f.path, () => explorer.filesystem.dirSize!(f.path))
-        .then(() => dirSizeRefresh.dispatch(v => v + 1))
-        // failed fetches leave the cell blank instead of caching a value
-        .catch(() => {});
-      return "";
-    },
-  );
+      case "type":
+        return (
+          <div class={col.cellClass}>
+            <span class={Typography.text}>{fileTypeName(f)}</span>
+          </div>
+        );
+      case "modified":
+        return sig.derive(
+          dateTimeFormat,
+          (format) => (
+            <div class={col.cellClass}>
+              <span class={Typography.text}>{Fmt.date(f.mtime, format)}</span>
+            </div>
+          ),
+        );
+    }
+  };
 
   return (
     <div
@@ -69,20 +107,10 @@ export function FileListEntry(
       <div class="filename">
         <span class={Typography.text}>{file.$prop("name")}</span>
       </div>
-      <div class="file-size">
-        <span class={Typography.text}>
-          {sizeText}
-        </span>
-      </div>
-      <div class="file-modified">
-        <span class={Typography.text}>
-          {sig.derive(
-            file,
-            dateTimeFormat,
-            (f, format) => Fmt.date(f.mtime, format),
-          )}
-        </span>
-      </div>
+      {LIST_COLUMNS.map(col =>
+        sig.derive(file, col.visibility(explorer), (f, show) =>
+          show ? renderCell(col, f) : null)
+      )}
     </div>
   );
 }

@@ -260,7 +260,7 @@ export class DirViewController {
     }
   }
 
-  toggleSorting(sortBy: "name" | "date" | "size") {
+  toggleSorting(sortBy: "name" | "date" | "size" | "type") {
     this.sorting.dispatch(prev => {
       switch (sortBy) {
         case "name": {
@@ -279,6 +279,12 @@ export class DirViewController {
           return {
             mode: SortMode.Size,
             reverse: prev.mode === SortMode.Size && !prev.reverse,
+          };
+        }
+        case "type": {
+          return {
+            mode: SortMode.Type,
+            reverse: prev.mode === SortMode.Type && !prev.reverse,
           };
         }
       }

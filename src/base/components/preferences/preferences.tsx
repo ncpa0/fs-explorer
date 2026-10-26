@@ -111,8 +111,14 @@ function AppearanceSettings(props: {
   const { explorer } = props;
   const { windowStyles, userSettings } = explorer;
   const { fontSize } = windowStyles;
-  const { thumbnailsInPreview, dateTimeFormat, galleryThumbnailSize } =
-    userSettings;
+  const {
+    thumbnailsInPreview,
+    dateTimeFormat,
+    galleryThumbnailSize,
+    showSizeColumn,
+    showTypeColumn,
+    showModifiedColumn,
+  } = userSettings;
 
   const handleFontSizeChange = (newValue: string | null) => {
     const v = Number(newValue);
@@ -243,6 +249,24 @@ function AppearanceSettings(props: {
           label="Show list header"
           defaultValue={explorer.showFileviewHeader.get()}
           onChange={handleShowHeaderChange}
+        />
+        <SwitchPreferenceRow
+          explorer={explorer}
+          label="Show size column"
+          defaultValue={showSizeColumn.get()}
+          onChange={(v) => showSizeColumn.dispatch(v)}
+        />
+        <SwitchPreferenceRow
+          explorer={explorer}
+          label="Show file type column"
+          defaultValue={showTypeColumn.get()}
+          onChange={(v) => showTypeColumn.dispatch(v)}
+        />
+        <SwitchPreferenceRow
+          explorer={explorer}
+          label="Show date modified column"
+          defaultValue={showModifiedColumn.get()}
+          onChange={(v) => showModifiedColumn.dispatch(v)}
         />
         <SwitchPreferenceRow
           explorer={explorer}

@@ -317,6 +317,9 @@ export class Explorer {
           typeof v === "number"
           && (GALLERY_THUMBNAIL_SIZES as readonly number[]).includes(v),
       ),
+      showSizeColumn: localSig(storage, "fsexp-col-size", true),
+      showModifiedColumn: localSig(storage, "fsexp-col-modified", true),
+      showTypeColumn: localSig(storage, "fsexp-col-type", false),
     };
 
     this.hideLeftPane = localSig(

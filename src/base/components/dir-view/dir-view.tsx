@@ -7,6 +7,7 @@ import { Path } from "../../../utils/path";
 import { TabController } from "../../tab-controller";
 import { LoadingIndicator } from "../_common/loader";
 import { GalleryFileList } from "./gallery-file-list";
+import { LIST_COLUMNS, ListColumnId } from "./list-columns";
 import { FileViewHeader } from "./list-header";
 import { VirtualFileList } from "./virtual-file-list";
 
@@ -111,6 +112,22 @@ export function DirView(props: DirViewProps) {
     (show, isGallery) => show && !isGallery,
   );
 
+  const listColumns = sig.derive(
+    explorer.userSettings.showSizeColumn,
+    explorer.userSettings.showTypeColumn,
+    explorer.userSettings.showModifiedColumn,
+    (size, type, modified) => {
+      const visible: Record<ListColumnId, boolean> = { size, type, modified };
+      const cols = ["3.75em", "auto"];
+      for (const col of LIST_COLUMNS) {
+        if (visible[col.id]) {
+          cols.push(col.width);
+        }
+      }
+      return cols.join(" ");
+    },
+  );
+
   type SwSig = SignalOf<typeof swSig>;
 
   return (
@@ -120,6 +137,7 @@ export function DirView(props: DirViewProps) {
         "file-drag-over": sig.when(dragEnterCount, true, false),
         "plain-list": explorer.plainList,
       }}
+      style={{ "--dirview-cols": sig.literal`${listColumns}` }}
       onmousedown={handleClick}
       oncontextmenu={handleContextMenu}
       ondrop={handleDrop}
@@ -133,7 +151,11 @@ export function DirView(props: DirViewProps) {
           return null;
         }
         return (
-          <FileViewHeader dir={tab.directory} sorting={tab.directory.sorting} />
+          <FileViewHeader
+            explorer={explorer}
+            dir={tab.directory}
+            sorting={tab.directory.sorting}
+          />
         );
       })}
       <Switch

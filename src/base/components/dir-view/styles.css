@@ -47,6 +47,7 @@
                 grid-template-columns: 3.75em auto;
 
                 & .header-size,
+                & .header-type,
                 & .header-date {
                     display: none;
                 }
@@ -60,6 +61,7 @@
                 }
 
                 & .file-size,
+                & .file-type,
                 & .file-modified {
                     display: none;
                 }
@@ -93,6 +95,11 @@
             & .header-size {
                 cursor: var(--current-cursor, pointer);
                 justify-content: center;
+                border-left: 1px solid var(--clr-dimmed);
+            }
+
+            & .header-type {
+                cursor: var(--current-cursor, pointer);
                 border-left: 1px solid var(--clr-dimmed);
             }
 
@@ -133,6 +140,7 @@
 
                 & .filename,
                 & .file-size,
+                & .file-type,
                 & .file-modified {
                     overflow-x: auto;
 
@@ -150,6 +158,7 @@
 
                 & .filename,
                 & .file-size,
+                & .file-type,
                 & .file-modified,
                 & .file-icon {
                     display: flex;
@@ -191,18 +200,12 @@
                         border: 1px solid var(--clr-primary-100);
                     }
 
-                    & .file-icon {
-                        border-right: unset;
-                    }
-
-                    & .filename,
-                    & .file-size {
-                        border-right: unset;
+                    & > :not(:first-child) {
                         border-left: unset;
                     }
 
-                    & .file-modified {
-                        border-left: unset;
+                    & > :not(:last-child) {
+                        border-right: unset;
                     }
                 }
 
@@ -221,6 +224,7 @@
                 &.file-cut {
                     & .filename,
                     & .file-size,
+                    & .file-type,
                     & .file-modified,
                     & .file-icon {
                         opacity: .5;
