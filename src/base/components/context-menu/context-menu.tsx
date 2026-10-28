@@ -107,6 +107,26 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
         action={() => menu.actions.open()}
         title="Open"
       />
+      {singleFile && singleFile.directory && (
+        <>
+          <MenuButton
+            hidden={hideOpenBtn}
+            action={() => {
+              explorer.newTabGroup(singleFile.path);
+              menu.close();
+            }}
+            title="Open in new tab"
+          />
+          <MenuButton
+            hidden={hideOpenBtn}
+            action={() => {
+              explorer.newTab(singleFile.path);
+              menu.close();
+            }}
+            title="Open in split view"
+          />
+        </>
+      )}
       <MenuButton
         hidden={hideNewFileBtn}
         action={() => menu.actions.createFile()}

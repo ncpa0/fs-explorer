@@ -1,6 +1,6 @@
 .explorer-window.explorer-window.explorer-window.explorer-window {
     & .dir-view-container {
-        --dirview-cols: 3.75em auto 7em 12em;
+        --dirview-cols: 3.75em auto 6em 12em;
         position: relative;
         flex: 1;
         min-width: 0;
@@ -181,7 +181,7 @@
                 }
 
                 & > * {
-                    padding: .25em .5em;
+                    padding: .25em .25em;
 
                     &:first-child {
                         border-top-left-radius: 4px;

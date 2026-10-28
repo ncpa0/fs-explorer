@@ -25,7 +25,7 @@ export type ListColumn = {
 export const LIST_COLUMNS: readonly ListColumn[] = [
   {
     id: "size",
-    width: "7em",
+    width: "6em",
     headerClass: "header-size",
     headerLabel: "Size",
     sortBy: "size",
@@ -34,7 +34,7 @@ export const LIST_COLUMNS: readonly ListColumn[] = [
   },
   {
     id: "type",
-    width: "10em",
+    width: "7em",
     headerClass: "header-type",
     headerLabel: "Type",
     sortBy: "type",

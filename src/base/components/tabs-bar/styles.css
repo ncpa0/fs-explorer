@@ -22,10 +22,10 @@
             max-width: 16em;
             display: flex;
             justify-content: space-between;
-            align-items: stretch;
             padding-left: .6em;
             padding-right: unset;
             opacity: .6;
+            align-items: center;
 
             &.active {
                 opacity: 1;
@@ -35,7 +35,6 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 overflow: hidden;
-                line-height: 2em;
             }
 
             & .close-tab-btn {
@@ -48,6 +47,7 @@
                 justify-content: center;
                 align-items: center;
                 border-radius: var(--border-radius);
+                place-self: stretch;
                 --btn-icon-dimm: 1.4em;
 
                 &:hover {
