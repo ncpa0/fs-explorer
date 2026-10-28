@@ -352,6 +352,7 @@ function BehaviorSettings(props: {
     openPreviewOnClick,
     confirmBeforeDelete,
     doubleClickInterval,
+    twoMouseBtnSelect,
   } = userSettings;
 
   const handleDoubleClickIntervalChange = (newValue: string): string => {
@@ -393,6 +394,12 @@ function BehaviorSettings(props: {
             label="Confirm before deleting"
             defaultValue={confirmBeforeDelete.get()}
             onChange={(v) => confirmBeforeDelete.dispatch(v)}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Toggle select via RMB+LMB"
+            defaultValue={twoMouseBtnSelect.get()}
+            onChange={(v) => twoMouseBtnSelect.dispatch(v)}
           />
           <InputPreferenceRow
             explorer={explorer}

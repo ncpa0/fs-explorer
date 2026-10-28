@@ -20,6 +20,7 @@ import "adwaveui/dist/esm/components/selector/selector";
 import { GALLERY_THUMBNAIL_SIZES } from "./base/components/dir-view/gallery-file-list";
 import { PreferencePages } from "./base/components/preferences/preferences";
 import { DirCache } from "./base/dir-cache";
+import { GlobalHandlers } from "./base/global-handlers";
 import { TabController } from "./base/tab-controller";
 import { TabGroup } from "./base/tab-group";
 import { localSig } from "./utils/persisted-signal";
@@ -228,6 +229,7 @@ export class Explorer {
   public readonly overlay = new OverlayController();
   public readonly drag = new DragController(this, this.cleanups);
   public readonly jobs = new JobsController();
+  public readonly global = new GlobalHandlers();
 
   // location visible on the left pane
   public readonly places: PlacesStorage;
@@ -238,6 +240,7 @@ export class Explorer {
   public readonly plainList = sig(false);
   public readonly noPreview;
   public readonly actionFilters: ReadonlyArray<ActionFilter> = [];
+  preventNextFileContext = false;
 
   public readonly showFileviewHeader;
 
@@ -283,13 +286,13 @@ export class Explorer {
 
     this.userSettings = {
       openOnDoubleClick: localSig(storage, "fsexp-double-click", false),
-      openPreviewOnClick: localSig(storage, "fsexp-preview-on-click", true),
+      openPreviewOnClick: localSig(storage, "fsexp-preview-on-click", false),
       thumbnailsInPreview: localSig(
         storage,
         "fsexp-thumbnails-in-preview",
         true,
       ),
-      confirmBeforeDelete: localSig(storage, "fsexp-confirm-delete", false),
+      confirmBeforeDelete: localSig(storage, "fsexp-confirm-delete", true),
       doubleClickInterval: localSig(
         storage,
         "fsexp-dblclick-interval",
@@ -311,7 +314,7 @@ export class Explorer {
         options.initDir ?? "/",
       ),
       askBeforeOverwrite: localSig(storage, "fsexp-ask-overwrite", true),
-      calculateDirSize: localSig(storage, "fsexp-calc-dir-size", true),
+      calculateDirSize: localSig(storage, "fsexp-calc-dir-size", false),
       showDirSizes: localSig(storage, "fsexp-show-dir-sizes", false),
       galleryThumbnailSize: localSig(
         storage,
@@ -324,6 +327,7 @@ export class Explorer {
       showSizeColumn: localSig(storage, "fsexp-col-size", true),
       showModifiedColumn: localSig(storage, "fsexp-col-modified", true),
       showTypeColumn: localSig(storage, "fsexp-col-type", false),
+      twoMouseBtnSelect: localSig(storage, "fsexp-two-mouse-btns-select", true),
     };
 
     this.hideLeftPane = localSig(
@@ -373,9 +377,24 @@ export class Explorer {
     // initial set is pushed here because no pop event fires at construction.
     this.syncWatchedDirs();
 
-    window.addEventListener("keydown", this.globalKeyDownHandler);
+    this.global.onWindow("keydown", this.globalKeyDownHandler);
+
+    this.global.onDocument("mouseup", ev => {
+      if (ev.button === 0) {
+        this.preventNextFileContext = false;
+      }
+    });
+
+    this.global.onDocument("mouseleave", ev => {
+      this.preventNextFileContext = false;
+    });
+
+    this.global.onWindow("blur", ev => {
+      this.preventNextFileContext = false;
+    });
+
     this.cleanups.push(() => {
-      window.removeEventListener("keydown", this.globalKeyDownHandler);
+      this.global.disable();
     });
 
     for (const g of this.tabGroups.get()) {

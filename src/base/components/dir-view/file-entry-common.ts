@@ -3,7 +3,7 @@ import { ReadonlySignal, sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../../explorer";
 import { FStat } from "../../../filesystem-interface";
 import { FileActionContext } from "../../../interfaces/file-action";
-import { isLmb } from "../../../utils/events";
+import { isLmb, isRmb } from "../../../utils/events";
 import { Path } from "../../../utils/path";
 import { isMac } from "../../../utils/platform";
 import { TabController } from "../../tab-controller";
@@ -95,6 +95,13 @@ export function useFileEntry(props: FileEntryProps): FileEntry {
   };
 
   const handleContextMenu = (event: MouseEvent) => {
+    if (explorer.preventNextFileContext) {
+      explorer.preventNextFileContext = false;
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     const windowRect = explorer.window!.getBoundingClientRect();
     const left = event.clientX - windowRect.left;
     const top = event.clientY - windowRect.top;
@@ -182,7 +189,17 @@ export function useFileEntry(props: FileEntryProps): FileEntry {
       }
       return;
     }
+
     isPressed = false;
+
+    if (
+      explorer.userSettings.twoMouseBtnSelect.get()
+      && (isRmb(event, "lmb") || isLmb(event, "rmb"))
+    ) {
+      event.preventDefault();
+      tab.directory.toggleSelectFile(file.get());
+      return;
+    }
 
     if (isMac()) {
       if (isLmb(event, "cmd")) {
@@ -216,7 +233,15 @@ export function useFileEntry(props: FileEntryProps): FileEntry {
   };
 
   const handleMouseDown = (event: MouseEvent) => {
-    if (isLmb(event, "any")) {
+    if (
+      explorer.userSettings.twoMouseBtnSelect.get()
+      && (isRmb(event, "lmb") || isLmb(event, "rmb"))
+    ) {
+      event.stopPropagation();
+      event.preventDefault();
+      isPressed = true;
+      explorer.preventNextFileContext = true;
+    } else if (isLmb(event, "any")) {
       isPressed = true;
     }
   };
