@@ -9,6 +9,9 @@ import {
   Typography,
 } from "adwavecss";
 import CloseIcon from "../../../assets/main-theme/icons/close.svg";
+import LayoutIcon from "../../../assets/main-theme/icons/layout.svg";
+import SliderIcon from "../../../assets/main-theme/icons/slider.svg";
+import ZapIcon from "../../../assets/main-theme/icons/zap.svg";
 import {
   Explorer,
   InputPreference,
@@ -56,7 +59,8 @@ export function PreferencesWindow(props: {
           }}
           onmousedown={handlePageBtnPress(PreferencePages.Appearance)}
         >
-          Appearance
+          <LayoutIcon />
+          <span>Appearance</span>
         </button>
         <button
           class={{
@@ -65,7 +69,8 @@ export function PreferencesWindow(props: {
           }}
           onmousedown={handlePageBtnPress(PreferencePages.Behavior)}
         >
-          Behavior
+          <SliderIcon />
+          <span>Behavior</span>
         </button>
         <button
           class={{
@@ -74,7 +79,8 @@ export function PreferencesWindow(props: {
           }}
           onmousedown={handlePageBtnPress(PreferencePages.Advanced)}
         >
-          Advanced
+          <ZapIcon />
+          <span>Advanced</span>
         </button>
       </div>
       <Switch

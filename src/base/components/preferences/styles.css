@@ -18,12 +18,31 @@
                 justify-content: center;
             }
 
-            & .nav-sidebar-btn:hover {
-                cursor: pointer;
+            & .nav-sidebar-btn {
+                &:hover {
+                    cursor: pointer;
+                }
+
+                & svg {
+                    width: 1.4em;
+                    height: 1.4em;
+                    margin-right: .6em;
+                    flex-shrink: 0;
+                }
+
+                & span {
+                    flex: 1;
+                    min-width: 0;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
             }
         }
 
         & .preferences-main {
+            display: flex;
+            flex-direction: column;
             padding: .3em;
             flex: 1;
 
@@ -36,8 +55,7 @@
 
             & .grid-container {
                 overflow-y: auto;
-                max-height: stretch;
-                min-height: stretch;
+                height: -webkit-fill-available;
             }
 
             & .settings-grid {
@@ -67,6 +85,93 @@
                 & > input {
                     width: 100%;
                     max-width: 28em;
+                }
+            }
+        }
+    }
+
+    @container explorerwindow (width < 1000px) {
+        & .preferences-settings {
+            width: 90cqw;
+        }
+    }
+
+    @container explorerwindow (width < 890px) {
+        & .preferences-settings {
+            width: 95cqw;
+
+            & .nav-sidebar {
+                width: fit-content;
+                padding-inline: .35em;
+
+                & .nav-header {
+                    display: none;
+                }
+
+                & .nav-sidebar-btn {
+                    & span {
+                        display: none;
+                    }
+
+                    & svg {
+                        margin-right: 0;
+                    }
+                }
+            }
+
+            & .preferences-main {
+                & .settings-grid {
+                    padding-inline: 1em;
+                }
+            }
+        }
+    }
+
+    @container explorerwindow (width < 580px) {
+        & .preferences-main.preferences-main {
+            & .settings-grid.settings-grid {
+                grid-template-columns: 1fr;
+                gap: 0;
+                padding-inline: .8em;
+
+                & > * {
+                    background-color: var(--clr-bg-3);
+                    padding: .6em 1em;
+                }
+
+                & > .label-container {
+                    border-radius: var(--border-radius) var(--border-radius) 0
+                    0;
+                    padding-bottom: .2em;
+                }
+
+                & > :nth-child(2n) {
+                    justify-self: stretch;
+                    border-radius: 0 0 var(--border-radius)
+                    var(--border-radius);
+                    padding-top: .2em;
+                    margin-bottom: 1.2em;
+                }
+
+                & > :last-child {
+                    margin-bottom: 0;
+                }
+
+                & > input.input.input {
+                    width: 100%;
+                    max-width: none;
+                    background-color: var(--clr-bg-2);
+                    line-height: 2em;
+                    padding-top: .6em;
+                }
+
+                & > adw-selector {
+                    display: block;
+                    width: 100%;
+                }
+
+                & .span-2 {
+                    grid-column: auto;
                 }
             }
         }
