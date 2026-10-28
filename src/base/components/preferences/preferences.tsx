@@ -252,6 +252,43 @@ function AppearanceSettings(props: {
               },
             ]}
           />
+          <SelectionPreferenceRow
+            explorer={explorer}
+            label="Date and time format"
+            onChange={handleDateTimeFormatChange}
+            options={[
+              {
+                label: "2026-10-26 13:58:00",
+                value: "yyyy-MM-dd HH:mm:ss",
+                selected: dateTimeFormat.get() === "yyyy-MM-dd HH:mm:ss",
+              },
+              {
+                label: "26/10/2026 13:58",
+                value: "dd/MM/yyyy HH:mm",
+                selected: dateTimeFormat.get() === "dd/MM/yyyy HH:mm",
+              },
+              {
+                label: "10/26/2026 1:58 PM",
+                value: "MM/dd/yyyy h:mm a",
+                selected: dateTimeFormat.get() === "MM/dd/yyyy h:mm a",
+              },
+              {
+                label: "26 Oct 2026, 13:58",
+                value: "dd MMM yyyy, HH:mm",
+                selected: dateTimeFormat.get() === "dd MMM yyyy, HH:mm",
+              },
+            ]}
+          />
+          <SelectionPreferenceRow
+            explorer={explorer}
+            label="Gallery icon size"
+            onChange={handleGalleryThumbnailSizeChange}
+            options={GALLERY_THUMBNAIL_SIZES.map((size) => ({
+              label: GALLERY_SIZE_LABELS[size],
+              value: String(size),
+              selected: galleryThumbnailSize.get() === size,
+            }))}
+          />
           <SwitchPreferenceRow
             explorer={explorer}
             label="Show list header"
@@ -293,43 +330,6 @@ function AppearanceSettings(props: {
             label="Always show tab bar"
             defaultValue={alwaysShowTabBar.get()}
             onChange={(v) => alwaysShowTabBar.dispatch(v)}
-          />
-          <SelectionPreferenceRow
-            explorer={explorer}
-            label="Date and time format"
-            onChange={handleDateTimeFormatChange}
-            options={[
-              {
-                label: "2026-10-26 13:58:00",
-                value: "yyyy-MM-dd HH:mm:ss",
-                selected: dateTimeFormat.get() === "yyyy-MM-dd HH:mm:ss",
-              },
-              {
-                label: "26/10/2026 13:58",
-                value: "dd/MM/yyyy HH:mm",
-                selected: dateTimeFormat.get() === "dd/MM/yyyy HH:mm",
-              },
-              {
-                label: "10/26/2026 1:58 PM",
-                value: "MM/dd/yyyy h:mm a",
-                selected: dateTimeFormat.get() === "MM/dd/yyyy h:mm a",
-              },
-              {
-                label: "26 Oct 2026, 13:58",
-                value: "dd MMM yyyy, HH:mm",
-                selected: dateTimeFormat.get() === "dd MMM yyyy, HH:mm",
-              },
-            ]}
-          />
-          <SelectionPreferenceRow
-            explorer={explorer}
-            label="Gallery icon size"
-            onChange={handleGalleryThumbnailSizeChange}
-            options={GALLERY_THUMBNAIL_SIZES.map((size) => ({
-              label: GALLERY_SIZE_LABELS[size],
-              value: String(size),
-              selected: galleryThumbnailSize.get() === size,
-            }))}
           />
           <CustomPreferences
             category={PreferencePages.Appearance}
