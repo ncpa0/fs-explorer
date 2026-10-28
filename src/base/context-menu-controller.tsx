@@ -137,36 +137,32 @@ export class ContextMenuController {
         if (!this.menu.filesAllowedActions.includes("copy")) {
           return false;
         }
-        const target = this.menu.getTargetFile();
         return this.btnAccessController.canCopy(
-          ...(target ? [target] : this.menu.selectedFiles.get()),
+          ...this.menu.getActionFiles(),
         );
       },
       cut: () => {
         if (!this.menu.filesAllowedActions.includes("cut")) {
           return false;
         }
-        const target = this.menu.getTargetFile();
         return this.btnAccessController.canCut(
-          ...(target ? [target] : this.menu.selectedFiles.get()),
+          ...this.menu.getActionFiles(),
         );
       },
       delete: () => {
         if (!this.menu.filesAllowedActions.includes("delete")) {
           return false;
         }
-        const target = this.menu.getTargetFile();
         return this.btnAccessController.canDelete(
-          ...(target ? [target] : this.menu.selectedFiles.get()),
+          ...this.menu.getActionFiles(),
         );
       },
       rename: () => {
         if (!this.menu.filesAllowedActions.includes("rename")) {
           return false;
         }
-        const target = this.menu.getTargetFile();
         return this.btnAccessController.canRename(
-          ...(target ? [target] : this.menu.selectedFiles.get()),
+          ...this.menu.getActionFiles(),
         );
       },
       createShortcut: () => {
@@ -265,42 +261,32 @@ export class ContextMenuController {
 
     copy() {
       const explorer = this.menu.explorer;
-      const file = this.menu.getTargetFile();
-      const selectedFiles = this.menu.selectedFiles.get();
+      const files = this.menu.getActionFiles();
       this.menu.close();
 
-      explorer.clipboard.put(
-        file ? file : selectedFiles,
-        "copy",
-      );
+      explorer.clipboard.put(files, "copy");
     }
 
     cut() {
       const explorer = this.menu.explorer;
-      const file = this.menu.getTargetFile();
-      const selectedFiles = this.menu.selectedFiles.get();
+      const files = this.menu.getActionFiles();
       this.menu.close();
 
-      explorer.clipboard.put(
-        file ? file : selectedFiles,
-        "move",
-      );
+      explorer.clipboard.put(files, "move");
     }
 
     delete() {
       const explorer = this.menu.explorer;
-      const file = this.menu.getTargetFile();
-      const selectedFiles = this.menu.selectedFiles.get();
+      const files = this.menu.getActionFiles();
       this.menu.close();
 
-      const files = file ? [file] : selectedFiles;
       explorer.fs.removeWithConfirm(files);
     }
 
     rename() {
       const explorer = this.menu.explorer;
       const file = this.menu.getTargetFile();
-      const selectedFiles = this.menu.selectedFiles.get();
+      const files = this.menu.getActionFiles();
       this.menu.close();
 
       if (file) {
@@ -319,7 +305,7 @@ export class ContextMenuController {
         });
       } else {
         explorer.overlay.display(
-          <BulkRename explorer={explorer} files={selectedFiles} />,
+          <BulkRename explorer={explorer} files={files} />,
         );
       }
     }
@@ -403,25 +389,12 @@ export class ContextMenuController {
   }
 
   getCustomActions() {
-    const files = this.selectedFiles.get();
-    const targetFile = this.triggerFile.get();
+    const files = this.getActionFiles();
 
     const actionDefs = this.explorer.options.actions;
-    if (!actionDefs) return [];
+    if (!actionDefs || files.length === 0) return [];
 
-    if (files.length === 0 && targetFile) {
-      return actionDefs.filter(def =>
-        def.match([targetFile], { isCurrentDir: false })
-      );
-    }
-
-    if (files.length > 0) {
-      return actionDefs.filter(def =>
-        def.match(files, { isCurrentDir: false })
-      );
-    }
-
-    return [];
+    return actionDefs.filter(def => def.match(files, { isCurrentDir: false }));
   }
 
   getCustomDirectoryActions() {
@@ -435,12 +408,27 @@ export class ContextMenuController {
       : [];
   }
 
-  getTargetFile() {
-    if (this.selectedFiles.get().length === 0) {
-      return this.triggerFile.get();
-    } else if (this.selectedFiles.get().length === 1) {
-      return this.selectedFiles.get()[0];
+  /** Files the menu operations act on — see `filesToActUpon`. */
+  getActionFiles(
+    triggerFile = this.triggerFile.get(),
+    relatedFiles = this.selectedFiles.get(),
+  ): readonly FStat[] {
+    if (!triggerFile) {
+      return relatedFiles;
     }
+    const isTriggerSelected = relatedFiles.some(f =>
+      Path.equal(f.path, triggerFile.path)
+    );
+    return isTriggerSelected ? relatedFiles : [triggerFile];
+  }
+
+  /**
+   * The single target file, or undefined when the operations would act
+   * on multiple files. See `getActionFiles`.
+   */
+  getTargetFile(): FStat | undefined {
+    const files = this.getActionFiles();
+    return files.length === 1 ? files[0] : undefined;
   }
 
   private afterClose() {
@@ -457,12 +445,11 @@ export class ContextMenuController {
   }
 
   private collectFilesAllowedActions(params: OpenMenuParams) {
-    const matchedFiles = params.relatedFiles.length > 0
-      ? params.relatedFiles
-      : params.triggerFile
-      ? [params.triggerFile]
-      : undefined;
-    const filesFilters = matchedFiles
+    const matchedFiles = this.getActionFiles(
+      params.triggerFile,
+      params.relatedFiles,
+    );
+    const filesFilters = matchedFiles.length > 0
       ? this.explorer.actionFilters.filter(af =>
         af.match(matchedFiles, { isCurrentDir: false })
       )

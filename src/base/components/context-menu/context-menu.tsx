@@ -15,8 +15,7 @@ export type ContextMenuProps = {
 
 export function ContextMenu(props: ContextMenuProps) {
   const menu = props.explorer.contextMenu;
-  const files = menu.selectedFiles.get();
-  const target = menu.triggerFile.get();
+  const files = menu.getActionFiles();
 
   const handleMenuClick = (e: MouseEvent) => {
     e.preventDefault();
@@ -31,17 +30,6 @@ export function ContextMenu(props: ContextMenuProps) {
           explorer={props.explorer}
           parentDir={props.parentDir}
           files={files}
-        />
-      );
-    }
-
-    if (target) {
-      return (
-        <FileMenuButtons
-          tab={props.tab}
-          explorer={props.explorer}
-          parentDir={props.parentDir}
-          files={[target]}
         />
       );
     }
@@ -143,7 +131,7 @@ const FileMenuButtons = $component(function FileMenuButtons(props: {
           return <span />;
         }
 
-        const f = props.files.length > 0 ? props.files : [singleFile!];
+        const f = props.files;
 
         const handler = (action: FileAction) => () => {
           menu.close();
