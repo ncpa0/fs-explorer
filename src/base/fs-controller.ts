@@ -320,9 +320,7 @@ export class FsController {
 
         owner?.unselectAll();
 
-        for (const job of copyJobs) {
-          await job.start();
-        }
+        this.explorer.jobs.startAndWait(copyJobs);
       },
     );
   }
@@ -366,9 +364,7 @@ export class FsController {
 
           owner?.unselectAll();
 
-          for (const job of copyJobs) {
-            await job.start();
-          }
+          this.explorer.jobs.startAndWait(copyJobs);
         },
       );
     } else {
@@ -406,7 +402,9 @@ export class FsController {
             const dest = targetDir.joinSegment(filename);
             const job = this._move(file, dest, owner, keepBoth);
             owner?.unselectAll();
-            return job?.start();
+            if (job) {
+              return this.explorer.jobs.startAndWait([job]);
+            }
           },
         );
       });
@@ -492,9 +490,7 @@ export class FsController {
 
         owner?.unselectAll();
 
-        for (const job of copyJobs) {
-          await job.start();
-        }
+        this.explorer.jobs.startAndWait(copyJobs);
       });
     }
   }
