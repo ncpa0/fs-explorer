@@ -248,8 +248,12 @@ export function useFileEntry(props: FileEntryProps): FileEntry {
 
   const handleMouseLeave = () => {
     if (isPressed) {
+      const thisFile = file.get();
       const selected = selectedFiles.get();
-      explorer.drag.startDrag(selected.length != 0 ? selected : [file.get()]);
+      const thisFileIsSelected = selected.some(f =>
+        Path.equal(f.path, thisFile.path)
+      );
+      explorer.drag.startDrag(thisFileIsSelected ? selected : [file.get()]);
     }
     isPressed = false;
   };
