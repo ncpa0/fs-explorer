@@ -17,7 +17,11 @@
         & .info-header {
             display: flex;
             justify-content: flex-end;
-            margin: .4em 1em;
+            margin: .4em;
+
+            & .btn {
+                font-size: .6em;
+            }
         }
 
         & .preview-thumbnail {

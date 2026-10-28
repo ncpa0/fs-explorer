@@ -37,6 +37,7 @@ export function VirtualFileList(
       overscanLeading={9000}
       bailThreshold={3000}
       estimateItemHeight={47}
+      initialScroll={tab.history.currentEntry()?.scrollPosition}
       itemHeight="homogeneous"
       onscroll={(_, pos) => {
         tab.history.setCurrentScrollPosition(pos);
@@ -70,7 +71,7 @@ export function VirtualFileList(
     />
   ) as VirtualListElement<FStat>;
 
-  dir.onContentChange = scrollPos => {
+  dir.restoreScrollPos = scrollPos => {
     list.scrollTo({ top: scrollPos, behavior: "instant" });
   };
 

@@ -31,7 +31,7 @@ export function PreviewPane(props: PreviewPaneProps) {
     >
       <div class="info-header">
         <button
-          class={ADW.Button.className({ flat: true, shape: "square" })}
+          class={ADW.Button.className({ flat: true, shape: "circular" })}
           onmousedown={handleCloseClick}
         >
           <CloseIcon />

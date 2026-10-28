@@ -37,7 +37,7 @@ export class DirViewController {
   public readonly filesView = this.deriveFilesView();
   public readonly directoryInfo = this.deriveDirectoryInfo();
 
-  public onContentChange?: (scrollPosition: number) => void;
+  public restoreScrollPos?: (scrollPosition: number) => void;
   public scrollToFile?: (file: string | Path) => void;
 
   constructor(
@@ -182,9 +182,9 @@ export class DirViewController {
           this.selection.dispatch([]);
         }
         this.files.dispatch(cached.files);
-        if (this.onContentChange) {
+        if (this.restoreScrollPos) {
           queueMicrotask(() => {
-            this.onContentChange!(entry.scrollPosition!);
+            this.restoreScrollPos!(entry.scrollPosition!);
           });
         }
       } else {
@@ -210,11 +210,11 @@ export class DirViewController {
         sig.commitBatch();
 
         queueMicrotask(() => {
-          if (this.onContentChange && scrollPosition != null) {
+          if (this.restoreScrollPos && scrollPosition != null) {
             if (scrollPosition === "RETAIN") {
               scrollPosition = this.tab.history.getEntry()?.scrollPosition;
             }
-            this.onContentChange(scrollPosition!);
+            this.restoreScrollPos(scrollPosition!);
           }
         });
       }).catch(err => {

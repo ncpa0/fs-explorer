@@ -150,7 +150,7 @@ export const GalleryFileList = $component(function GalleryFileList(
     };
   });
 
-  dir.onContentChange = scrollPos => {
+  dir.restoreScrollPos = scrollPos => {
     list.scrollTo({ top: scrollPos, behavior: "instant" });
   };
 

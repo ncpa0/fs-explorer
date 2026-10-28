@@ -1,4 +1,4 @@
-import { Typography } from "adwavecss";
+import { Button, Typography } from "adwavecss";
 import CloseIcon from "../../../assets/main-theme/icons/close.svg";
 import { Explorer } from "../../../explorer";
 import { Path } from "../../../utils/path";
@@ -65,7 +65,10 @@ export function Tab({ explorer, tab, group }: TabProps) {
             explorer.closeTab(tab.id);
             e.stopPropagation();
           }}
-          class="close-tab-button btn square flat"
+          class={[
+            "close-tab-button",
+            Button.className({ flat: true, shape: "circular" }),
+          ]}
         >
           <CloseIcon />
         </button>

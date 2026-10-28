@@ -1,4 +1,4 @@
-import { Range } from "@ncpa0cpl/vanilla-jsx";
+import { If, Range } from "@ncpa0cpl/vanilla-jsx";
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
@@ -69,9 +69,12 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
         <div class="main-view-container" style={{ maxWidth: mainViewMaxWidth }}>
           <LocationBar explorer={explorer} />
           <TabsBar explorer={explorer} hidden={tabBarHiddden} />
-          {explorer.tabGroups.$map(g => (
-            <TabGroupView group={g} explorer={explorer} />
-          ))}
+          <Range<TabGroup>
+            data={explorer.tabGroups}
+            into={<div class="dcontents" />}
+          >
+            {(g) => <TabGroupView group={g} explorer={explorer} />}
+          </Range>
         </div>
       </div>
       {Statusbar({ explorer })}
@@ -91,35 +94,41 @@ function TabGroupView(props: {
 
   const isActiveGroup = sig.eq(explorer.activeTabGroup, group.id);
 
-  return (
+  const container = (
     <div
       class={{
         "tab-group-view": true,
         "active-group": isActiveGroup,
       }}
-    >
-      {viewMode.derive(mode => {
-        if (mode === "single") {
-          return (
-            <div class="dir-view-wrapper">
-              <DirView tab={tabs.get()[0]!} explorer={explorer} />
-              <PreviewPane explorer={explorer} />
-            </div>
-          );
-        } else {
-          return (
-            <div class="explorer-tabs-container">
-              <Range<TabController>
-                data={tabs}
-                into={<div class="dcontents" />}
-              >
-                {tab => <Tab explorer={explorer} group={group} tab={tab} />}
-              </Range>
-              <PreviewPane explorer={explorer} />
-            </div>
-          );
-        }
-      })}
-    </div>
+    />
+  );
+
+  return (
+    <If
+      into={container}
+      condition={sig.eq(viewMode, "single")}
+      then={() => {
+        const firstTab = tabs.derive(t => t[0]!);
+        return (
+          <div class="dir-view-wrapper">
+            {firstTab.derive(tab => {
+              return <DirView tab={tab} explorer={explorer} />;
+            })}
+            <PreviewPane explorer={explorer} />
+          </div>
+        );
+      }}
+      else={() => (
+        <div class="explorer-tabs-container">
+          <Range<TabController>
+            data={tabs}
+            into={<div class="dcontents" />}
+          >
+            {tab => <Tab explorer={explorer} group={group} tab={tab} />}
+          </Range>
+          <PreviewPane explorer={explorer} />
+        </div>
+      )}
+    />
   );
 }
