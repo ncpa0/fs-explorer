@@ -318,6 +318,8 @@ export class FsController {
           }),
         ).then((jobs) => jobs.flat());
 
+        owner?.unselectAll();
+
         for (const job of copyJobs) {
           await job.start();
         }
@@ -362,6 +364,8 @@ export class FsController {
             }),
           ).then((jobs) => jobs.flat());
 
+          owner?.unselectAll();
+
           for (const job of copyJobs) {
             await job.start();
           }
@@ -401,6 +405,7 @@ export class FsController {
 
             const dest = targetDir.joinSegment(filename);
             const job = this._move(file, dest, owner, keepBoth);
+            owner?.unselectAll();
             return job?.start();
           },
         );
@@ -484,6 +489,8 @@ export class FsController {
             }
           }),
         ).then((jobs) => jobs.flat());
+
+        owner?.unselectAll();
 
         for (const job of copyJobs) {
           await job.start();
