@@ -2,6 +2,7 @@ import { Range } from "@ncpa0cpl/vanilla-jsx";
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Explorer } from "../../../explorer";
 import { ADW } from "../../../utils/css";
+import { useDoubleClick } from "../../../utils/use-double-click";
 import { TabController } from "../../tab-controller";
 import { TabGroup } from "../../tab-group";
 import { DirView } from "../dir-view/dir-view";
@@ -30,6 +31,8 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
     (groups, alwaysShow) => !alwaysShow && groups.length <= 1,
   );
 
+  const { doubleClickInterval, doubleClickToUnselect } = explorer.userSettings;
+
   return (
     <div
       class={{
@@ -41,6 +44,25 @@ export function ExplorerWindow(props: ExplorerWindowProps) {
       style={explorer.windowStyles}
       onmouseleave={() => explorer.drag.mouseLeave()}
       onmouseup={() => explorer.drag.endDrag()}
+      onclick={sig.and(
+        doubleClickToUnselect,
+        useDoubleClick(
+          ev => {
+            const elem = ev.target;
+            if (!(elem instanceof HTMLElement)) return;
+            if (
+              elem.closest("button") != null
+              || elem.closest("input") != null
+              || elem.closest(".file-entry") != null
+              || elem.closest(".location-preview") != null
+              || elem.closest(".overlay-contents") != null
+            ) return;
+
+            explorer.currentTab.get().directory.unselectAll();
+          },
+          doubleClickInterval,
+        ),
+      )}
     >
       <div class={[ADW.Box.className({ bg: 2 }), "explorer-content"]}>
         <LeftPane explorer={explorer} />

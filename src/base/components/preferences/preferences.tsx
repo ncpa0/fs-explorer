@@ -353,6 +353,7 @@ function BehaviorSettings(props: {
     confirmBeforeDelete,
     doubleClickInterval,
     twoMouseBtnSelect,
+    doubleClickToUnselect,
   } = userSettings;
 
   const handleDoubleClickIntervalChange = (newValue: string): string => {
@@ -400,6 +401,12 @@ function BehaviorSettings(props: {
             label="Toggle select via RMB+LMB"
             defaultValue={twoMouseBtnSelect.get()}
             onChange={(v) => twoMouseBtnSelect.dispatch(v)}
+          />
+          <SwitchPreferenceRow
+            explorer={explorer}
+            label="Unselect by double click outside"
+            defaultValue={doubleClickToUnselect.get()}
+            onChange={(v) => doubleClickToUnselect.dispatch(v)}
           />
           <InputPreferenceRow
             explorer={explorer}

@@ -328,6 +328,11 @@ export class Explorer {
       showModifiedColumn: localSig(storage, "fsexp-col-modified", true),
       showTypeColumn: localSig(storage, "fsexp-col-type", false),
       twoMouseBtnSelect: localSig(storage, "fsexp-two-mouse-btns-select", true),
+      doubleClickToUnselect: localSig(
+        storage,
+        "fsexp-double-click-to-unselect",
+        true,
+      ),
     };
 
     this.hideLeftPane = localSig(

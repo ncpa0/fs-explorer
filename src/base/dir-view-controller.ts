@@ -315,6 +315,10 @@ export class DirViewController {
     }
   }
 
+  unselectAll() {
+    this.selection.dispatch([]);
+  }
+
   getActiveEntryFile() {
     const fpath = this.activeEntry.get();
     const allfiles = this.files.get();
