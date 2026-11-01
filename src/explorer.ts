@@ -264,6 +264,14 @@ export class Explorer {
 
   private refreshScheduler = new Scheduler(250);
 
+  /**
+   * Cache of already fetched thumbnail sources as provided by the Filesystem.
+   *
+   * @key filepath
+   * @value `img.src`, provided by Filesystem.thumbnail()
+   */
+  public readonly thumbnailCache = new Map<string, string>();
+
   constructor(
     public readonly filesystem: Filesystem,
     public readonly options: ExplorerOptions = {},

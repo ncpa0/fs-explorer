@@ -1,7 +1,7 @@
 import { ReadonlySignal, sig, Signal } from "@ncpa0cpl/vanilla-jsx/signals";
 import { Typography } from "adwavecss";
 import { Explorer } from "../../../explorer";
-import { Filesystem, FStat } from "../../../filesystem-interface";
+import { FStat } from "../../../filesystem-interface";
 import { getFileIcon } from "../../../utils/get-file-icon";
 import { TabController } from "../../tab-controller";
 import { useFileEntry } from "./file-entry-common";
@@ -15,27 +15,22 @@ function isThumbnailable(file: FStat): boolean {
     && (mimetype.startsWith("image/") || mimetype.startsWith("video/"));
 }
 
-/**
- * Cache of already fetched thumbnail sources. The virtual list recycles
- * its slots as the user scrolls, which would otherwise result in the same
- * file thumbnails being requested over and over again.
- */
-const thumbnailCache = new Map<string, string>();
-
 function requestThumbnail(
-  filesystem: Filesystem,
+  explorer: Explorer,
   file: FStat,
   thumbnail: Signal<string | undefined>,
 ): void {
-  const cached = thumbnailCache.get(file.path);
+  const cached = explorer.thumbnailCache.get(file.path);
   if (cached) {
     thumbnail.dispatch(cached);
     return;
   }
 
+  const { filesystem } = explorer;
+
   filesystem.thumbnail?.(file.path).then(src => {
     if (src) {
-      thumbnailCache.set(file.path, src);
+      explorer.thumbnailCache.set(file.path, src);
       thumbnail.dispatch(src);
     }
   }).catch(err => {
@@ -64,7 +59,7 @@ export function GalleryFileListEntry(
   const isVideo = file.mimetype?.toLowerCase().startsWith("video/") ?? false;
   const thumbnail = sig<string>();
   if (canThumbnail) {
-    requestThumbnail(explorer.filesystem, file, thumbnail);
+    requestThumbnail(explorer, file, thumbnail);
   }
 
   return (
