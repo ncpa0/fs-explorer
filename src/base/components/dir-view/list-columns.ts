@@ -43,7 +43,7 @@ export const LIST_COLUMNS: readonly ListColumn[] = [
   },
   {
     id: "modified",
-    width: "12em",
+    width: "11em",
     headerClass: "header-date",
     headerLabel: "Date Modified",
     sortBy: "date",

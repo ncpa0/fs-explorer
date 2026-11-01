@@ -8,6 +8,7 @@ import {
   ScrollView,
   Typography,
 } from "adwavecss";
+import { DateTime } from "luxon";
 import CloseIcon from "../../../assets/main-theme/icons/close.svg";
 import LayoutIcon from "../../../assets/main-theme/icons/layout.svg";
 import SliderIcon from "../../../assets/main-theme/icons/slider.svg";
@@ -34,6 +35,14 @@ const GALLERY_SIZE_LABELS = {
   12: "Large",
   16: "Extra Large",
 } as const;
+
+const DATE_TIME_FORMATS = [
+  "yyyy-MM-dd HH:mm:ss",
+  "dd/MM/yyyy HH:mm",
+  "MM/dd/yyyy h:mm a",
+  "dd MMM yyyy, HH:mm",
+  "yyyy MMM dd, HH:mm",
+];
 
 export function PreferencesWindow(props: {
   explorer: Explorer;
@@ -262,28 +271,11 @@ function AppearanceSettings(props: {
             explorer={explorer}
             label="Date and time format"
             onChange={handleDateTimeFormatChange}
-            options={[
-              {
-                label: "2026-10-26 13:58:00",
-                value: "yyyy-MM-dd HH:mm:ss",
-                selected: dateTimeFormat.get() === "yyyy-MM-dd HH:mm:ss",
-              },
-              {
-                label: "26/10/2026 13:58",
-                value: "dd/MM/yyyy HH:mm",
-                selected: dateTimeFormat.get() === "dd/MM/yyyy HH:mm",
-              },
-              {
-                label: "10/26/2026 1:58 PM",
-                value: "MM/dd/yyyy h:mm a",
-                selected: dateTimeFormat.get() === "MM/dd/yyyy h:mm a",
-              },
-              {
-                label: "26 Oct 2026, 13:58",
-                value: "dd MMM yyyy, HH:mm",
-                selected: dateTimeFormat.get() === "dd MMM yyyy, HH:mm",
-              },
-            ]}
+            options={DATE_TIME_FORMATS.map(fmt => ({
+              value: fmt,
+              selected: dateTimeFormat.get() === fmt,
+              label: DateTime.now().toFormat(fmt),
+            }))}
           />
           <SelectionPreferenceRow
             explorer={explorer}

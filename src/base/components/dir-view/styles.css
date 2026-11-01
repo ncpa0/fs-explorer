@@ -1,6 +1,6 @@
 .explorer-window.explorer-window.explorer-window.explorer-window {
     & .dir-view-container {
-        --dirview-cols: 3.75em auto 6em 12em;
+        --dirview-cols: 3.75em auto 6em 11em;
         position: relative;
         flex: 1;
         min-width: 0;
@@ -168,9 +168,13 @@
                     height: 2.6em;
                 }
 
-                & .file-size,
-                & .file-modified {
+                & .file-size {
                     justify-content: flex-end;
+                    padding-right: .8em;
+                }
+
+                & .file-modified {
+                    justify-self: start;
                     padding-right: .8em;
                 }
 
