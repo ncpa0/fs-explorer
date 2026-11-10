@@ -1,9 +1,8 @@
 import { sig } from "@ncpa0cpl/vanilla-jsx/signals";
-import { Queue } from "async-await-queue";
 import { Explorer } from "../explorer";
 import { FStat } from "../filesystem-interface";
 import { Fmt } from "../utils/formatters";
-import { Immediate } from "../utils/immediate";
+import { Immediate, Resolvable } from "../utils/immediate";
 import { Path } from "../utils/path";
 import { sortFiles, SortMode } from "./components/dir-view/sort-files";
 import { FilesMutation } from "./fs-controller";
@@ -22,7 +21,7 @@ export interface DirectoryInfo {
 }
 
 export class DirViewController {
-  private readonly cdQueue = new Queue(1);
+  private readonly queue = new ChangeDirQueue();
   public readonly activeEntry = sig<string | null>(null);
   public readonly stat = sig<FStat | undefined>(undefined);
   public readonly files = sig<ReadonlyArray<FStat>>([]);
@@ -118,6 +117,11 @@ export class DirViewController {
     );
   }
 
+  private isCurrentDir(pth: string | Path) {
+    pth = Path.from(pth);
+    return pth.equals(this.stat.get()?.path ?? "");
+  }
+
   updateFiles(
     dir: string | Path,
     updates: FilesMutation[],
@@ -171,61 +175,64 @@ export class DirViewController {
     scrollPosition?: number | "RETAIN",
   ) {
     const dirpath = entry.path;
+    const locationPath = Path.from(dirpath).toString();
+    const dir = this;
 
-    this.cdQueue.run(async () => {
-      const isSameDir = dirpath.equals(this.stat.get()?.path ?? "");
-      const locationPath = Path.from(dirpath).toString();
-
-      const cached = this.explorer.cache.get(dirpath.toString());
-      if (cached) {
-        if (!isSameDir) {
-          this.selection.dispatch([]);
+    this.queue.cd({
+      before() {
+        const cached = dir.explorer.cache.get(dirpath.toString());
+        if (cached) {
+          if (!dir.isCurrentDir(dirpath)) {
+            dir.selection.dispatch([]);
+          }
+          dir.files.dispatch(cached.files);
+          if (dir.restoreScrollPos) {
+            queueMicrotask(() => {
+              dir.restoreScrollPos!(entry.scrollPosition!);
+            });
+          }
+        } else {
+          dir.loading.dispatch(true);
         }
-        this.files.dispatch(cached.files);
-        if (this.restoreScrollPos) {
-          queueMicrotask(() => {
-            this.restoreScrollPos!(entry.scrollPosition!);
-          });
-        }
-      } else {
-        this.loading.dispatch(true);
-      }
-
-      const data = Immediate.all(
-        this.explorer.filesystem.stat(locationPath),
-        this.explorer.filesystem.readdirStat(locationPath),
-      );
-
-      await data.then(([dirStat, files]) => {
-        this.explorer.cache.add(dirpath.toString(), files);
-
+      },
+      fetch() {
+        return Immediate.all(
+          dir.explorer.filesystem.stat(locationPath),
+          dir.explorer.filesystem.readdirStat(locationPath),
+        );
+      },
+      commit(dirStat, files) {
         sig.startBatch();
-        this.loading.dispatch(false);
-        if (!isSameDir) {
-          this.selection.dispatch([]);
+        dir.loading.dispatch(false);
+        if (!dir.isCurrentDir(dirpath)) {
+          dir.selection.dispatch([]);
         }
-        this.stat.dispatch(dirStat);
-        this.files.dispatch(files);
-        this.error.dispatch(undefined);
+        dir.stat.dispatch(dirStat);
+        dir.files.dispatch(files);
+        dir.error.dispatch(undefined);
         sig.commitBatch();
 
         queueMicrotask(() => {
-          if (this.restoreScrollPos && scrollPosition != null) {
+          if (dir.restoreScrollPos && scrollPosition != null) {
             if (scrollPosition === "RETAIN") {
-              scrollPosition = this.tab.history.getEntry()?.scrollPosition;
+              scrollPosition = dir.tab.history.getEntry()?.scrollPosition;
             }
-            this.restoreScrollPos(scrollPosition!);
+            dir.restoreScrollPos(scrollPosition!);
           }
         });
-      }).catch(err => {
+      },
+      after(dirStat, files) {
+        dir.explorer.cache.add(dirpath.toString(), files);
+      },
+      error(err) {
         sig.startBatch();
-        this.loading.dispatch(false);
-        this.selection.dispatch([]);
-        this.stat.dispatch(undefined);
-        this.files.dispatch([]);
-        this.error.dispatch(err);
+        dir.loading.dispatch(false);
+        dir.selection.dispatch([]);
+        dir.stat.dispatch(undefined);
+        dir.files.dispatch([]);
+        dir.error.dispatch(err);
         sig.commitBatch();
-      });
+      },
     });
   }
 
@@ -327,4 +334,79 @@ export class DirViewController {
       return allfiles.find(f => p.equals(f.path));
     }
   }
+}
+
+type CdAction = {
+  before(): void;
+  fetch(): Resolvable<[FStat, FStat[]]>;
+  after(dirstat: FStat, files: FStat[]): any;
+  commit(dirstat: FStat, files: FStat[]): any;
+  error(err: Error): void;
+};
+
+type InternalAction = CdAction & {
+  canceled: boolean;
+};
+
+class ChangeDirQueue {
+  private pendingActions: Array<InternalAction> = [];
+
+  private cancelAll() {
+    for (const a of this.pendingActions) {
+      a.canceled = true;
+    }
+  }
+
+  private removeAction(action: InternalAction) {
+    const idx = this.pendingActions.indexOf(action);
+    if (idx >= 0) {
+      this.pendingActions.splice(idx, 1);
+    }
+  }
+
+  cd(cdAction: CdAction) {
+    const action: InternalAction = { ...cdAction, canceled: false };
+
+    this.cancelAll();
+    this.pendingActions.push(action);
+
+    try {
+      action.before();
+    } catch (err) {
+      action.error(toError(err));
+      return;
+    }
+
+    action.fetch()
+      .then(([stat, files]) => {
+        if (!action.canceled) {
+          action.commit(stat, files);
+        }
+        action.after(stat, files);
+        this.removeAction(action);
+      })
+      .catch((err) => {
+        this.removeAction(action);
+        if (!action.canceled) {
+          action.error(toError(err));
+        }
+      });
+  }
+}
+
+let isError: (error: unknown) => error is Error;
+
+if ("isError" in Error) {
+  isError = Error.isError;
+} else {
+  isError = function isError(e: unknown): e is Error {
+    return typeof e === "object" && e != null && "message" in e;
+  };
+}
+
+function toError(e: any): Error {
+  if (isError(e)) {
+    return e;
+  }
+  return new Error(String(e));
 }
